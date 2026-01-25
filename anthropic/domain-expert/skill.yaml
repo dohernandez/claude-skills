@@ -1,0 +1,488 @@
+name: domain-expert
+kind: knowledge
+version: "2.0.0"
+description: "Domain knowledge discovery, learning, and guidance for understanding project concepts and terminology."
+severity: informational
+tags:
+  - domain
+  - knowledge
+  - concepts
+  - terminology
+  - ddd
+
+# Configuration - discovered/learned during setup
+config_refs:
+  - DOMAIN_SOURCE       # Where domain knowledge was loaded from
+  - PRIMARY_LANGUAGE    # Detected language for code analysis
+
+purpose: |
+  Four modes for domain knowledge management:
+
+  1. DISCOVER MODE (/domain discover) - Setup
+     Read domain knowledge from existing documentation.
+     Extracts glossary, entities, and business rules from docs.
+
+  2. LEARN MODE (/domain learn) - Analysis
+     Analyze domain code to infer entities, value objects,
+     relationships, and naming patterns.
+
+  3. EXPLAIN MODE (/domain explain <concept>) - Query
+     Answer questions about domain concepts.
+     Provide definitions, relationships, and code locations.
+
+  4. MAP MODE (/domain map <request>) - Translation
+     Map a user request to domain concepts.
+     Used by developer skill to understand what to implement.
+
+owns:
+  - "Domain concept definitions"
+  - "Ubiquitous language glossary"
+  - "Business invariants documentation"
+  - "Entity relationship knowledge"
+
+# =============================================================================
+# MODES
+# =============================================================================
+
+modes:
+  discover:
+    description: "Discover domain knowledge from documentation"
+    trigger: "/domain discover"
+    outputs:
+      - glossary: "Extracted domain terms and definitions"
+      - entities: "Discovered domain entities"
+      - invariants: "Business rules found in docs"
+      - confidence: "How complete the discovery is"
+
+  learn:
+    description: "Learn domain from code analysis"
+    trigger: "/domain learn [--analyze | --from <file>]"
+    options:
+      analyze:
+        description: "Analyze domain code to infer concepts"
+        flag: "--analyze"
+      from_file:
+        description: "Learn from specific domain file"
+        flag: "--from <file>"
+    outputs:
+      - inferred_entities: "Entities found in code"
+      - inferred_relationships: "Relationships between entities"
+      - naming_patterns: "Domain naming conventions"
+
+  explain:
+    description: "Explain a domain concept"
+    trigger: "/domain explain <concept>"
+    inputs:
+      - concept: "The domain concept to explain"
+    outputs:
+      - definition: "What the concept means"
+      - relationships: "Related concepts"
+      - code_location: "Where it's implemented"
+      - invariants: "Rules that apply"
+
+  map:
+    description: "Map user request to domain concepts"
+    trigger: "/domain map <request>"
+    inputs:
+      - request: "User's feature request or question"
+    outputs:
+      - entities: "Domain entities involved"
+      - operations: "Domain operations/commands"
+      - invariants: "Relevant business rules"
+
+# =============================================================================
+# DISCOVERY SOURCES
+# =============================================================================
+
+discovery_sources:
+  # Documentation files that may contain domain knowledge
+  documentation:
+    - path: "CLAUDE.md"
+      pattern: "(?i)(domain|concepts?|glossary|entities|business)"
+      extract: "Domain section, glossary, entity descriptions"
+
+    - path: "README.md"
+      pattern: "(?i)(domain|concepts?|overview|what is)"
+      extract: "Project overview, domain description"
+
+    - path: "docs/domain.md"
+      extract: "Full domain documentation"
+
+    - path: "docs/glossary.md"
+      extract: "Domain glossary"
+
+    - path: "docs/architecture.md"
+      pattern: "(?i)(domain|entities|business)"
+      extract: "Domain layer description"
+
+    - path: "docs/ADR/*.md"
+      extract: "Domain decisions in ADRs"
+
+  # Code that defines domain (language-specific)
+  domain_code:
+    typescript:
+      paths:
+        - "src/domain/"
+        - "src/core/"
+        - "src/entities/"
+        - "src/models/"
+      patterns:
+        entities: "class\\s+(\\w+)\\s*(extends|implements|\\{)"
+        types: "type\\s+(\\w+)\\s*="
+        interfaces: "interface\\s+(\\w+)"
+        enums: "enum\\s+(\\w+)"
+
+    python:
+      paths:
+        - "src/domain/"
+        - "domain/"
+        - "core/"
+        - "models/"
+      patterns:
+        classes: "class\\s+(\\w+).*:"
+        dataclasses: "@dataclass.*class\\s+(\\w+)"
+        pydantic: "class\\s+(\\w+)\\(.*BaseModel\\)"
+
+    go:
+      paths:
+        - "internal/domain/"
+        - "pkg/domain/"
+        - "domain/"
+      patterns:
+        structs: "type\\s+(\\w+)\\s+struct"
+        interfaces: "type\\s+(\\w+)\\s+interface"
+
+    rust:
+      paths:
+        - "src/domain/"
+        - "src/core/"
+      patterns:
+        structs: "struct\\s+(\\w+)"
+        enums: "enum\\s+(\\w+)"
+        traits: "trait\\s+(\\w+)"
+
+    java:
+      paths:
+        - "src/main/java/**/domain/"
+        - "src/main/java/**/model/"
+        - "src/main/java/**/entity/"
+      patterns:
+        classes: "class\\s+(\\w+)"
+        interfaces: "interface\\s+(\\w+)"
+        enums: "enum\\s+(\\w+)"
+
+# =============================================================================
+# DOMAIN TEMPLATES (DDD concepts)
+# =============================================================================
+
+ddd_concepts:
+  # Standard DDD building blocks - used to categorize discovered concepts
+  building_blocks:
+    entity:
+      description: "Object with identity that persists over time"
+      indicators: ["id", "uuid", "unique identifier"]
+
+    value_object:
+      description: "Immutable object defined by its attributes"
+      indicators: ["readonly", "immutable", "no id field"]
+
+    aggregate:
+      description: "Cluster of entities with a root entity"
+      indicators: ["root", "contains entities", "transactional boundary"]
+
+    repository:
+      description: "Interface for retrieving and persisting aggregates"
+      indicators: ["Repository", "Store", "find", "save", "delete"]
+
+    service:
+      description: "Stateless operations that don't belong to entities"
+      indicators: ["Service", "stateless", "orchestrates"]
+
+    event:
+      description: "Something that happened in the domain"
+      indicators: ["Event", "Created", "Updated", "Deleted", "past tense"]
+
+    command:
+      description: "Request to change system state"
+      indicators: ["Command", "Create", "Update", "Delete", "imperative"]
+
+# =============================================================================
+# PROCEDURES
+# =============================================================================
+
+procedures:
+  discover:
+    description: "Discover domain knowledge from documentation"
+    steps:
+      - step: "Search for domain documentation"
+        detail: |
+          Check discovery_sources.documentation in priority order:
+          1. CLAUDE.md - Look for Domain section
+          2. README.md - Look for project overview
+          3. docs/domain.md - Full domain documentation
+          4. docs/glossary.md - Term definitions
+        commands:
+          - "cat CLAUDE.md 2>/dev/null | grep -A 100 -i 'domain\\|concepts\\|glossary'"
+          - "cat README.md 2>/dev/null | grep -A 50 -i 'domain\\|overview'"
+
+      - step: "Extract glossary terms"
+        detail: |
+          Look for term definitions in format:
+          - "Term: definition"
+          - "**Term** - definition"
+          - Glossary sections
+          - Table of terms
+
+      - step: "Extract entities"
+        detail: |
+          Look for entity descriptions:
+          - "Entity" or "Model" sections
+          - Class/type descriptions
+          - Attribute lists
+          - Relationship diagrams
+
+      - step: "Extract business rules"
+        detail: |
+          Look for invariants and rules:
+          - "Rules" or "Constraints" sections
+          - "Must", "cannot", "always" statements
+          - Validation descriptions
+
+      - step: "Present discovered domain"
+        detail: |
+          Show discovered knowledge:
+
+          ## Discovered Domain Knowledge
+
+          **Project:** E-commerce platform
+          **Confidence:** High (domain.md found)
+
+          ### Glossary (12 terms)
+          | Term | Definition |
+          |------|------------|
+          | Customer | User who has made a purchase |
+          | Order | Customer's request to purchase items |
+          | Cart | Collection of items before checkout |
+
+          ### Entities (5 found)
+          | Entity | Description | Key Attributes |
+          |--------|-------------|----------------|
+          | Customer | Registered user | id, email, tier |
+          | Order | Purchase request | id, status, items |
+
+          ### Business Rules (3 found)
+          | Rule | Context |
+          |------|---------|
+          | Orders can only be cancelled within 24h | Order cancellation |
+
+          **Save this configuration?** [Confirm / Adjust]
+
+  learn:
+    description: "Learn domain from code analysis"
+    steps:
+      - step: "Detect language and find domain code"
+        detail: |
+          1. Detect project language
+          2. Find domain code paths from discovery_sources.domain_code
+          3. List files to analyze
+
+      - step: "Extract entities from code"
+        detail: |
+          For each domain file:
+          - Find class/struct/type definitions
+          - Extract name and categorize (entity, value object, etc.)
+          - Extract attributes/fields
+          - Look for relationships (references to other types)
+        commands:
+          # TypeScript
+          - "grep -rh 'class\\|interface\\|type\\|enum' src/domain/"
+          # Python
+          - "grep -rh 'class\\|@dataclass' domain/"
+          # Go
+          - "grep -rh 'type.*struct\\|type.*interface' internal/domain/"
+
+      - step: "Infer relationships"
+        detail: |
+          Analyze type references:
+          - Field types that reference other domain types
+          - Method parameters and return types
+          - Import statements within domain
+
+      - step: "Extract naming patterns"
+        detail: |
+          Identify domain naming conventions:
+          - Entity naming (User, Order, Product)
+          - Value object naming (Money, Address, Email)
+          - Event naming (OrderCreated, UserRegistered)
+          - Command naming (CreateOrder, UpdateUser)
+
+      - step: "Categorize using DDD concepts"
+        detail: |
+          Use ddd_concepts.building_blocks to categorize:
+          - Has id field? → likely Entity
+          - All readonly? → likely Value Object
+          - Ends with Repository? → Repository
+          - Ends with Service? → Service
+          - Past tense name? → Event
+
+      - step: "Present inferred domain"
+        detail: |
+          ## Inferred Domain Knowledge
+
+          **Method:** Code analysis (23 files)
+          **Confidence:** Medium
+
+          ### Entities (inferred)
+          | Name | Type | Attributes | Confidence |
+          |------|------|------------|------------|
+          | User | Entity | id, email, status | 95% |
+          | Order | Aggregate | id, items, total | 90% |
+          | Money | Value Object | amount, currency | 85% |
+
+          ### Relationships
+          ```
+          User ──1:N──> Order
+          Order ──1:N──> OrderItem
+          OrderItem ──N:1──> Product
+          ```
+
+          ### Naming Patterns
+          - Entities: PascalCase nouns (User, Order)
+          - Events: PascalCase past tense (OrderCreated)
+          - Commands: PascalCase imperative (CreateOrder)
+
+          **Save this configuration?** [Confirm / Adjust]
+
+  explain:
+    description: "Explain a domain concept"
+    steps:
+      - step: "Load domain knowledge"
+        detail: "Read saved domain config from skills-config.yaml"
+
+      - step: "Find the concept"
+        detail: |
+          Search for concept in:
+          1. Glossary
+          2. Entities
+          3. Related terms
+
+      - step: "Gather related information"
+        detail: |
+          For the concept:
+          - Definition
+          - Related concepts
+          - Business rules that mention it
+          - Code location
+
+      - step: "Present explanation"
+        detail: |
+          ## Domain Concept: Order
+
+          **Definition:** A customer's request to purchase one or more products.
+
+          **Type:** Aggregate Root
+
+          **Attributes:**
+          - id: Unique order identifier
+          - status: pending, confirmed, shipped, delivered, cancelled
+          - items: List of OrderItems
+          - total: Calculated total (Money)
+
+          **Relationships:**
+          - Belongs to: Customer
+          - Contains: OrderItem (1:N)
+
+          **Business Rules:**
+          - Cannot be modified after shipping
+          - Can only be cancelled within 24 hours
+          - Total must equal sum of items
+
+          **Code Location:** src/domain/order/order.ts
+
+  map:
+    description: "Map user request to domain concepts"
+    steps:
+      - step: "Parse the request"
+        detail: |
+          Extract from user's natural language:
+          - Nouns → potential entities
+          - Verbs → potential operations/commands
+          - Adjectives/states → potential attributes
+
+      - step: "Match to domain concepts"
+        detail: |
+          For each extracted term:
+          - Check glossary for matches
+          - Check entities for matches
+          - Find related concepts
+
+      - step: "Identify operations"
+        detail: |
+          Determine what domain operations are needed:
+          - Create/Read/Update/Delete on entities
+          - Domain events that would be triggered
+          - Business rules that apply
+
+      - step: "Present mapping"
+        detail: |
+          ## Domain Mapping
+
+          **Request:** "Allow users to cancel orders and get refunds"
+
+          ### Entities Involved
+          | Entity | Role |
+          |--------|------|
+          | User | Actor (who cancels) |
+          | Order | Target (what's cancelled) |
+          | Payment | Related (what's refunded) |
+
+          ### Operations
+          | Operation | Type | Description |
+          |-----------|------|-------------|
+          | CancelOrder | Command | Change order status to cancelled |
+          | RefundPayment | Command | Initiate refund for payment |
+          | OrderCancelled | Event | Emitted after cancellation |
+
+          ### Business Rules
+          - Can only cancel orders in pending/confirmed status
+          - Refund amount depends on cancellation timing
+          - Must notify customer of cancellation
+
+          ### Code Locations
+          - Order: src/domain/order/order.ts
+          - Payment: src/domain/payment/payment.ts
+
+# =============================================================================
+# EXAMPLES
+# =============================================================================
+
+examples:
+  - name: Discover domain from docs
+    request: "/domain discover"
+    flow: |
+      1. Find CLAUDE.md with Domain section
+      2. Extract glossary: customer, order, product
+      3. Extract entities: User, Order, Product
+      4. Present for confirmation
+
+  - name: Learn domain from code
+    request: "/domain learn --analyze"
+    flow: |
+      1. Detect: TypeScript project
+      2. Scan: src/domain/ (15 files)
+      3. Infer: 5 entities, 3 value objects
+      4. Present with confidence scores
+
+  - name: Explain a concept
+    request: "/domain explain Order"
+    flow: |
+      1. Find Order in domain config
+      2. Gather: definition, attributes, rules
+      3. Present complete explanation
+
+  - name: Map a request
+    request: "/domain map 'Users should be able to add items to cart'"
+    flow: |
+      1. Parse: users, add, items, cart
+      2. Map: User entity, Cart entity, CartItem, AddToCart command
+      3. Present mapping with code locations

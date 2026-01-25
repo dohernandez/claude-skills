@@ -1,0 +1,67 @@
+name: code
+version: "2.0.0"
+
+triggers:
+  # When to invoke /code discover or /code learn
+  - condition: "Setting up a new project"
+    action: "Run /code discover to detect existing style configs"
+  - condition: "No linter configs found"
+    action: "Run /code learn to infer style from existing code"
+
+  # When to invoke /code check
+  - condition: "Before committing code"
+    action: "Run /code check to validate style compliance"
+  - condition: "During PR review"
+    action: "Run /code check on changed files"
+
+  # When to invoke /code guide
+  - condition: "Starting implementation of a new feature"
+    action: "Run /code guide before writing code"
+  - condition: "Fixing a bug"
+    action: "Run /code guide to surface edge cases"
+  - condition: "Writing code that handles external input"
+    action: "Run /code guide to enumerate malicious inputs"
+  - condition: "Implementing error handling"
+    action: "Run /code guide to list failure modes"
+
+provides_to:
+  developer:
+    - style_rules: "Applicable style for current language"
+    - mindset: "Defensive programming guidance"
+    mode: guide
+    usage: |
+      Developer skill invokes /code guide when starting implementation
+      to ensure code follows project style and defensive patterns.
+
+  commit:
+    - validation: "Style check results"
+    mode: check
+    usage: |
+      Commit skill can invoke /code check before committing
+      to catch style violations early.
+
+  arch:
+    - layer_context: "Style rules may vary by architecture layer"
+    usage: |
+      Some projects have different style rules for different layers
+      (e.g., stricter rules for domain code).
+
+receives_from:
+  arch:
+    - layer_info: "Which architecture layer code is in"
+    usage: |
+      Code skill can adjust guidance based on layer
+      (domain vs infrastructure vs application).
+
+  developer:
+    - implementation_context: "What is being implemented"
+    usage: |
+      Code skill provides context-specific guidance
+      based on what's being written.
+
+usage_hints:
+  - "Run /code discover first to detect existing configs"
+  - "Use /code learn if no configs exist"
+  - "Run /code check before commits"
+  - "Invoke /code guide when starting new code"
+  - "Re-invoke when you notice yourself rushing"

@@ -1,0 +1,668 @@
+name: code
+kind: helper
+version: "2.0.0"
+description: "Code style discovery, validation, and guidance for writing defensive, well-reasoned code."
+severity: medium
+tags:
+  - coding
+  - style
+  - quality
+  - defensive-programming
+  - linting
+
+# Configuration from skills-config.yaml
+# Discovered/learned during setup
+config_refs:
+  - CODE_STYLE_SOURCE    # Where style was loaded from (discovered, learned, manual)
+  - PRIMARY_LANGUAGE     # Detected primary language
+
+purpose: |
+  Four modes for code style management:
+
+  1. DISCOVER MODE (/code discover) - Setup
+     Read code style from existing linter/formatter configurations.
+     Supports multiple languages and tools.
+
+  2. LEARN MODE (/code learn) - Analysis
+     Analyze actual code to infer naming conventions, formatting patterns,
+     and import ordering. Useful when no configs exist.
+
+  3. CHECK MODE (/code check) - Validation
+     Run linters/formatters to validate code follows style.
+     Reports violations with suggestions.
+
+  4. GUIDE MODE (/code guide) - Writing
+     Mindset primer + style guidance when writing new code.
+     Surfaces assumptions, edge cases, and applies learned style.
+
+owns:
+  - "Code style discovery and configuration"
+  - "Style validation and linting"
+  - "Defensive programming guidance"
+  - "Naming conventions and patterns"
+
+# =============================================================================
+# MODES
+# =============================================================================
+
+modes:
+  discover:
+    description: "Discover code style from existing configs"
+    trigger: "/code discover"
+    outputs:
+      - language: "Detected primary language"
+      - style_config: "Discovered style configuration"
+      - tools_found: "Linters/formatters found"
+      - confidence: "How complete the discovery is"
+
+  learn:
+    description: "Learn code style from actual code patterns"
+    trigger: "/code learn [--analyze | --from <file>]"
+    options:
+      analyze:
+        description: "Analyze codebase to infer style"
+        flag: "--analyze"
+      from_file:
+        description: "Learn style from a specific exemplar file"
+        flag: "--from <file>"
+    outputs:
+      - inferred_style: "Style patterns learned from code"
+      - naming_conventions: "Detected naming patterns"
+      - formatting_patterns: "Detected formatting patterns"
+
+  check:
+    description: "Validate code follows style"
+    trigger: "/code check [<file>]"
+    outputs:
+      - violations: "List of style violations"
+      - suggestions: "How to fix each violation"
+      - status: "PASS or FAIL"
+
+  guide:
+    description: "Get mindset + style guidance for writing code"
+    trigger: "/code guide [<context>]"
+    outputs:
+      - mindset: "Defensive programming reminders"
+      - style_rules: "Applicable style rules for context"
+      - examples: "Code examples following style"
+
+# =============================================================================
+# LANGUAGE DETECTION & TOOL DISCOVERY
+# =============================================================================
+
+discovery_sources:
+  # Detect primary language
+  language_detection:
+    - indicator: "go.mod"
+      language: go
+    - indicator: "pyproject.toml"
+      language: python
+    - indicator: "setup.py"
+      language: python
+    - indicator: "requirements.txt"
+      language: python
+    - indicator: "package.json"
+      language: javascript
+    - indicator: "tsconfig.json"
+      language: typescript
+    - indicator: "Cargo.toml"
+      language: rust
+    - indicator: "build.gradle"
+      language: java
+    - indicator: "pom.xml"
+      language: java
+
+  # Language-specific style tool configs
+  style_tools:
+    typescript:
+      linters:
+        - config: ".eslintrc*"
+          tool: "eslint"
+          extract: "rules, extends, plugins"
+        - config: "eslint.config.js"
+          tool: "eslint (flat config)"
+          extract: "rules"
+        - config: "biome.json"
+          tool: "biome"
+          extract: "linter rules, formatter settings"
+      formatters:
+        - config: ".prettierrc*"
+          tool: "prettier"
+          extract: "printWidth, tabWidth, semi, singleQuote, trailingComma"
+        - config: "prettier.config.js"
+          tool: "prettier"
+          extract: "formatting options"
+        - config: "biome.json"
+          tool: "biome"
+          extract: "formatter settings"
+      type_checking:
+        - config: "tsconfig.json"
+          tool: "typescript"
+          extract: "strict, noImplicitAny, paths"
+
+    python:
+      linters:
+        - config: "pyproject.toml"
+          tool: "ruff"
+          section: "[tool.ruff]"
+          extract: "select, ignore, line-length"
+        - config: "ruff.toml"
+          tool: "ruff"
+          extract: "rules, ignore"
+        - config: ".flake8"
+          tool: "flake8"
+          extract: "max-line-length, ignore"
+        - config: "setup.cfg"
+          tool: "flake8"
+          section: "[flake8]"
+        - config: "pyproject.toml"
+          tool: "pylint"
+          section: "[tool.pylint]"
+      formatters:
+        - config: "pyproject.toml"
+          tool: "black"
+          section: "[tool.black]"
+          extract: "line-length, target-version"
+        - config: "pyproject.toml"
+          tool: "isort"
+          section: "[tool.isort]"
+          extract: "profile, line_length, sections"
+        - config: ".isort.cfg"
+          tool: "isort"
+      type_checking:
+        - config: "pyproject.toml"
+          tool: "mypy"
+          section: "[tool.mypy]"
+        - config: "mypy.ini"
+          tool: "mypy"
+        - config: "pyrightconfig.json"
+          tool: "pyright"
+
+    go:
+      linters:
+        - config: ".golangci.yml"
+          tool: "golangci-lint"
+          extract: "linters, linters-settings, rules"
+        - config: ".golangci.yaml"
+          tool: "golangci-lint"
+      formatters:
+        - builtin: true
+          tool: "gofmt"
+          note: "Go has built-in formatting, no config needed"
+        - builtin: true
+          tool: "goimports"
+          note: "Extends gofmt with import organization"
+
+    rust:
+      linters:
+        - config: "clippy.toml"
+          tool: "clippy"
+          extract: "lint rules"
+        - config: ".cargo/config.toml"
+          tool: "clippy"
+          section: "[lints.clippy]"
+      formatters:
+        - config: "rustfmt.toml"
+          tool: "rustfmt"
+          extract: "max_width, tab_spaces, edition"
+        - config: ".rustfmt.toml"
+          tool: "rustfmt"
+
+    java:
+      linters:
+        - config: "checkstyle.xml"
+          tool: "checkstyle"
+          extract: "modules, checks"
+        - config: "pmd-ruleset.xml"
+          tool: "pmd"
+      formatters:
+        - config: ".editorconfig"
+          tool: "editorconfig"
+          extract: "indent_style, indent_size"
+        - config: "google-java-format"
+          tool: "google-java-format"
+          note: "No config, opinionated formatter"
+
+    generic:
+      - config: ".editorconfig"
+        tool: "editorconfig"
+        extract: "indent_style, indent_size, end_of_line, charset"
+        applies_to: "all languages"
+
+# =============================================================================
+# STYLE TEMPLATES (defaults by language)
+# =============================================================================
+
+style_templates:
+  typescript:
+    naming:
+      files: "kebab-case"
+      functions: "camelCase"
+      variables: "camelCase"
+      constants: "UPPER_SNAKE_CASE"
+      types: "PascalCase"
+      interfaces: "PascalCase (no I prefix)"
+      enums: "PascalCase"
+      private: "_camelCase"
+    imports:
+      order: ["external", "internal", "relative"]
+      type_imports: "import type for types only"
+    formatting:
+      indent: 2
+      quotes: "double"
+      semicolons: true
+      trailing_comma: "es5"
+
+  python:
+    naming:
+      files: "snake_case"
+      functions: "snake_case"
+      variables: "snake_case"
+      constants: "UPPER_SNAKE_CASE"
+      classes: "PascalCase"
+      private: "_snake_case"
+      dunder: "__name__"
+    imports:
+      order: ["stdlib", "third_party", "local"]
+      style: "isort black profile"
+    formatting:
+      indent: 4
+      line_length: 88
+      quotes: "double"
+
+  go:
+    naming:
+      files: "snake_case"
+      functions: "camelCase (unexported), PascalCase (exported)"
+      variables: "camelCase"
+      constants: "camelCase or PascalCase"
+      types: "PascalCase"
+      interfaces: "PascalCase (often *er suffix)"
+      private: "unexported (lowercase)"
+    imports:
+      order: ["stdlib", "external", "internal"]
+      grouping: "goimports style"
+    formatting:
+      indent: "tabs"
+      enforced_by: "gofmt"
+
+  rust:
+    naming:
+      files: "snake_case"
+      functions: "snake_case"
+      variables: "snake_case"
+      constants: "UPPER_SNAKE_CASE"
+      types: "PascalCase"
+      traits: "PascalCase"
+      modules: "snake_case"
+    imports:
+      order: ["std", "external", "crate", "self"]
+      style: "use statements grouped"
+    formatting:
+      indent: 4
+      max_width: 100
+
+  java:
+    naming:
+      files: "PascalCase (match class name)"
+      methods: "camelCase"
+      variables: "camelCase"
+      constants: "UPPER_SNAKE_CASE"
+      classes: "PascalCase"
+      interfaces: "PascalCase"
+      packages: "lowercase"
+    imports:
+      order: ["java", "javax", "external", "internal"]
+      style: "no wildcard imports"
+    formatting:
+      indent: 4
+      braces: "same line"
+
+# =============================================================================
+# PROCEDURES
+# =============================================================================
+
+procedures:
+  discover:
+    description: "Discover code style from existing configs"
+    steps:
+      - step: "Detect primary language"
+        detail: |
+          Check for language indicator files in priority order.
+          May detect multiple languages (e.g., TypeScript + Python).
+
+      - step: "Find style tool configs"
+        detail: |
+          For detected language(s), search for linter/formatter configs.
+          Check both root directory and common locations.
+        commands:
+          - "ls -la .eslintrc* .prettierrc* tsconfig.json 2>/dev/null"
+          - "ls -la pyproject.toml ruff.toml .flake8 2>/dev/null"
+          - "ls -la .golangci.yml rustfmt.toml 2>/dev/null"
+
+      - step: "Extract style rules"
+        detail: |
+          Parse each config file to extract style rules:
+          - Naming conventions (if specified)
+          - Formatting rules (indent, quotes, line length)
+          - Linting rules (enabled/disabled)
+          - Import ordering rules
+
+      - step: "Merge with defaults"
+        detail: |
+          Start with language template from style_templates.
+          Override with discovered rules from configs.
+          Mark each rule's source (default vs discovered).
+
+      - step: "Present discovered style"
+        detail: |
+          Show discovered configuration:
+
+          ## Discovered Code Style
+
+          **Language:** TypeScript
+          **Confidence:** High (eslint + prettier found)
+
+          ### Tools Found
+          | Tool | Config | Status |
+          |------|--------|--------|
+          | eslint | .eslintrc.json | Found |
+          | prettier | .prettierrc | Found |
+          | typescript | tsconfig.json | Found |
+
+          ### Style Rules
+          | Category | Rule | Source |
+          |----------|------|--------|
+          | Indent | 2 spaces | .prettierrc |
+          | Quotes | single | .prettierrc |
+          | Semicolons | yes | .prettierrc |
+          | Naming | camelCase | default |
+
+          **Save this configuration?** [Confirm / Adjust]
+
+  learn:
+    description: "Learn code style from actual code"
+    steps:
+      - step: "Sample source files"
+        detail: |
+          Select representative files from codebase:
+          - Prefer files with most imports (likely well-structured)
+          - Prefer files recently modified (current style)
+          - Exclude generated files, tests, vendor
+
+      - step: "Analyze naming patterns"
+        detail: |
+          For each file, extract:
+          - File naming pattern
+          - Function/method names → infer convention
+          - Variable names → infer convention
+          - Class/type names → infer convention
+          - Constant names → infer convention
+
+          Count occurrences of each pattern to determine dominant style.
+
+      - step: "Analyze import patterns"
+        detail: |
+          Extract import statements and analyze:
+          - Grouping patterns (stdlib, external, internal)
+          - Blank line conventions between groups
+          - Sorting within groups (alphabetical?)
+          - Type import usage (TypeScript)
+
+      - step: "Analyze formatting patterns"
+        detail: |
+          Detect formatting from actual code:
+          - Indentation (tabs vs spaces, width)
+          - Quote style (single vs double)
+          - Semicolon usage
+          - Trailing comma usage
+          - Line length tendencies
+          - Blank line patterns
+
+      - step: "Build inferred style"
+        detail: |
+          Combine analyses to build style config.
+          Note confidence for each rule based on consistency.
+
+          ## Inferred Code Style
+
+          **Method:** Code analysis (47 files)
+          **Confidence:** Medium
+
+          ### Naming Conventions (inferred)
+          | Pattern | Examples | Confidence |
+          |---------|----------|------------|
+          | Functions: camelCase | getData, parseUser | 95% (142/150) |
+          | Classes: PascalCase | UserService, DataLoader | 100% (23/23) |
+          | Constants: UPPER_SNAKE | MAX_RETRIES, API_URL | 87% (13/15) |
+
+          ### Formatting (inferred)
+          | Rule | Detected | Confidence |
+          |------|----------|------------|
+          | Indent | 2 spaces | 100% |
+          | Quotes | single | 78% |
+          | Semicolons | yes | 100% |
+
+          **Save this configuration?** [Confirm / Adjust]
+
+  check:
+    description: "Validate code follows style"
+    steps:
+      - step: "Load style configuration"
+        detail: |
+          Read saved style from skills-config.yaml.
+          Or run discover/learn if not configured.
+
+      - step: "Run language-specific linters"
+        detail: |
+          Execute appropriate tools:
+
+          TypeScript:
+          - npx eslint .
+          - npx prettier --check .
+
+          Python:
+          - ruff check .
+          - black --check .
+
+          Go:
+          - golangci-lint run
+          - gofmt -d .
+
+          Rust:
+          - cargo clippy
+          - cargo fmt --check
+
+      - step: "Collect violations"
+        detail: |
+          Parse linter output to extract:
+          - File and line number
+          - Rule violated
+          - Severity (error, warning)
+          - Suggested fix
+
+      - step: "Report results"
+        detail: |
+          ## Code Style Check
+
+          **Status:** FAIL (7 violations)
+
+          ### Violations
+
+          | File | Line | Rule | Message |
+          |------|------|------|---------|
+          | src/user.ts | 15 | @typescript-eslint/naming-convention | Variable 'UserData' should be camelCase |
+          | src/api.ts | 42 | prettier/prettier | Replace double quotes with single quotes |
+
+          ### Summary
+          - Errors: 2
+          - Warnings: 5
+
+          Run `npx eslint . --fix` to auto-fix 5 violations.
+
+  guide:
+    description: "Mindset + style guidance when writing code"
+    steps:
+      - step: "Load context"
+        detail: |
+          Understand what the user is about to write:
+          - New function? Class? Module?
+          - Which layer (domain, infrastructure, application)?
+          - What problem being solved?
+
+      - step: "Present mindset primer"
+        detail: |
+          ## Code Mindset
+
+          You are entering a code field.
+
+          Before you write:
+          - What are you assuming about the input?
+          - What are you assuming about the environment?
+          - What would break this?
+          - What would a malicious caller do?
+          - What would a tired maintainer misunderstand?
+
+          Do not:
+          - Write code before stating assumptions
+          - Handle the happy path and gesture at the rest
+          - Produce code you wouldn't want to debug at 3am
+
+          The question is not "Does this work?" but
+          "Under what conditions does this work?"
+
+      - step: "Present applicable style rules"
+        detail: |
+          Based on context, show relevant style rules:
+
+          ### Style for TypeScript Functions
+
+          **Naming:**
+          - Use camelCase: `getUserData`, `parseResponse`
+          - Prefix with verb: `get*`, `fetch*`, `parse*`, `build*`
+
+          **Parameters:**
+          - Context first if needed: `(ctx: Context, ...)`
+          - Options object for 3+ params: `(options: GetUserOptions)`
+
+          **Return:**
+          - Blank line before return
+          - Use Result pattern for fallible operations
+
+          **Example:**
+          ```typescript
+          async function fetchUserData(
+            ctx: Context,
+            userId: string
+          ): Promise<UserResult> {
+            if (!userId) {
+              return { success: false, error: "userId required" };
+            }
+
+            const data = await api.getUser(ctx, userId);
+
+            return { success: true, data };
+          }
+          ```
+
+# =============================================================================
+# MINDSET (language-agnostic)
+# =============================================================================
+
+mindset:
+  primer: |
+    You are entering a code field.
+
+    Code is frozen thought. The bugs live where the thinking stopped too soon.
+
+    Notice the completion reflex:
+    - The urge to produce something that runs
+    - The pattern-match to similar problems you've seen
+    - The assumption that compiling is correctness
+    - The satisfaction of "it works" before "it works in all cases"
+
+    Before you write:
+    - What are you assuming about the input?
+    - What are you assuming about the environment?
+    - What would break this?
+    - What would a malicious caller do?
+    - What would a tired maintainer misunderstand?
+
+    Do not:
+    - Write code before stating assumptions
+    - Claim correctness you haven't verified
+    - Handle the happy path and gesture at the rest
+    - Import complexity you don't need
+    - Solve problems you weren't asked to solve
+    - Produce code you wouldn't want to debug at 3am
+
+    The tests you didn't write are the bugs you'll ship.
+    The assumptions you didn't state are the docs you'll need.
+    The edge cases you didn't name are the incidents you'll debug.
+
+  patterns:
+    - id: assumptions-first
+      description: "State assumptions about inputs, environment, and callers before writing code"
+
+    - id: edge-cases-before-happy-path
+      description: "Enumerate edge cases and failure modes before implementing"
+
+    - id: smaller-than-instinct
+      description: "The first implementation is usually larger than necessary"
+
+    - id: defend-what-you-write
+      description: "If you can't explain why a line is correct, don't write it"
+
+  anti_patterns:
+    - id: completion-reflex
+      description: "Rushing to produce running code before understanding"
+      why_bad: "Running code that handles 80% of cases ships bugs for the other 20%"
+
+    - id: pattern-matching
+      description: "Copying similar code without understanding context differences"
+      why_bad: "Similar problems have different edge cases"
+
+    - id: happy-path-only
+      description: "Implementing success case and 'handling errors later'"
+      why_bad: "Error handling written later is error handling written never"
+
+    - id: premature-abstraction
+      description: "Creating abstractions before the second use case"
+      why_bad: "Premature abstractions encode wrong assumptions"
+
+# =============================================================================
+# EXAMPLES
+# =============================================================================
+
+examples:
+  - name: Discover TypeScript style
+    request: "/code discover"
+    flow: |
+      1. Detect language: TypeScript (tsconfig.json)
+      2. Find configs: .eslintrc.json, .prettierrc
+      3. Extract rules: indent=2, quotes=single, semi=true
+      4. Merge with defaults
+      5. Present: "Found eslint + prettier, 2 spaces, single quotes"
+
+  - name: Learn from codebase
+    request: "/code learn --analyze"
+    flow: |
+      1. Sample 50 TypeScript files
+      2. Analyze: camelCase functions (95%), PascalCase types (100%)
+      3. Detect: 2-space indent, single quotes, semicolons
+      4. Present inferred style with confidence scores
+
+  - name: Check code style
+    request: "/code check src/"
+    flow: |
+      1. Load saved style config
+      2. Run: npx eslint src/ && npx prettier --check src/
+      3. Collect 3 violations
+      4. Report with file, line, rule, fix suggestion
+
+  - name: Get coding guidance
+    request: "/code guide"
+    flow: |
+      1. Show mindset primer
+      2. Show relevant style rules for current context
+      3. Provide code example following style

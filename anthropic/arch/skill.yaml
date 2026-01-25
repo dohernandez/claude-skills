@@ -1,0 +1,805 @@
+name: arch
+kind: gate
+version: "1.0.0"
+description: "Architecture guidance and validation - check compliance or plan where new code belongs."
+severity: high
+tags:
+  - architecture
+  - enforcement
+  - planning
+  - patterns
+
+# Configuration from skills-config.yaml
+# ARCHITECTURE_STYLE is set via wizard, then auto-discovery fills the rest
+config_refs:
+  - ARCHITECTURE_STYLE  # hexagonal, layered, clean, mvc, custom (wizard)
+  # The following are auto-discovered after style selection:
+  - SOURCE_ROOT         # Discovered from directory structure
+  - LAYERS              # Discovered from directories + docs
+
+purpose: |
+  Four modes for architecture management:
+
+  1. DISCOVER MODE (/arch discover) - Setup
+     User selects ARCHITECTURE_STYLE, then skill auto-discovers project structure
+     from documentation and config files. Proposes layers for confirmation.
+
+  2. LEARN MODE (/arch learn) - Analysis
+     Analyze actual code import patterns to infer architecture.
+     Can also parse natural language descriptions or learn from examples.
+     Generates drift report comparing actual vs documented architecture.
+
+  3. CHECK MODE (/arch check) - Validation
+     Validate that code follows architecture layer boundaries.
+     Detect import violations, circular dependencies, and anti-patterns.
+
+  4. PLAN MODE (/arch plan <description>) - Guidance
+     Given a description of new functionality, suggest which layer(s) it belongs in.
+     Explain the reasoning based on layer responsibilities.
+     Used by developer skill to route implementation.
+
+# Auto-discovery sources for architecture documentation
+discovery_sources:
+  # Priority order - first match wins for architecture description
+  documentation:
+    - path: "CLAUDE.md"
+      pattern: "(?i)(architecture|layers?|structure)"
+      extract: "Look for Architecture section or layer descriptions"
+
+    - path: "README.md"
+      pattern: "(?i)(architecture|project structure|layers)"
+      extract: "Look for Architecture or Project Structure section"
+
+    - path: "docs/architecture.md"
+      extract: "Full architecture documentation"
+
+    - path: "docs/ARCHITECTURE.md"
+      extract: "Full architecture documentation"
+
+    - path: "docs/ADR/*.md"
+      extract: "Architecture Decision Records for historical context"
+
+  # Config files that encode architecture rules (language-specific)
+  config_files:
+    # === Language Detection ===
+    # First detect primary language to know which configs to check
+    language_detection:
+      - indicator: "go.mod"
+        language: go
+      - indicator: "pyproject.toml"
+        language: python
+      - indicator: "setup.py"
+        language: python
+      - indicator: "package.json"
+        language: javascript
+      - indicator: "tsconfig.json"
+        language: typescript
+      - indicator: "Cargo.toml"
+        language: rust
+      - indicator: "build.gradle"
+        language: java
+      - indicator: "pom.xml"
+        language: java
+
+    # === TypeScript/JavaScript ===
+    typescript:
+      - path: "tsconfig.json"
+        extract: "compilerOptions.paths - path aliases often mirror layers"
+        example: |
+          "@domain/*": ["src/domain/*"]
+          "@infra/*": ["src/infrastructure/*"]
+
+      - path: ".eslintrc*"
+        extract: "import/no-restricted-paths rules"
+
+      - path: ".dependency-cruiser.js"
+        extract: "forbidden dependency rules"
+
+      - path: "package.json"
+        extract: "workspaces for monorepo structure"
+
+    # === Python ===
+    python:
+      - path: "pyproject.toml"
+        extract: "tool.poetry.packages or project structure, import-linter config"
+        example: |
+          [tool.importlinter]
+          root_package = "myapp"
+          [[tool.importlinter.contracts]]
+          name = "Domain independence"
+          type = "independence"
+          modules = ["myapp.domain"]
+
+      - path: ".importlinter"
+        extract: "Layer contracts and forbidden imports"
+
+      - path: "setup.cfg"
+        extract: "packages and package_dir for structure"
+
+      - path: "mypy.ini"
+        extract: "per-module settings reveal boundaries"
+
+      - path: "tox.ini"
+        extract: "testenvs often mirror layer structure"
+
+    # === Go ===
+    go:
+      - path: "go.mod"
+        extract: "module name reveals package structure"
+        note: "Go uses internal/ convention for private packages"
+
+      - path: "go.work"
+        extract: "workspace members for monorepo"
+
+      - path: ".golangci.yml"
+        extract: "depguard rules define allowed imports per package"
+        example: |
+          linters-settings:
+            depguard:
+              rules:
+                domain:
+                  files: ["$all"]
+                  deny:
+                    - pkg: "myapp/infrastructure"
+                      desc: "domain cannot import infrastructure"
+
+    # === Rust ===
+    rust:
+      - path: "Cargo.toml"
+        extract: "workspace.members for monorepo structure"
+
+      - path: ".cargo/config.toml"
+        extract: "alias paths"
+
+    # === Java/Kotlin ===
+    java:
+      - path: "build.gradle"
+        extract: "subprojects/modules define layers"
+
+      - path: "pom.xml"
+        extract: "modules for multi-module structure"
+
+      - path: "archunit.properties"
+        extract: "ArchUnit layer rules"
+
+    # === Language-Agnostic ===
+    generic:
+      - path: "Makefile"
+        extract: "targets often mirror layer structure (build-domain, build-infra)"
+
+      - path: "docker-compose.yml"
+        extract: "services may represent architectural boundaries"
+
+      - path: "justfile"
+        extract: "recipes may mirror layer structure"
+
+      - path: ".pre-commit-config.yaml"
+        extract: "hooks may reveal structure"
+
+  # Fallback: scan directory structure
+  directory_scan:
+    locations:
+      - "src/"
+      - "lib/"
+      - "app/"
+      - "packages/"
+    match_against_template: true  # Compare found dirs to architecture_templates
+
+owns:
+  - "Layer boundary enforcement"
+  - "Import direction validation"
+  - "Architecture planning guidance"
+  - "Pattern compliance checking"
+
+modes:
+  discover:
+    description: "Auto-discover project architecture from docs/configs (run during setup)"
+    trigger: "/arch discover"
+    inputs:
+      - style: "Architecture style selected by user"
+    outputs:
+      - source_root: "Discovered source root directory"
+      - layers: "Discovered layer configuration"
+      - confidence: "How confident the discovery is"
+      - sources_used: "Which sources provided information"
+
+  learn:
+    description: "Learn architecture from code analysis or provided description"
+    trigger: "/arch learn [--analyze | --from <description> | --example <path>=<layer>]"
+    options:
+      analyze:
+        description: "Analyze actual import patterns to infer architecture"
+        flag: "--analyze"
+      from_description:
+        description: "Parse a natural language description of the architecture"
+        flag: "--from <text>"
+        example: '/arch learn --from "We use clean architecture with entities, use cases, and adapters"'
+      from_examples:
+        description: "Learn from labeled examples"
+        flag: "--example <path>=<layer>"
+        example: '/arch learn --example "src/domain/user.py=domain" --example "src/api/routes.py=application"'
+    outputs:
+      - inferred_layers: "Layers inferred from analysis"
+      - import_graph: "Summary of import relationships"
+      - drift_report: "Differences between documented and actual architecture"
+      - confidence: "How confident the inference is"
+
+  check:
+    description: "Validate architecture compliance"
+    trigger: "/arch check"
+    outputs:
+      - violations: "List of import violations"
+      - circular: "Circular dependency warnings"
+      - status: "PASS or FAIL"
+
+  plan:
+    description: "Suggest where new code should go"
+    trigger: "/arch plan <description>"
+    inputs:
+      - description: "What the new code does"
+    outputs:
+      - layers: "Which layer(s) the code belongs in"
+      - reasoning: "Why each layer was chosen"
+      - files: "Suggested file locations"
+
+# Default layer configurations by architecture style
+# User selects style in wizard, then customizes if needed
+architecture_templates:
+  hexagonal:
+    description: "Ports & Adapters - domain at center, infrastructure as adapters"
+    layers:
+      - name: config
+        level: 0
+        path: "${SOURCE_ROOT}config/"
+        responsibility: "Configuration, environment variables, schemas"
+        can_import: [external]
+        keywords: [config, env, settings, schema, validation]
+
+      - name: domain
+        level: 1
+        path: "${SOURCE_ROOT}domain/"
+        responsibility: "Core business logic, entities, value objects, business rules"
+        can_import: [config, external]
+        keywords: [entity, model, business, rule, logic, value object]
+
+      - name: infrastructure
+        level: 2
+        path: "${SOURCE_ROOT}infrastructure/"
+        responsibility: "External integrations, adapters, ports (database, APIs, messaging)"
+        can_import: [config, domain, external]
+        keywords: [database, api, client, adapter, port, repository, external]
+
+      - name: application
+        level: 3
+        path: "${SOURCE_ROOT}application/"
+        responsibility: "Use cases, services, orchestration, handlers"
+        can_import: [config, domain, infrastructure, external]
+        keywords: [service, handler, use case, orchestration, workflow]
+
+  layered:
+    description: "Traditional layered architecture"
+    layers:
+      - name: data
+        level: 0
+        path: "${SOURCE_ROOT}data/"
+        responsibility: "Data access, repositories, database operations"
+        can_import: [external]
+        keywords: [repository, database, query, persistence]
+
+      - name: business
+        level: 1
+        path: "${SOURCE_ROOT}business/"
+        responsibility: "Business logic, services, rules"
+        can_import: [data, external]
+        keywords: [service, logic, rule, validation]
+
+      - name: presentation
+        level: 2
+        path: "${SOURCE_ROOT}presentation/"
+        responsibility: "UI, API endpoints, controllers"
+        can_import: [business, data, external]
+        keywords: [controller, endpoint, view, api, route]
+
+  clean:
+    description: "Clean Architecture - entities at center, use cases, then adapters"
+    layers:
+      - name: entities
+        level: 0
+        path: "${SOURCE_ROOT}entities/"
+        responsibility: "Enterprise business rules, core entities"
+        can_import: [external]
+        keywords: [entity, core, business rule]
+
+      - name: usecases
+        level: 1
+        path: "${SOURCE_ROOT}usecases/"
+        responsibility: "Application business rules, use case interactors"
+        can_import: [entities, external]
+        keywords: [use case, interactor, application logic]
+
+      - name: adapters
+        level: 2
+        path: "${SOURCE_ROOT}adapters/"
+        responsibility: "Interface adapters, controllers, presenters, gateways"
+        can_import: [usecases, entities, external]
+        keywords: [controller, presenter, gateway, adapter]
+
+      - name: frameworks
+        level: 3
+        path: "${SOURCE_ROOT}frameworks/"
+        responsibility: "Frameworks, drivers, external tools"
+        can_import: [adapters, usecases, entities, external]
+        keywords: [framework, driver, web, database, external]
+
+  mvc:
+    description: "Model-View-Controller"
+    layers:
+      - name: models
+        level: 0
+        path: "${SOURCE_ROOT}models/"
+        responsibility: "Data models, business logic"
+        can_import: [external]
+        keywords: [model, data, entity]
+
+      - name: controllers
+        level: 1
+        path: "${SOURCE_ROOT}controllers/"
+        responsibility: "Request handling, orchestration"
+        can_import: [models, external]
+        keywords: [controller, handler, action]
+
+      - name: views
+        level: 1
+        path: "${SOURCE_ROOT}views/"
+        responsibility: "Presentation, templates, UI"
+        can_import: [models, external]
+        keywords: [view, template, ui, render]
+
+  custom:
+    description: "User-defined layers - customize in skill.yaml"
+    layers: []  # User fills in
+
+# Current project layers - populated from wizard or customized
+# This section is the source of truth for the current project
+layers: []  # Populated by wizard based on ARCHITECTURE_STYLE and LAYERS_CONFIG
+
+patterns:
+  - id: dependency-inversion
+    description: |
+      Inner layers should not depend on outer layers.
+      Imports flow inward: Application → Infrastructure → Domain → Config
+    enforcement: "Check import statements don't violate layer levels"
+
+  - id: single-responsibility
+    description: |
+      Each layer has a clear, single responsibility.
+      Don't mix concerns across layers.
+    enforcement: "Review new code placement against layer responsibilities"
+
+  - id: interface-segregation
+    description: |
+      Define interfaces at layer boundaries.
+      Higher layers depend on abstractions, not implementations.
+
+anti_patterns:
+  - id: domain-imports-outer
+    description: "Domain layer imports from infrastructure or application"
+    why_bad: "Violates dependency inversion. Domain should be pure and independent."
+    detection: "grep -r 'from.*infrastructure' ${SOURCE_ROOT}domain/"
+    fix: "Move dependency to outer layer or use dependency injection"
+
+  - id: circular-imports
+    description: "Module A imports B, B imports A"
+    why_bad: "Creates tight coupling and potential runtime issues"
+    detection: "Use dependency analysis tools"
+    fix: "Extract shared code to lower layer or use interfaces"
+
+  - id: layer-bypass
+    description: "Outer layer imports from non-adjacent inner layer"
+    why_bad: "Skips intermediate layers, creates hidden dependencies"
+    example: "Application directly importing from Config, bypassing Domain"
+    fix: "Route through intermediate layers or reconsider architecture"
+
+  - id: god-module
+    description: "Single module doing too many things across concerns"
+    why_bad: "Violates single responsibility, hard to maintain and test"
+    detection: "File > 500 lines or many unrelated functions"
+    fix: "Split into focused modules in appropriate layers"
+
+procedures:
+  discover:
+    description: "Auto-discover project architecture based on selected style"
+    steps:
+      - step: "Get architecture style from user"
+        detail: |
+          User selects ARCHITECTURE_STYLE from wizard:
+          - hexagonal, layered, clean, mvc, custom
+
+      - step: "Search for architecture documentation"
+        detail: |
+          Check discovery_sources.documentation in priority order:
+          1. CLAUDE.md - Look for Architecture section
+          2. README.md - Look for Project Structure section
+          3. docs/architecture.md or docs/ARCHITECTURE.md
+          4. docs/ADR/*.md - Architecture Decision Records
+
+          For each file found, extract:
+          - Layer names and descriptions
+          - Import rules if documented
+          - Directory structure
+        commands:
+          - "cat CLAUDE.md 2>/dev/null | grep -A 50 -i 'architecture\\|structure\\|layers'"
+          - "cat README.md 2>/dev/null | grep -A 50 -i 'architecture\\|structure\\|layers'"
+
+      - step: "Check config files for architecture rules"
+        detail: |
+          Check discovery_sources.config_files:
+          1. tsconfig.json - Extract paths (path aliases = layers)
+          2. .eslintrc* - Extract import/no-restricted-paths rules
+          3. .dependency-cruiser.js - Extract forbidden rules
+          4. package.json - Check for workspaces (monorepo)
+        commands:
+          - "cat tsconfig.json 2>/dev/null | jq '.compilerOptions.paths // empty'"
+          - "cat .eslintrc.json 2>/dev/null | jq '.rules[\"import/no-restricted-paths\"] // empty'"
+
+      - step: "Scan directory structure"
+        detail: |
+          If documentation doesn't fully define layers, scan directories:
+          1. Find source root: src/, lib/, app/, packages/
+          2. List top-level directories
+          3. Match against architecture_templates for selected style
+
+          For hexagonal style, look for:
+          - config/, domain/, infrastructure/, application/
+          - Or: core/, adapters/, ports/
+
+          For layered style, look for:
+          - data/, business/, presentation/
+          - Or: models/, services/, controllers/
+        commands:
+          - "ls -d src/*/ 2>/dev/null || ls -d lib/*/ 2>/dev/null || ls -d app/*/ 2>/dev/null"
+
+      - step: "Build layer configuration"
+        detail: |
+          Combine information from all sources:
+          1. Use documented layers if found
+          2. Fill gaps from directory scan
+          3. Apply default rules from architecture_templates
+          4. Assign levels based on dependency direction
+
+      - step: "Calculate confidence score"
+        detail: |
+          Confidence based on sources:
+          - High: Architecture documented in CLAUDE.md/README.md
+          - Medium: Inferred from config files (tsconfig, eslint)
+          - Low: Only directory structure scan
+
+      - step: "Present to user for confirmation"
+        detail: |
+          Show discovered configuration:
+
+          ## Discovered Architecture
+
+          **Style:** ${ARCHITECTURE_STYLE}
+          **Source Root:** ${SOURCE_ROOT}
+          **Confidence:** ${confidence}
+
+          ### Layers (lowest → highest)
+
+          | Level | Name | Path | Responsibility |
+          |-------|------|------|----------------|
+          | 0 | domain | src/domain/ | Core business logic |
+          | 1 | infrastructure | src/infrastructure/ | External integrations |
+          | 2 | application | src/application/ | Use cases, orchestration |
+
+          ### Sources Used
+          - CLAUDE.md (Architecture section)
+          - tsconfig.json (path aliases)
+
+          **Is this correct?** [Confirm / Adjust]
+
+      - step: "Save to skills-config.yaml"
+        detail: |
+          On user confirmation, save:
+          - SOURCE_ROOT
+          - LAYERS (as structured data)
+
+          On adjustment, let user modify and re-confirm.
+
+  learn:
+    description: "Learn architecture from code analysis or provided description"
+    steps:
+      - step: "Determine learning mode"
+        detail: |
+          Parse command to determine mode:
+          - --analyze: Analyze actual import patterns
+          - --from <text>: Parse natural language description
+          - --example <path>=<layer>: Learn from labeled examples
+          - No flag: Default to --analyze
+
+      - step: "Build import graph (for --analyze)"
+        detail: |
+          Scan all source files and extract imports:
+
+          For Python:
+            - Parse `import x` and `from x import y` statements
+            - Resolve relative imports to absolute paths
+
+          For Go:
+            - Parse `import "path"` and `import ( ... )` blocks
+            - Map to package paths
+
+          For TypeScript/JavaScript:
+            - Parse `import ... from '...'` and `require('...')`
+            - Resolve path aliases from tsconfig.json
+
+          Build directed graph: file → imports
+        commands:
+          # Python
+          - "grep -rh '^import\\|^from .* import' --include='*.py' ${SOURCE_ROOT}"
+          # Go
+          - "grep -rh '^import' --include='*.go' ${SOURCE_ROOT}"
+          # TypeScript/JavaScript
+          - "grep -rh \"import.*from\\|require(\" --include='*.ts' --include='*.js' ${SOURCE_ROOT}"
+
+      - step: "Identify module clusters"
+        detail: |
+          Group files by directory (potential layers).
+          For each directory, calculate:
+          - Inbound imports: How many other modules import from this one?
+          - Outbound imports: How many other modules does this one import?
+          - Internal cohesion: How much do files within import each other?
+
+      - step: "Infer layer levels"
+        detail: |
+          Apply heuristics to determine layer ordering:
+
+          Lower layers (level 0, 1):
+          - High inbound imports (many depend on them)
+          - Low outbound imports (few dependencies)
+          - Examples: domain/, models/, entities/
+
+          Higher layers (level 2, 3):
+          - Low inbound imports (few depend on them)
+          - High outbound imports (orchestrate others)
+          - Examples: application/, handlers/, controllers/
+
+          Middle layers:
+          - Moderate both directions
+          - Examples: infrastructure/, services/, adapters/
+
+          Formula: layer_level ∝ outbound_imports / inbound_imports
+
+      - step: "Detect cycles and violations"
+        detail: |
+          Find circular dependencies in the import graph.
+          Identify imports that go "backwards" (higher → lower should not import lower → higher).
+
+          Report:
+          - Cycles: A → B → C → A
+          - Backward imports: domain/ imports from application/
+
+      - step: "Parse description (for --from)"
+        detail: |
+          Extract architecture information from natural language:
+
+          Keywords to detect:
+          - Layer names: "domain", "infrastructure", "application", "core", "adapters"
+          - Architecture styles: "hexagonal", "clean architecture", "layered", "DDD"
+          - Relationships: "depends on", "imports from", "calls", "uses"
+          - Boundaries: "cannot import", "isolated from", "independent"
+
+          Example input:
+          "We use hexagonal architecture. Domain is at the center and cannot
+          import infrastructure. Application orchestrates domain and infrastructure."
+
+          Parsed output:
+          - Style: hexagonal
+          - Layers: domain (L0), infrastructure (L1), application (L2)
+          - Rules: domain cannot import infrastructure
+
+      - step: "Learn from examples (for --example)"
+        detail: |
+          User provides labeled examples:
+          /arch learn --example "src/domain/user.py=domain" --example "src/api/routes.py=application"
+
+          From examples, infer:
+          1. Directory → layer mapping (src/domain/ = domain layer)
+          2. Analyze imports from example files to infer rules
+          3. Extrapolate to unlabeled files in same directories
+
+      - step: "Compare to documented architecture"
+        detail: |
+          If architecture is already configured (from /arch discover):
+          - Compare inferred layers to documented layers
+          - Generate drift report
+
+          Drift report format:
+          ```
+          ## Architecture Drift Report
+
+          ### Layer Mismatches
+          - src/domain/utils.py imports from infrastructure 12 times
+          - src/infrastructure/db.py imports from application 3 times
+
+          ### Undocumented Dependencies
+          - src/shared/ is imported by all layers (not in config)
+
+          ### Suggested Adjustments
+          - Add 'shared' as level 0 layer
+          - Move utils.py to infrastructure/
+          ```
+
+      - step: "Present inferred architecture"
+        detail: |
+          Show the learned architecture:
+
+          ## Inferred Architecture
+
+          **Method:** Import analysis
+          **Confidence:** Medium (no docs, inferred from code)
+
+          ### Detected Layers
+
+          | Level | Directory | Inbound | Outbound | Role |
+          |-------|-----------|---------|----------|------|
+          | 0 | src/domain/ | 47 | 3 | Core (most depended on) |
+          | 1 | src/infrastructure/ | 23 | 15 | Middle (adapters) |
+          | 2 | src/application/ | 5 | 38 | Orchestrator |
+
+          ### Import Graph Summary
+          ```
+          domain ← infrastructure ← application
+                 ↖________________↙
+          ```
+
+          ### Cycles Detected: 2
+          1. src/infra/cache.py ↔ src/infra/db.py
+          2. src/app/service.py → src/domain/user.py → src/app/utils.py
+
+          **Save this configuration?** [Confirm / Adjust]
+
+      - step: "Save learned configuration"
+        detail: |
+          On confirmation, save inferred architecture to skills-config.yaml.
+          Mark as "learned" vs "documented" for future reference.
+
+  check:
+    description: "Validate architecture compliance"
+    steps:
+      - step: "Load layer configuration"
+        detail: |
+          Read ARCHITECTURE_STYLE and LAYERS from skills-config.yaml.
+          Apply the appropriate template from architecture_templates.
+
+      - step: "Scan imports"
+        detail: |
+          For each source file, extract import statements.
+          Determine which layer the file belongs to.
+          Check if imports violate layer rules.
+
+      - step: "Detect circular dependencies"
+        detail: |
+          Build dependency graph.
+          Find cycles using graph traversal.
+
+      - step: "Report violations"
+        detail: |
+          List each violation with:
+          - File path
+          - Violating import
+          - Rule violated
+          - Suggested fix
+
+      - step: "Return status"
+        detail: "PASS if no violations, FAIL otherwise"
+
+  plan:
+    description: "Suggest where new code belongs"
+    steps:
+      - step: "Parse description"
+        detail: |
+          Extract keywords from the description.
+          Identify the type of functionality (data, logic, integration, UI, etc.)
+
+      - step: "Match to layers"
+        detail: |
+          For each layer, check if description matches layer responsibility.
+          Use keywords and responsibility text for matching.
+
+      - step: "Determine layer(s)"
+        detail: |
+          Primary layer: Best match for core responsibility
+          Secondary layers: Supporting functionality if needed
+
+      - step: "Suggest file locations"
+        detail: |
+          Based on layer path and naming conventions, suggest file paths.
+          Consider existing similar files as examples.
+
+      - step: "Explain reasoning"
+        detail: |
+          For each suggested layer, explain:
+          - Why this layer (responsibility match)
+          - What belongs here vs other layers
+          - Any cross-cutting concerns
+
+examples:
+  - name: Check mode - clean architecture
+    request: "/arch check"
+    flow: |
+      1. Load hexagonal architecture config
+      2. Scan src/domain/ for imports from src/infrastructure/
+      3. Find: src/domain/user.ts imports from src/infrastructure/db
+      4. Report violation: "Domain imports Infrastructure - violates layer boundary"
+      5. Status: FAIL
+
+  - name: Plan mode - new feature
+    request: "/arch plan Add user authentication with JWT tokens"
+    flow: |
+      1. Parse: "user authentication", "JWT tokens"
+      2. Match keywords:
+         - "user" → domain (entity)
+         - "authentication" → application (use case)
+         - "JWT tokens" → infrastructure (external integration)
+      3. Suggest layers:
+         - Domain: User entity, AuthToken value object
+         - Infrastructure: JWTProvider adapter
+         - Application: AuthenticationService use case
+      4. Output: Multi-layer implementation needed
+
+  - name: Plan mode - simple addition
+    request: "/arch plan Add email validation"
+    flow: |
+      1. Parse: "email validation"
+      2. Match keywords:
+         - "email" → domain (value object)
+         - "validation" → domain (business rule)
+      3. Suggest layers:
+         - Domain: EmailAddress value object with validation
+      4. Output: Single layer - Domain
+
+handoffs:
+  - skill: developer
+    when: "After /arch plan provides layer suggestions"
+    provides: "layer assignments for implementation routing"
+
+  - skill: code
+    when: "Implementing suggested file structure"
+    provides: "file locations and naming"
+
+customization_guide: |
+  To customize this skill for your project:
+
+  1. During wizard, select ARCHITECTURE_STYLE:
+     - hexagonal: Ports & Adapters (recommended for complex domains)
+     - layered: Traditional layers (simple projects)
+     - clean: Clean Architecture (enterprise applications)
+     - mvc: Model-View-Controller (web applications)
+     - custom: Define your own layers
+
+  2. Set SOURCE_ROOT to your source directory (e.g., "src/")
+
+  3. For custom layers or modifications, edit this skill.yaml file:
+     - Add/modify entries in the `layers` section
+     - Update `architecture_templates` if creating a reusable pattern
+     - Add project-specific `anti_patterns`
+
+  Example custom layer:
+  ```yaml
+  layers:
+    - name: shared
+      level: 0
+      path: "${SOURCE_ROOT}shared/"
+      responsibility: "Shared utilities and types"
+      can_import: [external]
+      keywords: [util, helper, type, common]
+  ```
+
+  4. For cross-cutting concerns (like logging), add exceptions:
+  ```yaml
+  cross_cutting_exceptions:
+    - module: "infrastructure/logger"
+      allowed_in: [domain, infrastructure, application]
+      reason: "Logging is a cross-cutting concern"
+  ```

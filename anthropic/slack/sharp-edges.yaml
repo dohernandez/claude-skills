@@ -1,0 +1,173 @@
+description: |
+  Common pitfalls when working with Slack API and how to avoid them.
+
+edges:
+  - id: missing-env-vars
+    title: Missing Environment Variables
+    severity: high
+    symptom: |
+      API calls fail with "invalid_auth" or empty responses.
+      curl returns error about undefined variable.
+    root_cause: |
+      SLACK_BOT_TOKEN or SLACK_CHANNEL_ID not configured in .env file.
+    prevention: |
+      Always run verify_access procedure before using Slack API.
+      Check env vars with: grep -E '^SLACK_' .env
+    resolution:
+      - Check if .env file exists
+      - Verify SLACK_BOT_TOKEN is set (starts with xoxb-)
+      - Verify SLACK_CHANNEL_ID is set (starts with C)
+
+  - id: token-not-sourced
+    title: Environment Variables Not Sourced
+    severity: high
+    symptom: |
+      API calls fail even though env vars are in .env file.
+      curl command shows literal "$SLACK_BOT_TOKEN" instead of value.
+    root_cause: |
+      Forgot to run "source .env" before using env vars.
+    prevention: |
+      Always source .env before API calls.
+    example:
+      bad: |
+        curl -H "Authorization: Bearer $SLACK_BOT_TOKEN" ...
+        # Token is empty because .env wasn't sourced
+      good: |
+        source .env
+        curl -H "Authorization: Bearer $SLACK_BOT_TOKEN" ...
+
+  - id: channel-name-instead-of-id
+    title: Using Channel Name Instead of ID
+    severity: high
+    symptom: |
+      API returns "channel_not_found" error.
+    root_cause: |
+      Slack API requires channel ID (C0XXXXXXXX), not channel name (#alerts).
+    prevention: |
+      Always use channel ID from env var or MCP, not channel name.
+      Get ID: Right-click channel > View details > Copy ID at bottom.
+    example:
+      bad: |
+        curl "...?channel=#alerts"
+      good: |
+        curl "...?channel=$SLACK_CHANNEL_ID"  # C0XXXXXXXX
+
+  - id: not-checking-ok-field
+    title: Not Checking API Response
+    severity: medium
+    symptom: |
+      Code proceeds with empty or invalid data.
+      Errors appear later with confusing messages.
+    root_cause: |
+      Slack API returns 200 OK even on errors, with ok=false in body.
+    prevention: |
+      Always check .ok field in response before using data.
+    example:
+      bad: |
+        curl -s "..." | jq '.messages'  # May be null if ok=false
+      good: |
+        RESPONSE=$(curl -s "...")
+        if [ "$(echo $RESPONSE | jq -r '.ok')" = "true" ]; then
+          echo $RESPONSE | jq '.messages'
+        else
+          echo "Error: $(echo $RESPONSE | jq -r '.error')"
+        fi
+
+  - id: rate-limiting
+    title: Hitting Rate Limits
+    severity: medium
+    symptom: |
+      API returns "ratelimited" error.
+      Requests start failing after working initially.
+    root_cause: |
+      Too many API calls in short time period.
+      Slack limits vary by endpoint (usually 1-50 req/min).
+    prevention: |
+      - Add delays between calls (sleep 1)
+      - Cache results when possible
+      - Use larger limit parameter to reduce calls
+    resolution:
+      - Wait for rate limit to reset (usually 1 minute)
+      - Reduce call frequency
+
+  - id: timestamp-format
+    title: Wrong Timestamp Format
+    severity: medium
+    symptom: |
+      Time-based queries return no results or wrong time range.
+    root_cause: |
+      Slack uses Unix epoch timestamps (seconds since 1970), not ISO format.
+      The ts field format is "1706123456.789012".
+    prevention: |
+      Convert human-readable times to Unix epoch for oldest/latest params.
+    example:
+      bad: |
+        curl "...?oldest=2026-01-24T14:00:00Z"
+      good: |
+        # macOS
+        OLDEST=$(date -j -f "%Y-%m-%d %H:%M:%S" "2026-01-24 14:00:00" "+%s")
+        # Linux
+        OLDEST=$(date -d "2026-01-24 14:00:00" "+%s")
+        curl "...?oldest=$OLDEST"
+
+  - id: bot-not-in-channel
+    title: Bot Not Added to Channel
+    severity: high
+    symptom: |
+      API returns "not_in_channel" error.
+    root_cause: |
+      The Slack bot must be explicitly added to channels to read/post.
+    prevention: |
+      Add bot to channel: /invite @BotName in the channel.
+    resolution:
+      - Go to target channel in Slack
+      - Type /invite @YourBotName
+      - Bot should now have access
+
+  - id: missing-scopes
+    title: Missing OAuth Scopes
+    severity: high
+    symptom: |
+      API returns "missing_scope" error.
+      Some operations work, others fail.
+    root_cause: |
+      Bot token doesn't have required permissions for the operation.
+    prevention: |
+      Ensure bot has required scopes:
+      - channels:history (read messages)
+      - channels:read (view channel info)
+      - chat:write (post messages)
+      - files:write (upload files)
+    resolution:
+      - Go to api.slack.com/apps > Your App > OAuth & Permissions
+      - Add missing scopes
+      - Reinstall app to workspace
+      - Get new bot token
+
+  - id: token-in-code
+    title: Hardcoded Token in Code
+    severity: critical
+    symptom: |
+      Token exposed in git history or logs.
+      Security vulnerability.
+    root_cause: |
+      Token written directly in code or committed to repository.
+    prevention: |
+      NEVER put tokens in code. Always use environment variables.
+      Add .env to .gitignore.
+    resolution:
+      - Remove token from code immediately
+      - Revoke compromised token in Slack
+      - Generate new token
+      - Use env vars properly
+
+  - id: mcp-vs-api-confusion
+    title: Mixing MCP and API Methods
+    severity: low
+    symptom: |
+      Inconsistent behavior between MCP tools and direct API calls.
+    root_cause: |
+      Using both MCP and direct API without checking which is available.
+    prevention: |
+      Use determine_access_method procedure to pick one method.
+      Prefer MCP if available, fall back to API otherwise.

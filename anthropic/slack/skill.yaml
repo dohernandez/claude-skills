@@ -1,0 +1,282 @@
+kind: utility
+ownership: engineering
+stop_hook: null
+
+description: |
+  Slack access for reading messages and posting notifications.
+  Supports MCP server (recommended) or direct API via bot token.
+
+prerequisites:
+  tools:
+    - name: curl
+      description: Command-line HTTP client (for API method)
+      check_command: curl --version
+      required: false
+
+    - name: jq
+      description: JSON processor for parsing Slack API responses
+      check_command: jq --version
+      install_command: brew install jq  # or: apt install jq
+      required: false
+
+  authentication:
+    mcp:
+      description: Slack MCP server (recommended)
+      check: Look for slack-related MCP tools in available tools
+      required: false
+
+    bot_token:
+      description: Slack Bot authentication for API access
+      env_vars:
+        - name: SLACK_BOT_TOKEN
+          description: Bot User OAuth Token
+          format: xoxb-...
+          location: .env file
+          how_to_get: |
+            1. Go to https://api.slack.com/apps
+            2. Select your app (or create one)
+            3. Go to OAuth & Permissions
+            4. Copy "Bot User OAuth Token"
+          required_scopes:
+            - channels:history
+            - channels:read
+            - chat:write
+            - files:write
+
+        - name: SLACK_CHANNEL_ID
+          description: Default channel ID
+          format: C0XXXXXXXX
+          location: .env file
+          how_to_get: |
+            Right-click channel > View details > Copy ID at bottom
+
+inputs:
+  - name: channel
+    description: Channel ID or name (if using MCP)
+    required: false
+
+  - name: limit
+    description: Number of messages to fetch
+    required: false
+    default: 10
+
+  - name: time_range
+    description: Time range for message retrieval
+    required: false
+    examples:
+      - "last 30 minutes"
+      - "last 1 hour"
+
+  - name: message
+    description: Message text to post
+    required: false
+
+  - name: severity
+    description: Alert severity for posted messages
+    required: false
+    examples:
+      - ERROR
+      - WARN
+      - INFO
+
+outputs:
+  - name: messages
+    description: Retrieved messages from channel
+
+  - name: post_result
+    description: Result of posting a message
+
+patterns:
+  access_methods:
+    - method: mcp
+      name: MCP Server
+      priority: 1
+      description: Use Slack MCP tools if available
+      check: Look for slack_* tools in available MCP tools
+
+    - method: api
+      name: Bot Token + API
+      priority: 2
+      description: Direct Slack API calls with bot token
+      check: grep -q "^SLACK_BOT_TOKEN=" .env
+
+    - method: manual
+      name: Manual copy-paste
+      priority: 3
+      description: User copies messages from Slack UI
+      check: Always available as fallback
+
+  alert_severities:
+    - level: ERROR
+      prefix: "[ERROR]"
+      description: Requires immediate attention
+
+    - level: WARN
+      prefix: "[WARN]"
+      description: Potential issue, monitor closely
+
+    - level: INFO
+      prefix: "[INFO]"
+      description: Informational, no action needed
+
+  api_endpoints:
+    conversations_history: "https://slack.com/api/conversations.history"
+    chat_postMessage: "https://slack.com/api/chat.postMessage"
+    auth_test: "https://slack.com/api/auth.test"
+
+  api_templates:
+    fetch_messages: |
+      source .env
+      curl -s -H "Authorization: Bearer $SLACK_BOT_TOKEN" \
+        "https://slack.com/api/conversations.history?channel=$SLACK_CHANNEL_ID&limit={limit}"
+
+    post_message: |
+      source .env
+      curl -s -X POST -H "Authorization: Bearer $SLACK_BOT_TOKEN" \
+        -H "Content-Type: application/json" \
+        -d '{"channel": "'"$SLACK_CHANNEL_ID"'", "text": "{message}"}' \
+        "https://slack.com/api/chat.postMessage"
+
+    test_auth: |
+      source .env
+      curl -s -H "Authorization: Bearer $SLACK_BOT_TOKEN" \
+        "https://slack.com/api/auth.test"
+
+anti_patterns:
+  - name: hardcoded_tokens
+    why_bad: Security risk, tokens should never be in code
+    what_to_do: Always use environment variables from .env
+
+  - name: channel_name_instead_of_id
+    why_bad: API requires channel ID (C0XXX), not #channel-name
+    what_to_do: Get channel ID from Slack UI or use MCP
+
+  - name: ignoring_rate_limits
+    why_bad: Slack API has rate limits, excessive calls get blocked
+    what_to_do: Add delays between calls, cache results when possible
+
+  - name: not_checking_api_response
+    why_bad: API calls can fail silently with ok=false
+    what_to_do: Always check .ok field in response before using data
+
+procedures:
+  - name: determine_access_method
+    description: Choose best available Slack access method
+    steps:
+      - phase: Check MCP
+        actions:
+          - Look for slack_* tools in available MCP tools
+          - If found, use MCP method
+          - If not, continue to next check
+
+      - phase: Check Bot Token
+        actions:
+          - Check if SLACK_BOT_TOKEN exists in .env
+          - If yes, use API method
+          - If no, fall back to manual
+
+      - phase: Manual Fallback
+        actions:
+          - Guide user to open Slack UI
+          - Copy messages manually
+          - Paste for Claude to analyze
+
+  - name: read_messages
+    description: Read messages from a Slack channel
+    steps:
+      - phase: Determine Method
+        actions:
+          - Run determine_access_method procedure
+
+      - phase: MCP Method
+        condition: MCP available
+        actions:
+          - Use slack_read_messages tool
+          - Pass channel and limit parameters
+
+      - phase: API Method
+        condition: Bot token configured
+        actions:
+          - Source .env file
+          - Call conversations.history endpoint
+          - Parse response with jq
+          - Check .ok field for success
+
+      - phase: Manual Method
+        condition: Fallback
+        actions:
+          - Ask user to open Slack
+          - Navigate to target channel
+          - Copy relevant messages
+          - User provides text to Claude
+
+  - name: post_message
+    description: Post a message to Slack channel
+    steps:
+      - phase: Determine Method
+        actions:
+          - Run determine_access_method procedure
+          - Manual not applicable for posting
+
+      - phase: MCP Method
+        condition: MCP available
+        actions:
+          - Use slack_post_message tool
+          - Pass channel and text parameters
+
+      - phase: API Method
+        condition: Bot token configured
+        actions:
+          - Source .env file
+          - Call chat.postMessage endpoint
+          - Check response for ok=true
+
+  - name: verify_access
+    description: Check Slack access is properly configured
+    steps:
+      - phase: Check MCP
+        actions:
+          - Look for slack_* tools
+          - If found, MCP is available
+
+      - phase: Check Bot Token
+        actions:
+          - Run "grep -E '^SLACK_' .env"
+          - Verify SLACK_BOT_TOKEN exists
+          - Verify SLACK_CHANNEL_ID exists
+
+      - phase: Test Authentication
+        actions:
+          - Call auth.test endpoint
+          - Verify response has ok=true
+          - Report user and team name
+
+examples:
+  - name: Read recent messages
+    request: "Show me recent messages from Slack"
+    procedure: read_messages
+    inputs:
+      limit: 5
+
+  - name: Post notification
+    request: "Post a status update to Slack"
+    procedure: post_message
+    inputs:
+      message: "[INFO] Deployment completed successfully"
+
+  - name: Check access
+    request: "Is Slack configured?"
+    procedure: verify_access
+
+context: |
+  This skill provides Slack access for any project. It supports:
+
+  1. MCP Server (recommended) - If a Slack MCP server is configured,
+     use it directly for the best experience.
+
+  2. Bot Token + API - Direct Slack API calls using a bot token
+     stored in environment variables.
+
+  3. Manual fallback - User can always copy-paste from Slack UI.
+
+  The skill automatically determines the best available method.

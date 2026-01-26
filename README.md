@@ -50,27 +50,27 @@ Install the full framework or any individual skill:
 | Plugin | Description |
 |--------|-------------|
 | `framework` | **All 22 skills** - Complete developer workflow |
-| `arch` | Architecture guidance and validation |
-| `bugfix` | Structured bug investigation workflow |
-| `code` | Code style discovery and enforcement |
-| `commit` | Git commits with conventional format |
-| `create-skill` | Scaffold new skills |
-| `debugger` | Debug production issues systematically |
+| `arch` | Architecture patterns, layer boundaries, and structural validation |
+| `bugfix` | Systematic bug investigation with root cause analysis |
+| `code` | Code style enforcement and project conventions |
+| `commit` | Git commits with conventional commit format |
+| `create-skill` | Scaffold new Claude Code skills |
+| `debugger` | Production issue debugging through logs and alerts |
 | `deploy` | Deployment workflow with environment selection |
-| `deploy-verify` | Post-deployment verification |
-| `developer` | Development orchestration with domain awareness |
-| `docs-refresh` | Documentation generation and maintenance |
-| `domain-expert` | Domain knowledge and terminology |
-| `linear` | Linear issue management and ticket workflows |
-| `pr-create` | Create GitHub pull requests |
-| `pr-merge` | Merge pull requests with validation |
-| `setup` | Project setup and onboarding |
-| `slack` | Slack integration for notifications |
-| `task` | Task execution and management |
-| `tdd` | Test-driven development workflow |
-| `workflow` | Development workflow orchestrator |
-| `workflow-finish` | Complete workflow with cleanup |
-| `workflow-setup` | Initialize workflow with branch creation |
+| `deploy-verify` | Post-deployment success verification |
+| `developer` | Development orchestration with architecture awareness |
+| `docs-refresh` | Generate and refresh documentation from source |
+| `domain-expert` | Domain knowledge and business terminology |
+| `linear` | Linear issue creation and management |
+| `pr-create` | Create GitHub pull requests with standardized format |
+| `pr-merge` | Merge pull requests with CI validation |
+| `setup` | Project setup and environment configuration |
+| `slack` | Slack notifications and team integrations |
+| `task` | Task execution with validation checkpoints |
+| `tdd` | Test-driven development: tests first, then code |
+| `workflow` | Development workflow orchestration |
+| `workflow-finish` | Cleanup branches and worktrees after PR merge |
+| `workflow-setup` | Setup git worktree for ticket-based development |
 
 **Same result:** Installing `framework` = Installing all 22 individual plugins
 

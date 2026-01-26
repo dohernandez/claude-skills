@@ -1,6 +1,6 @@
 {
   "name": "code",
-  "description": "Code style discovery, validation, and guidance for writing d",
+  "description": "Code style enforcement and project conventions",
   "version": "1.0.0",
   "author": {
     "name": "GenLayer Labs",

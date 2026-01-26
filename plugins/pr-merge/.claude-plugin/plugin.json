@@ -1,6 +1,6 @@
 {
   "name": "pr-merge",
-  "description": "Merge GitHub pull requests with proper validation",
+  "description": "Merge pull requests with CI validation",
   "version": "1.0.0",
   "author": {
     "name": "GenLayer Labs",

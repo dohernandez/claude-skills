@@ -1,6 +1,6 @@
 {
   "name": "slack",
-  "description": "|",
+  "description": "Slack notifications and team integrations",
   "version": "1.0.0",
   "author": {
     "name": "GenLayer Labs",

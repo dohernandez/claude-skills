@@ -1,6 +1,6 @@
 {
   "name": "debugger",
-  "description": "Guide debugging of production issues through alert triage, l",
+  "description": "Production issue debugging through logs and alerts",
   "version": "1.0.0",
   "author": {
     "name": "GenLayer Labs",

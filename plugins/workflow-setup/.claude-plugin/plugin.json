@@ -1,6 +1,6 @@
 {
   "name": "workflow-setup",
-  "description": "Setup development environment with git worktree for ticket-b",
+  "description": "Setup git worktree for ticket-based development",
   "version": "1.0.0",
   "author": {
     "name": "GenLayer Labs",

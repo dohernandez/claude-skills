@@ -1,6 +1,6 @@
 {
   "name": "arch",
-  "description": "Architecture guidance and validation - check compliance or p",
+  "description": "Architecture patterns, layer boundaries, and structural validation",
   "version": "1.0.0",
   "author": {
     "name": "GenLayer Labs",

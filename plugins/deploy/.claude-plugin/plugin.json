@@ -1,6 +1,6 @@
 {
   "name": "deploy",
-  "description": "Deployment workflow with environment selection and verificat",
+  "description": "Deployment workflow with environment selection",
   "version": "1.0.0",
   "author": {
     "name": "GenLayer Labs",

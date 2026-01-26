@@ -9,23 +9,22 @@
     {
       "name": "framework",
       "source": "framework",
-      "description": "Complete developer workflow framework with 22 integrated skills",
-      "tags": ["workflow", "git", "testing", "deployment", "developer-tools"]
+      "description": "Complete developer workflow framework with 22 integrated skills"
     },
     {
       "name": "arch",
       "source": "plugins/arch",
-      "description": "Architecture guidance and validation"
+      "description": "Architecture patterns, layer boundaries, and structural validation"
     },
     {
       "name": "bugfix",
       "source": "plugins/bugfix",
-      "description": "Structured bug investigation workflow"
+      "description": "Systematic bug investigation with root cause analysis"
     },
     {
       "name": "code",
       "source": "plugins/code",
-      "description": "Code style discovery and enforcement"
+      "description": "Code style enforcement and project conventions"
     },
     {
       "name": "commit",
@@ -35,12 +34,12 @@
     {
       "name": "create-skill",
       "source": "plugins/create-skill",
-      "description": "Scaffold new skills"
+      "description": "Scaffold new Claude Code skills"
     },
     {
       "name": "debugger",
       "source": "plugins/debugger",
-      "description": "Debug production issues systematically"
+      "description": "Production issue debugging through logs and alerts"
     },
     {
       "name": "deploy",
@@ -50,72 +49,72 @@
     {
       "name": "deploy-verify",
       "source": "plugins/deploy-verify",
-      "description": "Post-deployment verification"
+      "description": "Post-deployment success verification"
     },
     {
       "name": "developer",
       "source": "plugins/developer",
-      "description": "Development orchestration with domain awareness"
+      "description": "Development orchestration with architecture awareness"
     },
     {
       "name": "docs-refresh",
       "source": "plugins/docs-refresh",
-      "description": "Documentation generation and maintenance"
+      "description": "Generate and refresh documentation from source"
     },
     {
       "name": "domain-expert",
       "source": "plugins/domain-expert",
-      "description": "Domain knowledge and terminology"
+      "description": "Domain knowledge and business terminology"
     },
     {
       "name": "linear",
       "source": "plugins/linear",
-      "description": "Linear issue management and ticket workflows"
+      "description": "Linear issue creation and management"
     },
     {
       "name": "pr-create",
       "source": "plugins/pr-create",
-      "description": "Create GitHub pull requests"
+      "description": "Create GitHub pull requests with standardized format"
     },
     {
       "name": "pr-merge",
       "source": "plugins/pr-merge",
-      "description": "Merge pull requests with validation"
+      "description": "Merge pull requests with CI validation"
     },
     {
       "name": "setup",
       "source": "plugins/setup",
-      "description": "Project setup and onboarding"
+      "description": "Project setup and environment configuration"
     },
     {
       "name": "slack",
       "source": "plugins/slack",
-      "description": "Slack integration for notifications"
+      "description": "Slack notifications and team integrations"
     },
     {
       "name": "task",
       "source": "plugins/task",
-      "description": "Task execution and management"
+      "description": "Task execution with validation checkpoints"
     },
     {
       "name": "tdd",
       "source": "plugins/tdd",
-      "description": "Test-driven development workflow"
+      "description": "Test-driven development: tests first, then code"
     },
     {
       "name": "workflow",
       "source": "plugins/workflow",
-      "description": "Development workflow orchestrator"
+      "description": "Development workflow orchestration"
     },
     {
       "name": "workflow-finish",
       "source": "plugins/workflow-finish",
-      "description": "Complete workflow with cleanup"
+      "description": "Cleanup branches and worktrees after PR merge"
     },
     {
       "name": "workflow-setup",
       "source": "plugins/workflow-setup",
-      "description": "Initialize workflow with branch creation"
+      "description": "Setup git worktree for ticket-based development"
     }
   ]
 }

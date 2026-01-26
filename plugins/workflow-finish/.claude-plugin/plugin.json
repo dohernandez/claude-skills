@@ -1,6 +1,6 @@
 {
   "name": "workflow-finish",
-  "description": "Cleanup git branches and worktrees after a PR is merged.",
+  "description": "Cleanup branches and worktrees after PR merge",
   "version": "1.0.0",
   "author": {
     "name": "GenLayer Labs",

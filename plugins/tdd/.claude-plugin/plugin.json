@@ -1,6 +1,6 @@
 {
   "name": "tdd",
-  "description": "Enforce TDD discipline: tests first, fix code not tests.",
+  "description": "Test-driven development: tests first, then code",
   "version": "1.0.0",
   "author": {
     "name": "GenLayer Labs",

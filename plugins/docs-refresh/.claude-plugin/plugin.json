@@ -1,6 +1,6 @@
 {
   "name": "docs-refresh",
-  "description": "Refresh documentation with deterministic generation from sou",
+  "description": "Generate and refresh documentation from source",
   "version": "1.0.0",
   "author": {
     "name": "GenLayer Labs",

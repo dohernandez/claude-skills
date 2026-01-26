@@ -1,6 +1,6 @@
 {
   "name": "workflow",
-  "description": "Manage development environment lifecycle for ticket-based wo",
+  "description": "Development workflow orchestration",
   "version": "1.0.0",
   "author": {
     "name": "GenLayer Labs",

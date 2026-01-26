@@ -1,6 +1,6 @@
 {
   "name": "create-skill",
-  "description": "Scaffold a new Claude Code skill using the multi-YAML patter",
+  "description": "Scaffold new Claude Code skills",
   "version": "1.0.0",
   "author": {
     "name": "GenLayer Labs",

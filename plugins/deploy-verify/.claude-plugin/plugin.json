@@ -1,6 +1,6 @@
 {
   "name": "deploy-verify",
-  "description": "Systematic verification of deployments to confirm service he",
+  "description": "Post-deployment success verification",
   "version": "1.0.0",
   "author": {
     "name": "GenLayer Labs",

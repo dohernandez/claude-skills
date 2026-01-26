@@ -1,6 +1,6 @@
 {
   "name": "task",
-  "description": "|",
+  "description": "Task execution with validation checkpoints",
   "version": "1.0.0",
   "author": {
     "name": "GenLayer Labs",

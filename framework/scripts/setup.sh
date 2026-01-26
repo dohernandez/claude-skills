@@ -13,23 +13,23 @@ echo "PWD: ${PWD}" >> "$DEBUG_LOG"
 echo "CLAUDE_PLUGIN_ROOT: ${CLAUDE_PLUGIN_ROOT:-not set}" >> "$DEBUG_LOG"
 echo "CLAUDE_PROJECT_DIR: ${CLAUDE_PROJECT_DIR:-not set}" >> "$DEBUG_LOG"
 
-set -euo pipefail
+set -uo pipefail  # Removed -e to prevent silent exits
 
 echo "After pipefail" >> "$DEBUG_LOG"
 
-# Colors
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-CYAN='\033[0;36m'
-NC='\033[0m'
+# Colors (disabled for hook execution - no TTY)
+RED=''
+GREEN=''
+YELLOW=''
+BLUE=''
+CYAN=''
+NC=''
 
-log_info() { echo -e "${BLUE}[INFO]${NC} $1"; }
-log_success() { echo -e "${GREEN}[OK]${NC} $1"; }
-log_warning() { echo -e "${YELLOW}[WARN]${NC} $1"; }
-log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
-log_header() { echo -e "\n${CYAN}=== $1 ===${NC}\n"; }
+log_info() { echo "[INFO] $1"; echo "[INFO] $1" >> "$DEBUG_LOG"; }
+log_success() { echo "[OK] $1"; echo "[OK] $1" >> "$DEBUG_LOG"; }
+log_warning() { echo "[WARN] $1"; echo "[WARN] $1" >> "$DEBUG_LOG"; }
+log_error() { echo "[ERROR] $1"; echo "[ERROR] $1" >> "$DEBUG_LOG"; }
+log_header() { echo "=== $1 ==="; echo "=== $1 ===" >> "$DEBUG_LOG"; }
 
 # ============================================================================
 # CONFIGURATION

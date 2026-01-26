@@ -1,0 +1,214 @@
+name: tdd
+kind: methodology
+version: "1.0.0"
+description: "Enforce TDD discipline: tests first, fix code not tests."
+severity: critical
+tags:
+  - tdd
+  - testing
+  - methodology
+
+purpose: |
+  Implement changes using Test-Driven Development. The core principle:
+  write tests that define expected behavior BEFORE writing implementation.
+
+  The TDD cycle:
+  1. RED - Write a failing test
+  2. GREEN - Write minimal code to pass
+  3. REFACTOR - Clean up with tests green
+
+owns:
+  - "TDD workflow and discipline"
+  - "Test-first development"
+  - "Flow Spec requirements"
+
+non_negotiables:
+  - id: tests-first
+    rule: |
+      Tests must be written before implementation code.
+      The test must fail first (RED phase) to prove it's testing something meaningful.
+
+  - id: fix-code-not-tests
+    rule: |
+      If a test fails due to implementation mismatch, the fix must be in the code.
+      Do not weaken or modify the test to make it pass.
+      The test defines correctness, not the current implementation.
+
+  - id: no-behavior-without-tests
+    rule: "Every new function with behavior needs a test."
+
+  - id: test-isolation
+    rule: |
+      Tests must be independent. No test should depend on another test
+      or share mutable state. Each test should be runnable in isolation.
+
+flow_spec_template: |
+  ## Flow Spec: {feature_name}
+
+  - **Name**: {descriptive name}
+  - **Entry point(s)**: (Function, method, endpoint)
+  - **Inputs**: (Parameters, dependencies)
+  - **Expected outputs**: (Return values, side effects)
+  - **Invariants**: (What must always be true)
+  - **Edge cases**: (Boundaries, error conditions)
+
+procedure:
+  - step: "Discover project testing patterns"
+    detail: |
+      Before writing tests, learn the project's testing conventions:
+      1. Find test framework (jest, vitest, pytest, go test)
+      2. Find existing test files and read 2-3 examples
+      3. Note: file naming, test structure, mock patterns, assertion style
+      4. Check test commands (Taskfile, package.json, Makefile)
+      Match existing patterns - don't introduce new testing styles.
+
+  - step: "Define expected behavior"
+    detail: "Write Flow Spec describing what the code should do."
+
+  - step: "Write failing test (RED)"
+    detail: |
+      Write a test that defines the expected behavior.
+      Run the test - it must FAIL. This proves the test is meaningful.
+
+  - step: "Write minimal code (GREEN)"
+    detail: |
+      Write just enough code to make the test pass.
+      Don't over-engineer. Don't add features not covered by tests.
+
+  - step: "Refactor"
+    detail: |
+      Clean up the code while keeping tests green.
+      Improve naming, extract functions, remove duplication.
+
+  - step: "Repeat"
+    detail: "Add next test for next behavior. Continue the cycle."
+
+  - step: "Verify all tests pass"
+    detail: "Run task test and ensure all tests pass."
+
+definition_of_done:
+  - "Flow Spec written for the feature"
+  - "Tests fail before code and pass after"
+  - "task test passes (all tests green)"
+  - "task precommit passes"
+  - "No skipped tests unless documented"
+
+patterns:
+  - id: test-file-naming
+    description: "Test files are co-located with source files"
+    examples:
+      typescript: |
+        src/services/user-service.ts
+        src/services/user-service.test.ts
+      python: |
+        src/services/user_service.py
+        src/services/test_user_service.py
+      go: |
+        services/user_service.go
+        services/user_service_test.go
+
+  - id: describe-it-structure
+    description: "Use describe/it blocks for test organization"
+    examples:
+      typescript: |
+        describe('UserService', () => {
+          describe('createUser', () => {
+            it('creates user with valid data', () => {
+              const user = userService.createUser({ email: 'test@example.com' });
+              expect(user.email).toBe('test@example.com');
+            });
+
+            it('throws error for invalid email', () => {
+              expect(() => userService.createUser({ email: 'invalid' }))
+                .toThrow('Invalid email');
+            });
+          });
+        });
+      python: |
+        class TestUserService:
+            def test_create_user_with_valid_data(self):
+                user = user_service.create_user(email='test@example.com')
+                assert user.email == 'test@example.com'
+
+            def test_create_user_throws_for_invalid_email(self):
+                with pytest.raises(ValueError, match='Invalid email'):
+                    user_service.create_user(email='invalid')
+      go: |
+        func TestUserService_CreateUser(t *testing.T) {
+            user, err := userService.CreateUser("test@example.com")
+            if err != nil {
+                t.Fatalf("unexpected error: %v", err)
+            }
+            if user.Email != "test@example.com" {
+                t.Errorf("expected test@example.com, got %s", user.Email)
+            }
+        }
+
+  - id: mock-dependencies
+    description: "Mock external dependencies in unit tests"
+    examples:
+      typescript: |
+        const mockDb = { findUser: vi.fn() };
+        const service = new UserService({ db: mockDb });
+
+        mockDb.findUser.mockResolvedValue({ id: 1, name: 'Test' });
+        const user = await service.getUser(1);
+
+        expect(mockDb.findUser).toHaveBeenCalledWith(1);
+      python: |
+        @patch('services.user_service.db')
+        def test_get_user(mock_db):
+            mock_db.find_user.return_value = {'id': 1, 'name': 'Test'}
+            user = user_service.get_user(1)
+            mock_db.find_user.assert_called_once_with(1)
+
+  - id: arrange-act-assert
+    description: "Structure tests with Arrange-Act-Assert pattern"
+    example: |
+      it('calculates total with discount', () => {
+        // Arrange
+        const cart = new Cart();
+        cart.addItem({ price: 100 });
+        cart.applyDiscount(0.1);
+
+        // Act
+        const total = cart.getTotal();
+
+        // Assert
+        expect(total).toBe(90);
+      });
+
+anti_patterns:
+  - id: test-after-code
+    description: "Writing code first, then backfilling tests"
+    why_bad: "Tests become documentation of implementation, not specification of behavior."
+
+  - id: weakening-tests
+    description: "Modifying tests to pass instead of fixing the code"
+    why_bad: "Hides bugs and defeats the purpose of TDD."
+
+  - id: testing-implementation-details
+    description: "Tests that verify internal implementation rather than behavior"
+    why_bad: "Tests break on refactoring even when behavior is unchanged."
+
+  - id: no-test-isolation
+    description: "Tests that depend on each other or shared mutable state"
+    why_bad: "Flaky tests, hard to debug, order-dependent failures."
+
+  - id: skipping-red-phase
+    description: "Writing test and code together without seeing test fail"
+    why_bad: "Can't verify the test actually tests something meaningful."
+
+  - id: over-mocking
+    description: "Mocking everything including the code under test"
+    why_bad: "Test doesn't verify real behavior, just mock interactions."
+
+context: |
+  TDD is a discipline that produces:
+  1. Testable code (by design)
+  2. Documentation (tests describe expected behavior)
+  3. Confidence to refactor (tests catch regressions)
+  4. Minimal code (only write what's needed to pass tests)
+
+  The key insight: tests are specifications, not afterthoughts.
+  Write the specification (test) first, then implement to match.

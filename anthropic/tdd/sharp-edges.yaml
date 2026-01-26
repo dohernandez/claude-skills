@@ -1,0 +1,150 @@
+description: |
+  Common TDD pitfalls and how to avoid them.
+
+edges:
+  - id: test-fails-fix-code-not-test
+    title: Test Fails - Temptation to Weaken Test
+    severity: critical
+    symptom: |
+      Test fails, developer modifies the test assertions to pass
+      instead of fixing the implementation.
+    root_cause: |
+      Misunderstanding of TDD principle: tests define correctness.
+    prevention: |
+      - Keep the test as-is
+      - Fix the implementation to match expected behavior
+      - The test defines correctness, not the current implementation
+    resolution:
+      - Revert test changes
+      - Analyze why implementation doesn't match expectation
+      - Fix the implementation
+
+  - id: tests-written-after-code
+    title: Code Before Tests
+    severity: high
+    symptom: |
+      Implementation exists but tests are backfilled afterward.
+      Git history shows implementation commits before test commits.
+    root_cause: |
+      Skipping the RED phase of TDD.
+    prevention: |
+      - Always write the failing test first
+      - Verify test fails before writing implementation
+      - If test passes immediately, it's not testing new behavior
+    resolution:
+      - Stash/delete the implementation
+      - Write failing tests first
+      - Re-implement to pass tests
+
+  - id: skipping-red-phase
+    title: Test Never Fails
+    severity: high
+    symptom: |
+      Test written but never seen to fail.
+      Test may be testing something that already works or is a tautology.
+    root_cause: |
+      Writing test and implementation together.
+    prevention: |
+      - Run test immediately after writing it
+      - It MUST fail (RED phase)
+      - If it passes, either the test is wrong or you're not testing new behavior
+    resolution:
+      - Verify the test actually exercises the new code
+      - Add assertions that would fail without the implementation
+
+  - id: no-test-for-new-function
+    title: New Function Without Test
+    severity: high
+    symptom: |
+      New function added without corresponding test.
+      Coverage decreases or behavior is undocumented.
+    root_cause: |
+      Skipping TDD, adding behavior without specification.
+    prevention: |
+      - Every new function needs a test
+      - Write the test first that defines expected behavior
+      - Verify test fails, then implement
+    resolution:
+      - Write test for the function
+      - Ensure test would fail without the implementation
+
+  - id: testing-implementation-details
+    title: Testing Private Implementation
+    severity: medium
+    symptom: |
+      Tests import internal symbols or use workarounds to access private methods.
+      Tests break when refactoring even though behavior unchanged.
+    root_cause: |
+      Testing HOW code works instead of WHAT it does.
+    prevention: |
+      - Test only public API and observable behavior
+      - If internal logic needs testing, consider extracting to separate module
+    resolution:
+      - Rewrite tests to use public API
+      - Delete tests of implementation details
+
+  - id: mock-not-reset-between-tests
+    title: Shared Mock State
+    severity: medium
+    symptom: |
+      Tests pass individually but fail when run together.
+      Mocks retain state from previous tests.
+    root_cause: |
+      Not resetting mocks between tests.
+    prevention: |
+      - Reset mocks in beforeEach/setUp
+      - Create fresh mock instances for each test
+    resolution:
+      - Add mock reset in test setup
+      - Ensure each test is independent
+
+  - id: flaky-tests
+    title: Tests Pass Sometimes, Fail Sometimes
+    severity: medium
+    symptom: |
+      Tests intermittently fail without code changes.
+      CI fails randomly.
+    root_cause: |
+      - Timing dependencies
+      - Shared state between tests
+      - External service dependencies
+    prevention: |
+      - Use deterministic test data
+      - Mock time-dependent operations
+      - Isolate tests from external services
+    resolution:
+      - Identify the flaky test
+      - Add deterministic mocks
+      - Remove timing dependencies
+
+  - id: over-mocking
+    title: Mocking Everything
+    severity: medium
+    symptom: |
+      Test mocks so much that it only tests mock interactions.
+      Real bugs slip through because real code isn't exercised.
+    root_cause: |
+      Mocking code under test instead of just dependencies.
+    prevention: |
+      - Only mock external boundaries (DB, network, filesystem)
+      - Let internal code run for real
+      - Integration tests should use real components
+    resolution:
+      - Remove unnecessary mocks
+      - Test real behavior where possible
+
+  - id: hardcoded-test-data
+    title: Magic Numbers in Tests
+    severity: low
+    symptom: |
+      Tests use unexplained hardcoded values.
+      Hard to understand what's being tested.
+    root_cause: |
+      Not documenting test data intent.
+    prevention: |
+      - Use descriptive variable names
+      - Add comments explaining why specific values matter
+      - Consider fixtures for complex data
+    resolution:
+      - Add explanatory comments
+      - Extract magic values to named constants

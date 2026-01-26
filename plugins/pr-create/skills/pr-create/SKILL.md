@@ -13,7 +13,7 @@ hooks:
 
 ## Purpose
 Creates GitHub pull requests with conventional commit-style titles and structured bodies.
-Follows the project's git workflow conventions from `.claude/docs/git-workflow.md`.
+Follows git workflow conventions from `.claude/skills/pr-create/git-workflow.md`.
 
 ## Quick Reference
 - Creates: GitHub PR via `gh pr create`

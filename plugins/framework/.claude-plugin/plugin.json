@@ -1,12 +1,18 @@
 {
   "name": "framework",
-  "description": "Configure all framework skills at once",
+  "description": "Install and configure Claude Code skills - orchestrates tier-based skill installation",
   "version": "1.0.0",
   "author": {
     "name": "dohernandez",
     "url": "https://github.com/dohernandez"
   },
+  "keywords": [
+    "framework",
+    "orchestrator",
+    "skills",
+    "installation",
+    "configuration"
+  ],
   "repository": "https://github.com/dohernandez/claude-skills",
-  "skills": "./skills/",
-  "hooks": "./hooks/hooks.json"
+  "skills": "./skills/"
 }

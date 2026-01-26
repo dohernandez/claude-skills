@@ -2,8 +2,11 @@
 # ============================================================================
 # FRAMEWORK SETUP - Triggered by Claude Code SessionStart hook
 # ============================================================================
-# Copies skills from plugin cache into the project's .claude/ directory.
-# This enables direct skill invocation: /commit instead of /framework:commit
+# Copies shared infrastructure (hooks, scripts, Taskfile) and the framework
+# skill to the project's .claude/ directory.
+#
+# Individual skills are installed via: /framework install <tier>
+# which uses: claude plugin install <skill>@dohernandez-claude-skills
 # ============================================================================
 
 # Debug: log to file for troubleshooting
@@ -14,8 +17,6 @@ echo "CLAUDE_PLUGIN_ROOT: ${CLAUDE_PLUGIN_ROOT:-not set}" >> "$DEBUG_LOG"
 echo "CLAUDE_PROJECT_DIR: ${CLAUDE_PROJECT_DIR:-not set}" >> "$DEBUG_LOG"
 
 set -uo pipefail  # Removed -e to prevent silent exits
-
-echo "After pipefail" >> "$DEBUG_LOG"
 
 # Colors (disabled for hook execution - no TTY)
 RED=''
@@ -29,7 +30,7 @@ log_info() { echo "[INFO] $1"; echo "[INFO] $1" >> "$DEBUG_LOG"; }
 log_success() { echo "[OK] $1"; echo "[OK] $1" >> "$DEBUG_LOG"; }
 log_warning() { echo "[WARN] $1"; echo "[WARN] $1" >> "$DEBUG_LOG"; }
 log_error() { echo "[ERROR] $1"; echo "[ERROR] $1" >> "$DEBUG_LOG"; }
-log_header() { echo "=== $1 ==="; echo "=== $1 ===" >> "$DEBUG_LOG"; }
+log_header() { echo "=== $1 ==="; echo "=== $1 ====" >> "$DEBUG_LOG"; }
 
 # ============================================================================
 # CONFIGURATION
@@ -45,26 +46,6 @@ PROJECT_ROOT="${CLAUDE_PROJECT_DIR:-${PWD}}"
 echo "PLUGIN_ROOT: ${PLUGIN_ROOT}" >> "$DEBUG_LOG"
 echo "PROJECT_ROOT: ${PROJECT_ROOT}" >> "$DEBUG_LOG"
 
-# Skills that have configure mode (17 total)
-CONFIGURABLE_SKILLS=(
-    "arch"
-    "code"
-    "debugger"
-    "deploy"
-    "deploy-verify"
-    "developer"
-    "docs-refresh"
-    "domain-expert"
-    "framework"
-    "linear"
-    "setup"
-    "task"
-    "test"
-    "tdd"
-    "workflow-finish"
-    "workflow-setup"
-)
-
 # ============================================================================
 # MAIN SETUP
 # ============================================================================
@@ -76,7 +57,6 @@ main() {
         force_reinstall=true
     fi
 
-    echo "About to log_header" >> "$DEBUG_LOG"
     log_header "Claude Code Framework Setup"
 
     echo "Plugin source: $PLUGIN_ROOT"
@@ -88,81 +68,53 @@ main() {
     mkdir -p "$PROJECT_ROOT/.claude/hooks"
     mkdir -p "$PROJECT_ROOT/.claude/scripts"
 
-    # Check existing installation
-    local existing_count=0
-    if [[ -d "$PROJECT_ROOT/.claude/skills" ]]; then
-        existing_count=$(ls -d "$PROJECT_ROOT/.claude/skills"/*/ 2>/dev/null | wc -l | tr -d ' ')
-    fi
+    # ========================================================================
+    # INSTALL FRAMEWORK SKILL ONLY
+    # ========================================================================
+    # The framework skill provides /framework install, /framework configure, etc.
+    # Other skills are installed via: /framework install <tier>
 
-    # Install skills (always check for new skills)
-    # NOTE: Skill definitions are in directories: .claude/skills/<skill>/
-    #       Skill configs are in files: .claude/skills/<skill>.yaml
-    #       This script only touches directories, configs are preserved.
-    log_info "Checking skills..."
-    echo "Checking skills in: $PLUGIN_ROOT/skills/" >> "$DEBUG_LOG"
-    echo "Skills found: $(ls -la "$PLUGIN_ROOT/skills/" 2>&1)" >> "$DEBUG_LOG"
+    log_info "Installing framework skill..."
+    echo "Installing framework skill..." >> "$DEBUG_LOG"
 
-    local installed=0
-    local skipped=0
-    local updated=0
+    local framework_src="$PLUGIN_ROOT/skills/framework"
+    local framework_dest="$PROJECT_ROOT/.claude/skills/framework"
 
-    for skill_dir in "$PLUGIN_ROOT/skills"/*/; do
-        echo "Processing: $skill_dir" >> "$DEBUG_LOG"
-        if [[ -d "$skill_dir" ]]; then
-            local skill_name=$(basename "$skill_dir")
-            local dest="$PROJECT_ROOT/.claude/skills/$skill_name"
-            echo "  skill_name: $skill_name, dest: $dest" >> "$DEBUG_LOG"
-
-            if [[ ! -d "$dest" ]]; then
-                # New skill - install it (use -L to follow symlinks)
-                echo "  Installing (cp -rL $skill_dir $dest)..." >> "$DEBUG_LOG"
-                if cp -rL "$skill_dir" "$dest" 2>> "$DEBUG_LOG"; then
-                    log_success "Installed: $skill_name"
-                    echo "  Success: $skill_name" >> "$DEBUG_LOG"
-                    ((installed++))
-                else
-                    log_error "Failed to install: $skill_name"
-                    echo "  FAILED: $skill_name" >> "$DEBUG_LOG"
-                fi
-            elif [[ "$force_reinstall" == true ]]; then
-                # Force reinstall - replace skill definition only
-                # Config file (.claude/skills/<skill>.yaml) is preserved
-                rm -rf "$dest"
-                cp -rL "$skill_dir" "$dest"
-                log_success "Updated: $skill_name"
-                ((updated++))
+    if [[ -d "$framework_src" ]]; then
+        if [[ ! -d "$framework_dest" ]] || [[ "$force_reinstall" == true ]]; then
+            rm -rf "$framework_dest" 2>/dev/null || true
+            if cp -rL "$framework_src" "$framework_dest" 2>> "$DEBUG_LOG"; then
+                log_success "Installed: framework"
             else
-                echo "  Skipped (already exists): $skill_name" >> "$DEBUG_LOG"
-                ((skipped++))
+                log_error "Failed to install framework skill"
             fi
         else
-            echo "  Not a directory: $skill_dir" >> "$DEBUG_LOG"
+            log_info "Framework skill already installed"
         fi
-    done
-
-    # Report results
-    if [[ $installed -gt 0 ]]; then
-        log_success "Installed $installed new skill(s)"
-    fi
-    if [[ $updated -gt 0 ]]; then
-        log_success "Updated $updated skill(s)"
-    fi
-    if [[ $skipped -gt 0 ]] && [[ $installed -eq 0 ]] && [[ $updated -eq 0 ]]; then
-        log_info "All $skipped skills already installed (use --force to reinstall)"
+    else
+        log_error "Framework skill not found at: $framework_src"
     fi
 
-    # Install infrastructure (always update)
-    log_info "Updating infrastructure..."
+    # ========================================================================
+    # INSTALL SHARED INFRASTRUCTURE
+    # ========================================================================
+    # These are used by all skills regardless of tier
+
+    log_info "Installing shared infrastructure..."
     echo "Installing infrastructure..." >> "$DEBUG_LOG"
 
     # Hooks (use -L to follow symlinks)
     echo "Checking hooks dir: $PLUGIN_ROOT/hooks" >> "$DEBUG_LOG"
     if [[ -d "$PLUGIN_ROOT/hooks" ]]; then
-        echo "  Hooks dir exists, copying..." >> "$DEBUG_LOG"
-        cp -rL "$PLUGIN_ROOT/hooks/"* "$PROJECT_ROOT/.claude/hooks/" 2>> "$DEBUG_LOG" || echo "  Hooks copy failed" >> "$DEBUG_LOG"
-        log_success "Updated hooks"
-    else
-        echo "  No hooks dir found" >> "$DEBUG_LOG"
+        # Don't copy hooks.json (that's for the plugin itself)
+        # Copy any other hook scripts if they exist
+        for hook_file in "$PLUGIN_ROOT/hooks"/*; do
+            if [[ -f "$hook_file" ]] && [[ "$(basename "$hook_file")" != "hooks.json" ]]; then
+                echo "  Copying hook: $hook_file" >> "$DEBUG_LOG"
+                cp -L "$hook_file" "$PROJECT_ROOT/.claude/hooks/"
+            fi
+        done
+        log_success "Checked hooks"
     fi
 
     # Scripts (except setup.sh itself)
@@ -177,8 +129,6 @@ main() {
             fi
         done
         log_success "Updated scripts"
-    else
-        echo "  No scripts dir found" >> "$DEBUG_LOG"
     fi
 
     # Taskfile (always update to get new tasks)
@@ -187,36 +137,27 @@ main() {
         echo "  Taskfile exists, copying..." >> "$DEBUG_LOG"
         cp "$PLUGIN_ROOT/Taskfile.yaml" "$PROJECT_ROOT/.claude/Taskfile.yaml"
         log_success "Updated Taskfile"
-    else
-        echo "  No Taskfile found" >> "$DEBUG_LOG"
     fi
+
+    # Docs and GitHub templates are bundled with individual skills
+    # (e.g., git-workflow.md is in pr-create skill)
+    # GitHub templates are offered during /framework configure
 
     echo "=== Setup completed at $(date) ===" >> "$DEBUG_LOG"
 
-    # Show success and configure reminder
+    # ========================================================================
+    # SHOW SUCCESS MESSAGE
+    # ========================================================================
     log_header "Setup Complete"
-    local total_skills=$(ls -d "$PROJECT_ROOT/.claude/skills"/*/ 2>/dev/null | wc -l | tr -d ' ')
-    echo "Total skills installed: $total_skills"
-    echo "Skills are available as: /commit, /test, /tdd, etc."
     echo ""
-
-    # Only show configure reminder if new skills were installed
-    if [[ $installed -gt 0 ]]; then
-        show_configure_reminder
-    fi
-}
-
-show_configure_reminder() {
-    log_header "Configuration"
-    echo "The following skills have configure mode:"
+    echo "Framework installed. Next steps:"
     echo ""
-    for skill in "${CONFIGURABLE_SKILLS[@]}"; do
-        if [[ "$skill" != "framework" ]]; then
-            echo "  /$skill configure"
-        fi
-    done
+    echo "  /framework install minimal   - Install 11 core skills"
+    echo "  /framework install standard  - Install 16 skills"
+    echo "  /framework install full      - Install all 22 skills"
     echo ""
-    echo "Run /framework configure to configure all skills at once."
+    echo "  /framework list              - Show available skills"
+    echo "  /framework configure         - Configure installed skills"
     echo ""
 }
 

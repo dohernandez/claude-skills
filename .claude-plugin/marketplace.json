@@ -9,7 +9,7 @@
     {
       "name": "framework",
       "source": "./framework",
-      "description": "Complete developer workflow framework with 23 integrated skills"
+      "description": "Install and configure Claude Code skills - orchestrates tier-based skill installation"
     },
     {
       "name": "arch",

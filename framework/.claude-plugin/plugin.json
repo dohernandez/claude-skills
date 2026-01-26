@@ -1,21 +1,17 @@
 {
   "name": "framework",
-  "description": "Claude Code Developer Framework - Complete developer workflow with 23 integrated skills",
+  "description": "Install and configure Claude Code skills - orchestrates tier-based skill installation",
   "version": "1.0.0",
   "author": {
     "name": "dohernandez",
     "url": "https://github.com/dohernandez"
   },
   "keywords": [
-    "workflow",
-    "git",
-    "commit",
-    "pull-request",
-    "testing",
-    "tdd",
-    "deployment",
-    "architecture",
-    "developer-tools"
+    "framework",
+    "orchestrator",
+    "skills",
+    "installation",
+    "configuration"
   ],
   "repository": "https://github.com/dohernandez/claude-skills",
   "skills": "./skills/"

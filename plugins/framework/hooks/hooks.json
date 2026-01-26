@@ -1,12 +1,11 @@
 {
   "hooks": {
-    "Setup": [
+    "SessionStart": [
       {
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/setup.sh",
-            "description": "Install framework skill into project"
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/setup.sh"
           }
         ]
       }

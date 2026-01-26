@@ -1,6 +1,6 @@
 ---
 name: framework
-description: "Configure the Claude Code Developer Framework. Use when user says /framework or /framework configure."
+description: "Install and configure Claude Code skills. Use when user says /framework."
 user-invocable: true
 allowed-tools:
   - Read
@@ -15,143 +15,283 @@ hooks:
       command: "task -t .claude/Taskfile.yaml validate-skill -- --skill framework"
 ---
 
-# Framework Configuration
+# Framework - Skill Installation Orchestrator
 
 ## Purpose
 
-Configure the Claude Code Developer Framework after installation. This skill orchestrates the configuration of all framework skills.
+Install, manage, and configure Claude Code skills from the dohernandez-claude-skills marketplace. The framework acts as an orchestrator that installs individual skill plugins based on your selected tier.
 
-## When to Use
+## Marketplace
 
-- After installing the framework plugin: `/plugin install anthropic@dohernandez-claude-skills`
-- After running `claude --init`
-- When re-configuring the framework for a project
-- When user says `/framework` or `/framework configure`
+All skills are available from: `dohernandez-claude-skills`
 
 ## Commands
 
 | Command | Purpose |
 |---------|---------|
-| `/framework configure` | Run full configuration wizard |
-| `/framework status` | Show current configuration status |
+| `/framework install <tier>` | Install skills by tier (minimal, standard, full) |
+| `/framework install <skills>` | Install specific skills (comma-separated) |
+| `/framework uninstall <skill>` | Uninstall a specific skill |
+| `/framework uninstall --all` | Remove ALL skills and infrastructure |
+| `/framework list` | Show installed skills and their status |
+| `/framework update` | Update all installed skills |
+| `/framework configure` | Configure installed skills |
+| `/framework status` | Show configuration status |
 
-## Configuration Workflow
+## Skill Tiers
 
-### Phase 0: Tier Selection
+| Tier | Count | Skills |
+|------|-------|--------|
+| **minimal** | 11 | commit, create-skill, docs-refresh, linear, pr-create, pr-merge, setup, task, bugfix, workflow-finish, workflow-setup |
+| **standard** | 16 | minimal + deploy, deploy-verify, developer, code, test |
+| **full** | 22 | All available skills |
 
-Ask which skill tier the user wants:
+## Installation Workflow
 
-| Tier | Skills | Description |
-|------|--------|-------------|
-| **Minimal** (Recommended) | 11 | commit, create-skill, docs-refresh, linear, pr-create, pr-merge, setup, task, bugfix, workflow-finish, workflow-setup |
-| **Standard** | 16 | Minimal + deploy, deploy-verify, developer, code, test |
-| **Full** | 23 | All available skills including arch, domain-expert, tdd, debugger, slack, workflow |
+### `/framework install <tier>`
 
-Save selected tier to `.claude/skills-config.env` as `FRAMEWORK_TIER`.
-
-### Phase 1: Framework-Level Configuration
-
-Ask for project-level settings and save to `.claude/skills-config.env`:
-
-```
-FRAMEWORK_TIER=<minimal|standard|full>
-PROJECT_NAME=<project-name>
-LINT_COMMAND=<lint-command>
-TEST_COMMAND=<test-command>
-TEST_WATCH_COMMAND=<test-watch-command>
-TEST_COVERAGE_COMMAND=<test-coverage-command>
-PRECOMMIT_COMMAND=<precommit-command>
-```
-
-**Questions to ask:**
-
-1. **PROJECT_NAME** (required): "What is your project name?"
-2. **LINT_COMMAND** (optional): "What command runs your linter? (e.g., npm run lint, task lint)"
-3. **TEST_COMMAND** (optional): "What command runs your tests? (e.g., npm test, task test)"
-4. **TEST_WATCH_COMMAND** (optional): "What command runs tests in watch mode? (e.g., npm test -- --watch)"
-5. **TEST_COVERAGE_COMMAND** (optional): "What command runs tests with coverage? (e.g., npm test -- --coverage)"
-6. **PRECOMMIT_COMMAND** (optional): "What command runs pre-commit checks? (leave blank for lint + test)"
-
-### Phase 2: Skill-Level Configuration
-
-For each skill in the selected tier, offer to configure or skip.
-
-**IMPORTANT: All skills can be skipped**
-- For each skill, ask: "Configure <skill>?" with options [Configure, Skip]
-- **Skip**: Skill remains installed and usable with defaults, no config file created
-- **Configure**: Run the skill's configure procedure
-
-**Skills by tier:**
-
-**Minimal tier (11 skills):**
-1. `/commit configure` - Commit scopes
-2. `/linear configure` - Linear workspace
-3. `/docs-refresh configure` - Documentation paths
-4. `/setup configure` - Setup commands
-5. `/task configure` - Task management
-
-**Standard tier adds (+5 skills):**
-6. `/code configure` - Code style from linter configs
-7. `/test configure` - Test framework
-8. `/deploy configure` - Deployment commands
-9. `/deploy-verify configure` - Verification endpoints
-10. `/developer configure` - Development patterns (simple version)
-
-**Full tier adds (+7 skills):**
-11. `/arch configure` - Architecture style and layers
-12. `/tdd configure` - Test framework and patterns
-13. `/domain-expert configure` - Domain knowledge
-14. `/debugger configure` - Log commands
-15. `/workflow configure` - Worktree and IDE preferences
-16. `/slack configure` - Slack integration
-
-**For each skill:**
-1. Ask: "Configure <skill>?" [Configure / Skip]
-2. If Configure: Run the skill's configure procedure
-3. If Skip: Continue to next skill
-4. Show result (configured/skipped)
-
-### Phase 3: Verification
-
-After all skills are configured:
-
-1. Show selected tier
-2. Show summary of configured skills
-3. Show skipped skills (usable with defaults)
-4. Show location of config files
-5. Remind user they can re-configure individual skills anytime
-
-## Output Format
+Installs all skills in the specified tier using `claude plugin install`.
 
 ```
 ╔══════════════════════════════════════════════════════════════╗
-║  Claude Code Developer Framework - Configuration Wizard      ║
+║  Claude Code Skills - Installation                           ║
 ╚══════════════════════════════════════════════════════════════╝
 
-Phase 0: Tier Selection
-───────────────────────
-Which skill tier do you want?
-1. Minimal (Recommended) - 11 skills
-   commit, create-skill, docs-refresh, linear, pr-create, pr-merge,
-   setup, task, bugfix, workflow-finish, workflow-setup
-2. Standard - 16 skills
-   Minimal + deploy, deploy-verify, developer, code, test
-3. Full - 23 skills
-   All available skills
+Installing tier: minimal (11 skills)
+──────────────────────────────────────
 
-Selected: Minimal
+Scope: project (shared via git)
+
+[1/11] Installing commit...
+  → claude plugin install commit@dohernandez-claude-skills --scope project
+  ✓ Installed
+
+[2/11] Installing create-skill...
+  → claude plugin install create-skill@dohernandez-claude-skills --scope project
+  ✓ Installed
+
+... (continues for all skills)
+
+Summary
+───────
+✓ Installed: 11 skills
+✗ Failed: 0 skills
+
+Skills are now available as: /commit, /pr-create, /test, etc.
+
+Next steps:
+  /framework configure  - Configure installed skills
+  /framework list       - View installed skills
+```
+
+### `/framework install <skills>`
+
+Install specific skills by name (comma-separated).
+
+```bash
+# Examples
+/framework install commit,pr-create,pr-merge
+/framework install tdd,test
+```
+
+### Scope Selection
+
+Before installation, ask the user which scope to use:
+
+| Scope | Location | Git Shared | Use Case |
+|-------|----------|------------|----------|
+| **project** (Recommended) | `.claude/settings.json` | Yes | Team projects |
+| **local** | `.claude/settings.local.json` | No (gitignored) | Personal additions |
+| **user** | `~/.claude/settings.json` | No | Global installation |
+
+## Uninstall
+
+### `/framework uninstall <skill>`
+
+Remove a specific skill.
+
+```
+Uninstalling: commit
+  → claude plugin uninstall commit@dohernandez-claude-skills --scope project
+  ✓ Uninstalled
+
+Note: Configuration file .claude/skills/commit.yaml preserved.
+      Delete manually if no longer needed.
+```
+
+### `/framework uninstall --all`
+
+Remove ALL skills and shared infrastructure. **This is the recommended way to completely remove the framework.**
+
+```
+╔══════════════════════════════════════════════════════════════╗
+║  Framework Uninstall - Complete Removal                      ║
+╚══════════════════════════════════════════════════════════════╝
+
+This will remove:
+  • All installed skills from dohernandez-claude-skills
+  • Shared infrastructure (Taskfile, scripts)
+  • Framework skill itself
+
+Proceed? [Yes / No]
+
+Uninstalling skills...
+──────────────────────
+[1/11] Uninstalling commit...
+  → claude plugin uninstall commit@dohernandez-claude-skills
+  ✓ Uninstalled
+
+[2/11] Uninstalling pr-create...
+  → claude plugin uninstall pr-create@dohernandez-claude-skills
+  ✓ Uninstalled
+
+... (continues for all installed skills)
+
+Removing shared infrastructure...
+─────────────────────────────────
+  ✓ Removed .claude/Taskfile.yaml
+  ✓ Removed .claude/scripts/
+  ✓ Removed .claude/skills/framework/
+
+Uninstalling framework plugin...
+────────────────────────────────
+  → claude plugin uninstall framework@dohernandez-claude-skills
+  ✓ Uninstalled
+
+Summary
+───────
+✓ Uninstalled: 11 skills
+✓ Removed: shared infrastructure
+✓ Removed: framework plugin
+
+Note: Configuration files in .claude/skills/*.yaml preserved.
+      Delete .claude/skills/ manually if no longer needed.
+```
+
+### Direct Plugin Uninstall (Alternative)
+
+If you uninstall the framework plugin directly via CLI:
+
+```bash
+claude plugin uninstall framework@dohernandez-claude-skills
+```
+
+**What happens:**
+- ✓ Framework plugin is removed
+- ✓ Individual skill plugins remain installed (they're separate plugins)
+- ○ Shared infrastructure files remain (harmless):
+  - `.claude/Taskfile.yaml`
+  - `.claude/scripts/`
+  - `.claude/skills/framework/`
+
+**To clean up manually after direct uninstall:**
+
+```bash
+# Remove individual skill plugins
+claude plugin uninstall commit@dohernandez-claude-skills
+claude plugin uninstall pr-create@dohernandez-claude-skills
+# ... repeat for each installed skill
+
+# Remove infrastructure files
+rm -f .claude/Taskfile.yaml
+rm -rf .claude/scripts/
+rm -rf .claude/skills/framework/
+
+# Optionally remove skill configs
+rm -rf .claude/skills/*.yaml
+```
+
+**Note:** The infrastructure files are harmless if left behind. They don't affect other plugins or Claude Code functionality.
+
+## List Installed Skills
+
+### `/framework list`
+
+Show all installed skills from this marketplace.
+
+```
+╔══════════════════════════════════════════════════════════════╗
+║  Installed Skills                                            ║
+╚══════════════════════════════════════════════════════════════╝
+
+Scope: project
+
+Installed (11):
+  ✓ commit          Git commits with conventional format
+  ✓ create-skill    Scaffold new skills
+  ✓ docs-refresh    Documentation generation
+  ✓ linear          Linear issue management
+  ✓ pr-create       Create GitHub PRs
+  ✓ pr-merge        Merge PRs with CI validation
+  ✓ setup           Project setup
+  ✓ task            Task execution
+  ✓ bugfix          Bug investigation
+  ✓ workflow-finish Complete workflow cleanup
+  ✓ workflow-setup  Initialize workflow
+
+Not installed (11):
+  ○ arch            Architecture patterns
+  ○ code            Code style enforcement
+  ○ debugger        Production debugging
+  ○ deploy          Deployment workflow
+  ○ deploy-verify   Post-deployment verification
+  ○ developer       Development orchestration
+  ○ domain-expert   Domain knowledge
+  ○ slack           Slack integration
+  ○ tdd             Test-driven development
+  ○ test            Smart test runner
+  ○ workflow        Workflow orchestration
+
+Install more: /framework install <skill>
+Install tier: /framework install standard
+```
+
+## Update Skills
+
+### `/framework update`
+
+Update all installed skills to latest version.
+
+```
+╔══════════════════════════════════════════════════════════════╗
+║  Updating Skills                                             ║
+╚══════════════════════════════════════════════════════════════╝
+
+[1/11] Updating commit...
+  → claude plugin update commit@dohernandez-claude-skills
+  ✓ Updated
+
+... (continues for all installed skills)
+
+Summary
+───────
+✓ Updated: 11 skills
+```
+
+## Configuration Workflow
+
+### `/framework configure`
+
+Configure installed skills. Only shows skills that are actually installed.
+
+```
+╔══════════════════════════════════════════════════════════════╗
+║  Claude Code Skills - Configuration                          ║
+╚══════════════════════════════════════════════════════════════╝
 
 Phase 1: Framework Configuration
 ────────────────────────────────
 PROJECT_NAME: my-project
-LINT_COMMAND: (none)
-TEST_COMMAND: (none)
+LINT_COMMAND: npm run lint
+TEST_COMMAND: npm test
 PRECOMMIT_COMMAND: (none)
 
 ✓ Saved to .claude/skills-config.env
 
 Phase 2: Skill Configuration
 ────────────────────────────
+Configuring installed skills...
+
 [1/5] commit - Configure? [Configure / Skip]
   → Configured: conventional commits, scopes: api, core, infra
   ✓ Saved to .claude/skills/commit.yaml
@@ -159,71 +299,101 @@ Phase 2: Skill Configuration
 [2/5] linear - Configure? [Configure / Skip]
   → Skipped (usable with defaults)
 
-[3/5] docs-refresh - Configure? [Configure / Skip]
-  → Configured: docs/ directory
-  ✓ Saved to .claude/skills/docs-refresh.yaml
-
-... (continue for each skill in tier)
+... (continues for configurable skills)
 
 Phase 3: Summary
 ────────────────
-✓ Framework configured successfully!
+✓ Configuration complete!
 
-Tier: Minimal (11 skills)
-
-Configured skills:
+Configured:
   • commit        .claude/skills/commit.yaml
   • docs-refresh  .claude/skills/docs-refresh.yaml
-  • setup         .claude/skills/setup.yaml
 
-Skipped skills (usable with defaults):
+Skipped (using defaults):
   • linear
-  • task
+  • setup
 
-Skills without configuration:
-  • create-skill, pr-create, pr-merge, bugfix, workflow-finish, workflow-setup
-
-To re-configure a specific skill:
-  /commit configure
-  /linear configure
-  etc.
+To re-configure: /<skill> configure
 ```
 
-## Status Command
+## Status
 
-When user runs `/framework status`:
+### `/framework status`
+
+Show current installation and configuration status.
 
 ```
 ╔══════════════════════════════════════════════════════════════╗
-║  Framework Configuration Status                              ║
+║  Framework Status                                            ║
 ╚══════════════════════════════════════════════════════════════╝
+
+Marketplace: dohernandez-claude-skills
+
+Installation:
+  Installed: 11 skills (minimal tier)
+  Scope: project
 
 Framework Config: .claude/skills-config.env
   PROJECT_NAME: my-project ✓
   LINT_COMMAND: npm run lint ✓
   TEST_COMMAND: npm test ✓
-  TEST_WATCH_COMMAND: npm test -- --watch ✓
-  TEST_COVERAGE_COMMAND: npm test -- --coverage ✓
   PRECOMMIT_COMMAND: (default) ✓
 
 Skill Configurations:
-  ✓ arch        .claude/skills/arch.yaml
-  ✓ code        .claude/skills/code.yaml
-  ✓ tdd         .claude/skills/tdd.yaml
-  ✗ commit      Not configured
-  ✗ developer   Not configured
-  ...
+  ✓ commit        .claude/skills/commit.yaml
+  ✓ docs-refresh  .claude/skills/docs-refresh.yaml
+  ○ linear        Not configured (using defaults)
+  ○ setup         Not configured (using defaults)
+  ○ task          Not configured (using defaults)
 
-Run /framework configure to configure missing skills.
+Commands:
+  /framework install standard  - Upgrade to standard tier
+  /framework configure         - Configure more skills
+  /framework update           - Update all skills
 ```
+
+## Implementation Details
+
+### Install Command
+
+For each skill in the tier, run:
+
+```bash
+claude plugin install <skill>@dohernandez-claude-skills --scope <scope>
+```
+
+### Check Installed Skills
+
+To determine which skills are installed, check:
+
+```bash
+# List installed plugins and filter by marketplace
+claude plugin list | grep dohernandez-claude-skills
+```
+
+Or read from settings files:
+- Project: `.claude/settings.json`
+- Local: `.claude/settings.local.json`
+- User: `~/.claude/settings.json`
+
+### Skill Plugin Names
+
+All skills follow the pattern: `<skill-name>@dohernandez-claude-skills`
+
+Examples:
+- `commit@dohernandez-claude-skills`
+- `pr-create@dohernandez-claude-skills`
+- `tdd@dohernandez-claude-skills`
 
 ## Error Handling
 
-- If a skill's configure fails, log the error and continue with next skill
-- At the end, show list of skills that failed configuration
-- User can re-run individual skill configure commands
+- If a skill installation fails, log the error and continue with next skill
+- At the end, show summary of successful and failed installations
+- User can retry failed skills individually
 
 ## Notes
 
-- This skill is included in the framework bundle but can also be invoked after individual skill installation
-- When installing a single skill that requires configuration, the install process should prompt to run `/skill configure`
+- Skills can be installed individually without using the framework
+- The framework just provides convenient tier-based installation
+- Each skill is a standalone plugin with its own version
+- Configuration files are separate from plugin installation

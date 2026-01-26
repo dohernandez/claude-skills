@@ -1,22 +1,32 @@
 #!/bin/bash
-set -euo pipefail
+# ============================================================================
+# FRAMEWORK SKILL SETUP - Triggered by plugin SessionStart hook
+# ============================================================================
+# Installs the framework skill which provides:
+#   /framework install <tier>  - Install skills by tier
+#   /framework configure       - Configure installed skills
+#   /framework list            - Show installed skills
+# ============================================================================
 
-BLUE='\033[0;34m'
-GREEN='\033[0;32m'
-CYAN='\033[0;36m'
-NC='\033[0m'
+set -uo pipefail
 
-log_info() { echo -e "${BLUE}[INFO]${NC} $1"; }
-log_success() { echo -e "${GREEN}[OK]${NC} $1"; }
-log_header() { echo -e "\n${CYAN}=== $1 ===${NC}\n"; }
+# Colors (disabled for hook execution - no TTY)
+BLUE=''
+GREEN=''
+CYAN=''
+NC=''
+
+log_info() { echo "[INFO] $1"; }
+log_success() { echo "[OK] $1"; }
+log_header() { echo "=== $1 ==="; }
 
 PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
-PROJECT_ROOT="${PWD}"
+PROJECT_ROOT="${CLAUDE_PROJECT_DIR:-${PWD}}"
 
 SKILL_NAME="framework"
 
 main() {
-    log_header "${SKILL_NAME^} Skill Setup"
+    log_header "${SKILL_NAME} Skill Setup"
 
     mkdir -p "$PROJECT_ROOT/.claude/skills"
 
@@ -30,12 +40,17 @@ main() {
     if [[ -d "$dest" ]]; then
         log_info "Skill already installed: $SKILL_NAME"
     else
-        cp -r "$skill_source" "$dest"
+        cp -rL "$skill_source" "$dest"
         log_success "Installed: $SKILL_NAME"
     fi
 
     log_header "Installation Complete"
-    echo "Skill is now available as: /$SKILL_NAME"
+    echo ""
+    echo "Framework installed. Next steps:"
+    echo ""
+    echo "  /framework install minimal   - Install 11 core skills"
+    echo "  /framework install standard  - Install 16 skills"
+    echo "  /framework install full      - Install all 22 skills"
     echo ""
 }
 

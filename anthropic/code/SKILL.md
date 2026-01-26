@@ -1,6 +1,29 @@
+---
+name: code
+description: Code style discovery, validation, and guidance. Use when user says /code, /code discover, /code learn, /code check, or /code guide.
+user-invocable: true
+allowed-tools:
+  - Read
+  - Bash
+  - Glob
+  - Grep
+hooks:
+  Stop:
+    - type: command
+      command: "task -t .claude/Taskfile.yaml claude:validate-skill -- --skill code"
+---
+
 # Code Skill
 
-Code style discovery, validation, and guidance for writing defensive, well-reasoned code.
+## Purpose
+
+Discover, validate, and guide code style. Helps write defensive, well-reasoned code following project conventions.
+
+## Quick Reference
+
+- **Validates:** Code style, naming conventions, patterns
+- **Modes:** discover, learn, check, guide
+- **Stop hook:** `task claude:validate-skill -- --skill code`
 
 ## Modes Overview
 

@@ -1,48 +1,45 @@
 # Architecture skill collaboration
 # Defines how arch skill works with other skills
 
-dependencies:
+dependencies: []
   # No hard dependencies - arch is a foundational skill
 
 triggers:
-  # When to suggest using arch skill
-  patterns:
-    - "architecture"
-    - "layer"
-    - "import violation"
-    - "where should.*go"
-    - "which layer"
-    - "dependency"
-    - "circular"
+  - pattern: "architecture|layer|import violation|where should.*go|which layer|dependency|circular"
+    suggest: arch
 
 provides_to:
-  developer:
-    - layer_assignments: "Which layer(s) new code belongs in"
-    - file_locations: "Suggested file paths"
-    - reasoning: "Why each layer was chosen"
+  - skill: developer
+    provides:
+      - "layer_assignments: Which layer(s) new code belongs in"
+      - "file_locations: Suggested file paths"
+      - "reasoning: Why each layer was chosen"
     mode: plan
     usage: |
       Developer skill calls /arch plan before implementation to determine
       where code should be placed. This ensures architecture compliance
       from the start rather than fixing violations after.
 
-  code:
-    - layer_context: "Current layer for style/pattern guidance"
-    - allowed_imports: "What this layer can import"
+  - skill: code
+    provides:
+      - "layer_context: Current layer for style/pattern guidance"
+      - "allowed_imports: What this layer can import"
     mode: check
     usage: |
       Code skill uses arch knowledge to ensure imports follow rules
       when generating or modifying code.
 
 receives_from:
-  developer:
-    - change_description: "What is being implemented"
+  - skill: developer
+    receives:
+      - "change_description: What is being implemented"
     usage: |
       Developer provides description of new functionality,
       arch returns layer assignments.
 
-  workflow:
-    - validation_request: "Check architecture before commit/PR"
+  - skill: workflow
+    receives:
+      - "validation_request: Check architecture before commit/PR"
     usage: |
       Workflow triggers /arch check as part of pre-commit validation.
 
@@ -52,25 +49,25 @@ integration_patterns:
       Before writing code, developer skill asks arch for layer guidance.
       This prevents architecture violations from being introduced.
     flow:
-      1. User requests feature
-      2. Developer skill calls: /arch plan <feature description>
-      3. Arch returns: layer assignments + reasoning
-      4. Developer routes to appropriate code patterns
+      - "User requests feature"
+      - "Developer skill calls: /arch plan <feature description>"
+      - "Arch returns: layer assignments + reasoning"
+      - "Developer routes to appropriate code patterns"
 
   - pattern: "pre-commit-validation"
     description: |
       Before committing, workflow triggers architecture check.
       Prevents violations from entering codebase.
     flow:
-      1. User requests commit
-      2. Workflow calls: /arch check
-      3. If violations: block commit, show fixes
-      4. If clean: proceed with commit
+      - "User requests commit"
+      - "Workflow calls: /arch check"
+      - "If violations: block commit, show fixes"
+      - "If clean: proceed with commit"
 
   - pattern: "pr-review"
     description: |
       During PR review, arch check validates changed files.
     flow:
-      1. PR created
-      2. CI runs: /arch check
-      3. Violations reported in PR comments
+      - "PR created"
+      - "CI runs: /arch check"
+      - "Violations reported in PR comments"

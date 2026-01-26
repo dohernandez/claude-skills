@@ -1,6 +1,29 @@
+---
+name: arch
+description: Architecture discovery, validation, and planning. Use when user says /arch, /arch discover, /arch learn, /arch check, or /arch plan.
+user-invocable: true
+allowed-tools:
+  - Read
+  - Bash
+  - Glob
+  - Grep
+hooks:
+  Stop:
+    - type: command
+      command: "task -t .claude/Taskfile.yaml claude:validate-skill -- --skill arch"
+---
+
 # Architecture Skill
 
-Architecture guidance and validation for your project.
+## Purpose
+
+Discover, validate, and guide project architecture. Ensures code follows layer boundaries and helps plan where new code should go.
+
+## Quick Reference
+
+- **Validates:** Layer boundaries, import directions, architectural compliance
+- **Modes:** discover, learn, check, plan
+- **Stop hook:** `task claude:validate-skill -- --skill arch`
 
 ## Modes Overview
 

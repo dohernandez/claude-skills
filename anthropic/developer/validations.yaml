@@ -1,0 +1,29 @@
+# Validations for developer
+# v1 supports command validations only
+
+name: developer
+version: "2.0.0"
+
+validations:
+  - id: config-exists
+    type: file
+    path: ".claude/skills/developer.yaml"
+    description: "Developer config exists (run /developer discover first)"
+    failure_message: "Developer config not found. Run /developer discover to analyze project architecture."
+
+  - id: precommit
+    type: command
+    command: "task -t .claude/Taskfile.yaml precommit"
+    description: "Run pre-commit checks (lint + tests)"
+    failure_message: "Pre-commit checks failed. Fix errors before proceeding."
+
+  - id: skill-structure
+    type: command
+    command: "task -t .claude/Taskfile.yaml validate-skill -- --skill developer"
+    description: "Validate skill YAML structure"
+    failure_message: "Skill validation failed. Check skill file structure."
+
+# on_stop: quick validation only
+# Full test suite runs via precommit when needed
+on_stop:
+  - config-exists

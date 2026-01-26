@@ -1,0 +1,284 @@
+name: developer
+kind: orchestrator
+version: "2.0.0"
+description: "Orchestrates development workflow with domain understanding, architecture mapping, and implementation."
+severity: high
+tags:
+  - orchestrator
+  - development-workflow
+  - architecture
+  - domain
+
+config_location: ".claude/skills/developer.yaml"
+
+purpose: |
+  Provides a unified development workflow that:
+  1. Understands user requests in domain terms
+  2. Maps changes to the correct architecture layer
+  3. Implements following project patterns and conventions
+  4. Validates changes before completion
+
+  This skill discovers project architecture during setup and uses that knowledge
+  for all subsequent development tasks.
+
+owns:
+  - "Development workflow orchestration"
+  - "Architecture layer routing"
+  - "Domain-to-implementation mapping"
+
+commands:
+  - name: discover
+    description: "Analyze entire project for architecture patterns (framework setup)"
+    procedure:
+      - "Scan project structure for architecture style"
+      - "Identify layer boundaries and naming conventions"
+      - "Detect import rules and dependency direction"
+      - "Extract domain concepts and vocabulary"
+      - "Find test file patterns and locations"
+      - "Propose findings to user for approval"
+      - "Save approved config to .claude/skills/developer.yaml"
+    output: ".claude/skills/developer.yaml"
+    user_approval: required
+
+  - name: learn
+    description: "Analyze specific path and update architecture config"
+    arguments:
+      - name: path
+        required: true
+        description: "Path to analyze for patterns"
+    procedure:
+      - "Read existing config from .claude/skills/developer.yaml"
+      - "Analyze specified path for patterns"
+      - "Identify new domain concepts or layers"
+      - "Propose updates to user"
+      - "Merge approved updates into config"
+    output: "Updates .claude/skills/developer.yaml"
+    user_approval: required
+
+  - name: default
+    description: "Orchestrate development using saved configuration"
+    requires: ".claude/skills/developer.yaml exists"
+    procedure:
+      - "Load architecture config"
+      - "Understand request in domain terms"
+      - "Locate relevant code using architecture mapping"
+      - "Plan changes respecting layer boundaries"
+      - "Implement following project patterns"
+      - "Validate with configured checks"
+
+inputs_required:
+  - id: user_request
+    description: "Description of the change, feature, or fix requested by the user"
+    examples:
+      - "Add user authentication"
+      - "Create a new API endpoint"
+      - "Update the notification service"
+      - "Add database caching"
+
+required_outputs:
+  - "Implemented change following architecture boundaries"
+  - "Tests passing"
+  - "Pre-commit checks passing"
+
+discovery:
+  architecture_detection:
+    - indicator: "src/domain, src/infrastructure, src/application"
+      style: layered
+      description: "Hexagonal/clean architecture with clear layer boundaries"
+    - indicator: "src/<feature>/ with self-contained modules"
+      style: modular
+      description: "Feature-based modules with internal structure"
+    - indicator: "src/models, src/services, src/utils"
+      style: flat
+      description: "Traditional MVC-style flat structure"
+    - indicator: "packages/, apps/"
+      style: monorepo
+      description: "Multiple packages in single repository"
+
+  import_rule_detection:
+    - pattern: "Domain imports nothing external"
+      rule: "domain → (none)"
+    - pattern: "Infrastructure imports domain only"
+      rule: "infrastructure → domain"
+    - pattern: "Application imports both"
+      rule: "application → domain, infrastructure"
+
+  test_pattern_detection:
+    - pattern: "*.test.ts adjacent to source"
+      location: adjacent
+      suffix: ".test"
+    - pattern: "__tests__/ directories"
+      location: __tests__
+      suffix: ".test"
+    - pattern: "tests/ at root"
+      location: root_tests
+      suffix: ".test"
+    - pattern: "*_test.go adjacent"
+      location: adjacent
+      suffix: "_test"
+    - pattern: "test_*.py in tests/"
+      location: root_tests
+      suffix: "test_"
+
+patterns:
+  - id: domain-first-understanding
+    description: |
+      Map user request to domain concepts before implementation.
+      Use discovered domain_concepts from config.
+    example: |
+      User: "Add monitoring for user activity"
+
+      Step 1: Check domain_concepts in config
+      - "user" → src/domain/user
+      - "activity" → src/domain/activity or new concept
+
+      Step 2: Plan implementation based on findings
+
+  - id: architecture-layer-mapping
+    description: |
+      Use discovered architecture style to determine affected layers.
+      Follow import_rules from config for dependency direction.
+    example: |
+      Request: "Add email notifications"
+
+      Config shows layered architecture:
+      - Domain: notification models
+      - Infrastructure: email service integration
+      - Application: notification handler
+
+      Follow import rules: app → infra → domain
+
+  - id: bottom-up-implementation
+    description: |
+      For multi-layer changes, implement from inner to outer layers.
+      Validate after each layer.
+    example: |
+      Multi-layer change:
+      1. Domain (business logic) - validate
+      2. Infrastructure (integrations) - validate
+      3. Application (orchestration) - validate
+
+  - id: pattern-consistency
+    description: |
+      Follow discovered naming and structure patterns.
+      Match existing code style in the codebase.
+    example: |
+      Config shows:
+        naming.files: kebab-case
+        naming.functions: camelCase
+        test_suffix: .test
+
+      New file: user-service.ts
+      New function: getUserById()
+      New test: user-service.test.ts
+
+anti_patterns:
+  - id: skipping-architecture-check
+    description: "Implementing without checking architecture config"
+    why_bad: "May violate layer boundaries or import rules"
+
+  - id: wrong-layer-placement
+    description: "Placing code in wrong architecture layer"
+    why_bad: "Breaks dependency rules, makes code untestable"
+
+  - id: ignoring-domain-concepts
+    description: "Using generic terms instead of project vocabulary"
+    why_bad: "Code becomes unclear, doesn't match domain model"
+
+  - id: top-down-implementation
+    description: "Starting at outer layers before inner layers ready"
+    why_bad: "Creates placeholder code, architectural debt"
+
+  - id: skipping-validation
+    description: "Not running pre-commit checks before completion"
+    why_bad: "May introduce regressions or style violations"
+
+procedure:
+  - step: "Load configuration"
+    detail: |
+      Read .claude/skills/developer.yaml for:
+      - Architecture style and layers
+      - Import rules
+      - Domain concepts
+      - Naming patterns
+
+      If config doesn't exist, prompt user to run /developer discover first.
+
+  - step: "Understand request in domain terms"
+    detail: |
+      Map user request to domain_concepts from config.
+      Identify which domain areas are involved.
+      Note any new concepts not in config.
+
+  - step: "Locate relevant code"
+    detail: |
+      Use architecture.layers from config to find:
+      - Existing code in affected areas
+      - Related modules and files
+      - Test files for affected code
+
+  - step: "Plan implementation"
+    detail: |
+      Based on architecture style:
+      - Determine which layers are affected
+      - Plan implementation order (bottom-up for layered)
+      - Identify files to create or modify
+      - Note test files needed
+
+  - step: "Implement changes"
+    detail: |
+      Follow patterns from config:
+      - Use correct naming conventions
+      - Respect import rules
+      - Match existing code style
+      - Create tests following test patterns
+
+      For multi-layer: implement inner layers first, validate after each.
+
+  - step: "Validate changes"
+    detail: |
+      Run pre-commit validation:
+        task -t .claude/Taskfile.yaml precommit
+
+      Fix any errors before considering complete.
+      Do NOT proceed if validation fails.
+
+decision_tree:
+  - question: "Does config exist?"
+    no: "Prompt user to run /developer discover"
+    yes: "Continue with workflow"
+
+  - question: "How many layers affected?"
+    answers:
+      - answer: "Single layer"
+        action: "Direct implementation"
+      - answer: "Multiple layers"
+        action: "Implement bottom-up, validate after each"
+
+  - question: "Is this a new concept?"
+    yes: "Add to domain_concepts, suggest /developer learn"
+    no: "Use existing concept mapping"
+
+examples:
+  - request: "Add user authentication"
+    workflow: |
+      1. Check config: architecture=layered, domain_concepts has "user"
+      2. Plan: domain (auth models) → infrastructure (auth provider) → application (auth handler)
+      3. Implement bottom-up
+      4. Validate: task -t .claude/Taskfile.yaml precommit
+
+  - request: "Create API endpoint for reports"
+    workflow: |
+      1. Check config: find "report" in domain_concepts or add new
+      2. Plan: domain (report models) → application (API handler)
+      3. Implement following patterns.naming
+      4. Add tests following patterns.test_suffix
+      5. Validate
+
+  - request: "Fix bug in payment processing"
+    workflow: |
+      1. Check config: locate "payment" domain
+      2. Find affected files using architecture.layers
+      3. Fix following existing patterns
+      4. Update/add tests
+      5. Validate

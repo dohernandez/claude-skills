@@ -13,35 +13,109 @@
       "tags": ["workflow", "git", "testing", "deployment", "developer-tools"]
     },
     {
+      "name": "arch",
+      "source": "plugins/arch",
+      "description": "Architecture guidance and validation"
+    },
+    {
+      "name": "bugfix",
+      "source": "plugins/bugfix",
+      "description": "Structured bug investigation workflow"
+    },
+    {
+      "name": "code",
+      "source": "plugins/code",
+      "description": "Code style discovery and enforcement"
+    },
+    {
       "name": "commit",
       "source": "plugins/commit",
-      "description": "Git commits with conventional commit format",
-      "tags": ["git", "commit"]
+      "description": "Git commits with conventional commit format"
+    },
+    {
+      "name": "create-skill",
+      "source": "plugins/create-skill",
+      "description": "Scaffold new skills"
+    },
+    {
+      "name": "debugger",
+      "source": "plugins/debugger",
+      "description": "Debug production issues systematically"
+    },
+    {
+      "name": "deploy",
+      "source": "plugins/deploy",
+      "description": "Deployment workflow with environment selection"
+    },
+    {
+      "name": "deploy-verify",
+      "source": "plugins/deploy-verify",
+      "description": "Post-deployment verification"
+    },
+    {
+      "name": "developer",
+      "source": "plugins/developer",
+      "description": "Development orchestration with domain awareness"
+    },
+    {
+      "name": "docs-refresh",
+      "source": "plugins/docs-refresh",
+      "description": "Documentation generation and maintenance"
+    },
+    {
+      "name": "domain-expert",
+      "source": "plugins/domain-expert",
+      "description": "Domain knowledge and terminology"
     },
     {
       "name": "linear",
       "source": "plugins/linear",
-      "description": "Linear issue management and ticket workflows",
-      "tags": ["linear", "issues", "project-management"]
+      "description": "Linear issue management and ticket workflows"
     },
     {
       "name": "pr-create",
       "source": "plugins/pr-create",
-      "description": "Create GitHub pull requests with standardized format",
-      "tags": ["git", "github", "pull-request"]
+      "description": "Create GitHub pull requests"
     },
     {
       "name": "pr-merge",
       "source": "plugins/pr-merge",
-      "description": "Merge GitHub pull requests with proper validation",
-      "tags": ["git", "github", "pull-request"]
+      "description": "Merge pull requests with validation"
     },
     {
-      "name": "node-installer",
-      "source": "plugins/node-installer",
-      "description": "Node.js version management and installation",
-      "tags": ["nodejs", "nvm", "installation"],
-      "standalone": true
+      "name": "setup",
+      "source": "plugins/setup",
+      "description": "Project setup and onboarding"
+    },
+    {
+      "name": "slack",
+      "source": "plugins/slack",
+      "description": "Slack integration for notifications"
+    },
+    {
+      "name": "task",
+      "source": "plugins/task",
+      "description": "Task execution and management"
+    },
+    {
+      "name": "tdd",
+      "source": "plugins/tdd",
+      "description": "Test-driven development workflow"
+    },
+    {
+      "name": "workflow",
+      "source": "plugins/workflow",
+      "description": "Development workflow orchestrator"
+    },
+    {
+      "name": "workflow-finish",
+      "source": "plugins/workflow-finish",
+      "description": "Complete workflow with cleanup"
+    },
+    {
+      "name": "workflow-setup",
+      "source": "plugins/workflow-setup",
+      "description": "Initialize workflow with branch creation"
     }
   ]
 }

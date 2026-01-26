@@ -1,0 +1,12 @@
+{
+  "name": "create-skill",
+  "description": "Scaffold a new Claude Code skill using the multi-YAML patter",
+  "version": "1.0.0",
+  "author": {
+    "name": "GenLayer Labs",
+    "url": "https://github.com/genlayerlabs"
+  },
+  "repository": "https://github.com/genlayerlabs/skills",
+  "skills": "./skills/",
+  "hooks": "./hooks/hooks.json"
+}

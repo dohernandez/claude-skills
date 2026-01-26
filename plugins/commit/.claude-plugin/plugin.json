@@ -8,5 +8,6 @@
   },
   "keywords": ["git", "commit", "conventional-commits"],
   "repository": "https://github.com/genlayerlabs/skills",
-  "skills": "./skills/"
+  "skills": "./skills/",
+  "hooks": "./hooks/hooks.json"
 }

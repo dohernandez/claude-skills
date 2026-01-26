@@ -8,5 +8,6 @@
   },
   "keywords": ["linear", "issues", "project-management", "tickets"],
   "repository": "https://github.com/genlayerlabs/skills",
-  "skills": "./skills/"
+  "skills": "./skills/",
+  "hooks": "./hooks/hooks.json"
 }

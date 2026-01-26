@@ -5,20 +5,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/post-install.sh",
-            "description": "Validate prerequisites and guide framework setup"
-          }
-        ]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": "Write|Edit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/check-skill-structure.sh",
-            "description": "Validate skill structure after editing skill files"
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/setup.sh",
+            "description": "Install framework skills into project"
           }
         ]
       }

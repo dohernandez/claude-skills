@@ -1,6 +1,6 @@
-# Claude Code Plugins
+# Claude Code Skills
 
-Developer workflow plugins for Anthropic's Claude Code. This repository is a marketplace of plugins that can be installed into your Claude Code projects.
+Developer workflow skills for Anthropic's Claude Code. Install the full framework or individual skills via the marketplace.
 
 ## Overview
 
@@ -9,207 +9,244 @@ Skills are structured configuration files that guide AI assistants through compl
 ## Quick Start
 
 ```bash
-# Add the marketplace (once)
+# 1. Add the marketplace (once)
 /plugin marketplace add https://github.com/genlayerlabs/skills.git
 
-# Install full framework (22 skills)
+# 2. Install full framework (22 skills)
 /plugin install framework@genlayerlabs-skills
 
-# Or install individual skills
-/plugin install commit@genlayerlabs-skills
-/plugin install linear@genlayerlabs-skills
+# 3. Initialize - REQUIRED (copies skills to your project)
+claude --init
+
+# 4. Configure - REQUIRED (sets up skills for your project)
+/framework configure
 ```
 
-## Available Plugins
+After these steps, skills are available as `/commit`, `/tdd`, `/linear`, etc.
 
-| Plugin | Skills | Description |
-|--------|--------|-------------|
-| `framework` | 22 | Complete developer workflow framework |
-| `commit` | 1 | Git commits with conventional commit format |
-| `linear` | 1 | Linear issue management and ticket workflows |
-| `pr-create` | 1 | Create GitHub pull requests with standardized format |
-| `pr-merge` | 1 | Merge GitHub pull requests with proper validation |
-| `node-installer` | 1 | Node.js version management (standalone) |
+## Installation Flow
 
-## Installation
+```
+┌─────────────────────────────────────────────────────────────┐
+│  1. /plugin marketplace add .../skills.git                  │
+│                         ↓                                   │
+│  2. /plugin install framework@genlayerlabs-skills           │
+│     (Plugin cached at ~/.claude/plugins/cache/)             │
+│                         ↓                                   │
+│  3. claude --init                                           │
+│     (Setup hook copies skills to project/.claude/skills/)   │
+│                         ↓                                   │
+│  4. /framework configure                                    │
+│     (Configure each skill that needs it)                    │
+│                         ↓                                   │
+│  Skills available as: /commit, /linear, /tdd, etc.          │
+└─────────────────────────────────────────────────────────────┘
+```
+
+## Available Plugins (23)
+
+Install the full framework or any individual skill:
+
+| Plugin | Description |
+|--------|-------------|
+| `framework` | **All 22 skills** - Complete developer workflow |
+| `arch` | Architecture guidance and validation |
+| `bugfix` | Structured bug investigation workflow |
+| `code` | Code style discovery and enforcement |
+| `commit` | Git commits with conventional format |
+| `create-skill` | Scaffold new skills |
+| `debugger` | Debug production issues systematically |
+| `deploy` | Deployment workflow with environment selection |
+| `deploy-verify` | Post-deployment verification |
+| `developer` | Development orchestration with domain awareness |
+| `docs-refresh` | Documentation generation and maintenance |
+| `domain-expert` | Domain knowledge and terminology |
+| `linear` | Linear issue management and ticket workflows |
+| `pr-create` | Create GitHub pull requests |
+| `pr-merge` | Merge pull requests with validation |
+| `setup` | Project setup and onboarding |
+| `slack` | Slack integration for notifications |
+| `task` | Task execution and management |
+| `tdd` | Test-driven development workflow |
+| `workflow` | Development workflow orchestrator |
+| `workflow-finish` | Complete workflow with cleanup |
+| `workflow-setup` | Initialize workflow with branch creation |
+
+**Same result:** Installing `framework` = Installing all 22 individual plugins
+
+## Installation Options
 
 ### Option A: Install Full Framework (22 skills)
 
 ```bash
-# Add the marketplace
+# 1. Add the marketplace (once)
 /plugin marketplace add https://github.com/genlayerlabs/skills.git
 
-# Install the framework plugin
+# 2. Install the framework plugin
 /plugin install framework@genlayerlabs-skills
-```
 
-This installs all 22 framework skills (2 meta + 11 core + 9 customizable).
-
-**After installation:**
-```bash
-# Validate prerequisites
+# 3. Initialize - REQUIRED (copies skills to project)
 claude --init
 
-# Configure the framework
-/framework:configure
+# 4. Configure - REQUIRED (configures all skills that need it)
+/framework configure
 ```
+
+**What gets installed:**
+```
+your-project/
+├── .claude/
+│   ├── skills/           # All 22 skills
+│   │   ├── commit/
+│   │   ├── linear/
+│   │   ├── tdd/
+│   │   └── ...
+│   ├── hooks/            # Hook configurations
+│   ├── scripts/          # Validation scripts
+│   └── Taskfile.yaml     # Task runner
+```
+
+**Skills are invoked directly:** `/commit`, `/linear`, `/tdd`, etc.
 
 ### Option B: Install Individual Skills
 
 ```bash
-# Add the marketplace (if not already added)
+# 1. Add the marketplace (if not already added)
 /plugin marketplace add https://github.com/genlayerlabs/skills.git
 
-# Install specific skill plugins
+# 2. Install specific skill(s)
 /plugin install commit@genlayerlabs-skills
-/plugin install linear@genlayerlabs-skills
+/plugin install tdd@genlayerlabs-skills
+
+# 3. Initialize - REQUIRED (copies skills to project)
+claude --init
+
+# 4. Configure - REQUIRED for skills that need it
+/tdd configure
 ```
 
-**After installation:**
-```bash
-# Use the skill (namespaced by plugin)
-/commit:commit
-/linear:linear
+**What gets installed:**
+```
+your-project/
+├── .claude/
+│   └── skills/
+│       ├── commit/
+│       └── tdd/
 ```
 
-### Option C: Install Standalone Plugins
+**Skills are invoked directly:** `/commit`, `/tdd`
 
-Standalone plugins are not part of the framework bundle:
+### Required Steps Summary
 
-```bash
-/plugin install node-installer@genlayerlabs-skills
-```
+| Step | Command | When |
+|------|---------|------|
+| 1. Add marketplace | `/plugin marketplace add ...` | Once per machine |
+| 2. Install plugin | `/plugin install <name>@...` | Once per project |
+| 3. **Initialize** | `claude --init` | **REQUIRED** - Copies skills to project |
+| 4. **Configure** | `/framework configure` or `/skill configure` | **REQUIRED** - For skills that need it |
 
-## Skill Namespacing
-
-Skills are namespaced by their plugin name:
-
-| Installed Plugin | Skill Invocation |
-|------------------|------------------|
-| `framework` | `/framework:commit`, `/framework:linear`, etc. |
-| `commit` | `/commit:commit` |
-| `linear` | `/linear:linear` |
-
-**Note:** If you install the full `framework` plugin, use `/framework:commit`. If you install the individual `commit` plugin, use `/commit:commit`.
-
-## Installation Behavior
-
-| Step | Framework Install | Individual Install |
-|------|-------------------|-------------------|
-| 1. Add marketplace | `/plugin marketplace add .../skills.git` | Same |
-| 2. Install plugin | `/plugin install framework@...` | `/plugin install commit@...` |
-| 3. Validate | `claude --init` | `claude --init` |
-| 4. Configure | `/framework:configure` | (if skill has configure) |
-
-**Key principle:** Configuration is a separate step after installation.
-
-**Why separate steps?**
-- Claude Code plugins don't have automatic post-install wizards
-- Users have full control over what gets configured
-- Configuration can be re-run anytime to update settings
+**Important:** Without `claude --init`, skills won't be copied to your project. Without configure, skills that require configuration won't work properly.
 
 ## Framework Skills (22)
 
-### Meta Skills (2) - Framework management
+### Meta Skills (2)
 
-| Skill | Command | Description |
-|-------|---------|-------------|
-| `framework` | `/framework:framework` | Configure framework after installation |
-| `create-skill` | `/framework:create-skill` | Create new skills following the architecture |
+| Skill | Configure | Description |
+|-------|-----------|-------------|
+| `framework` | yes | Configure the framework |
+| `create-skill` | no | Scaffold new skills |
 
-### Core Skills (11) - Drop-in, no customization needed
+### Core Skills (11)
 
-| Skill | Command | Description |
-|-------|---------|-------------|
-| `commit` | `/framework:commit` | Git commit with conventional commit format |
-| `pr-create` | `/framework:pr-create` | Create pull requests with standardized format |
-| `pr-merge` | `/framework:pr-merge` | Merge pull requests with proper validation |
-| `bugfix` | `/framework:bugfix` | Structured bug investigation and fix workflow |
-| `task` | `/framework:task` | Task execution and management workflow |
-| `tdd` | `/framework:tdd` | Test-driven development workflow |
-| `workflow` | `/framework:workflow` | Main development workflow orchestrator |
-| `workflow-setup` | `/framework:workflow-setup` | Initialize workflow with branch creation |
-| `workflow-finish` | `/framework:workflow-finish` | Complete workflow with cleanup |
-| `linear` | `/framework:linear` | Linear issue management and ticket workflows |
-| `slack` | `/framework:slack` | Slack integration for notifications |
+| Skill | Configure | Description |
+|-------|-----------|-------------|
+| `commit` | no | Git commits with conventional format |
+| `pr-create` | no | Create GitHub pull requests |
+| `pr-merge` | no | Merge pull requests with validation |
+| `bugfix` | no | Structured bug investigation |
+| `task` | yes | Task execution and management |
+| `tdd` | yes | Test-driven development workflow |
+| `workflow` | no | Development workflow orchestrator |
+| `workflow-setup` | yes | Initialize workflow with branch creation |
+| `workflow-finish` | yes | Complete workflow with cleanup |
+| `linear` | no | Linear issue management |
+| `slack` | no | Slack integration |
 
-### Customizable Skills (9) - Have configure mode
+### Customizable Skills (9)
 
-| Skill | Command | Description |
-|-------|---------|-------------|
-| `arch` | `/framework:arch` | Architecture guidance and validation |
-| `code` | `/framework:code` | Code style configuration and enforcement |
-| `developer` | `/framework:developer` | Development orchestration with domain understanding |
-| `docs-refresh` | `/framework:docs-refresh` | Documentation generation and maintenance |
-| `setup` | `/framework:setup` | Project setup and onboarding |
-| `domain-expert` | `/framework:domain-expert` | Domain knowledge and terminology |
-| `debugger` | `/framework:debugger` | Debugging workflow with systematic investigation |
-| `deploy` | `/framework:deploy` | Deployment workflow |
-| `deploy-verify` | `/framework:deploy-verify` | Post-deployment verification |
+| Skill | Configure | Description |
+|-------|-----------|-------------|
+| `arch` | no | Architecture guidance and validation |
+| `code` | no | Code style discovery and enforcement |
+| `developer` | yes | Development orchestration |
+| `docs-refresh` | yes | Documentation generation |
+| `setup` | no | Project setup and onboarding |
+| `domain-expert` | no | Domain knowledge and terminology |
+| `debugger` | yes | Debug production issues |
+| `deploy` | yes | Deployment workflow |
+| `deploy-verify` | yes | Post-deployment verification |
 
-## Standalone Plugins
+## Configuration
 
-Skills not part of the framework bundle:
-
-| Plugin | Skill | Description |
-|--------|-------|-------------|
-| `node-installer` | `/node-installer:node-installer` | Node.js version management and installation |
-
-## Configuration Model
-
-Skills follow a **configure/learn** pattern for project-specific setup:
-
-| Command | Purpose | When to Use |
-|---------|---------|-------------|
-| `/plugin:skill configure` | Initial setup - scans project, proposes config | After install |
-| `/plugin:skill learn` | Update config from new context | When project changes |
-| `/plugin:skill` | Normal usage with saved config | Daily use |
-
-### Example: TDD Skill
+### Configure All Skills
 
 ```bash
-# First time setup (after framework install)
-/framework:tdd configure
-  → Scans project for test patterns
-  → Proposes config (framework, locations, assertions)
-  → Saves to .claude/skills/tdd.yaml
-
-# Later, after adding new test patterns
-/framework:tdd learn
-  → Updates config with new patterns
-
-# Normal usage
-/framework:tdd
-  → Uses saved config for consistent TDD workflow
+/framework configure
 ```
+
+This wizard:
+1. Asks for project settings (PROJECT_NAME, etc.)
+2. Runs configure for each skill that needs it
+3. Saves configs to `.claude/skills-config.env` and `.claude/skills/*.yaml`
+
+### Configure Individual Skills
+
+```bash
+/tdd configure       # Configure TDD skill
+/developer configure # Configure developer skill
+/deploy configure    # Configure deploy skill
+```
+
+### Configuration Model
+
+| Command | Purpose |
+|---------|---------|
+| `/skill configure` | Initial setup - scans project |
+| `/skill learn` | Update config from new context |
+| `/skill` | Normal usage with saved config |
 
 ## Repository Structure
 
 ```
-skills/                              # Claude Code Plugins Marketplace
+skills/
 ├── .claude-plugin/
-│   └── marketplace.json             # Lists all available plugins
+│   └── marketplace.json         # Marketplace catalog
 │
-├── framework/                       # Full framework plugin (22 skills)
-│   ├── .claude-plugin/plugin.json
-│   ├── skills/                      # All framework skills
-│   │   ├── commit/
-│   │   ├── linear/
-│   │   └── ...
-│   ├── hooks/
-│   └── scripts/
+├── plugins/                     # SOURCE OF TRUTH - Individual skill plugins
+│   ├── commit/
+│   │   ├── .claude-plugin/plugin.json
+│   │   ├── skills/
+│   │   │   └── commit/          # ← Actual skill files here
+│   │   │       ├── SKILL.md
+│   │   │       └── skill.yaml
+│   │   ├── hooks/hooks.json
+│   │   └── scripts/setup.sh
+│   ├── tdd/
+│   ├── linear/
+│   └── ... (22 framework skills + future standalone skills)
 │
-└── plugins/                         # Individual skill plugins
-    ├── commit/                      # Commit skill only
-    │   ├── .claude-plugin/plugin.json
-    │   └── skills/commit -> ../../framework/skills/commit
-    ├── linear/
-    ├── pr-create/
-    ├── pr-merge/
-    └── node-installer/              # Standalone (not in framework)
-        ├── .claude-plugin/plugin.json
-        └── skills/node-installer/
+└── framework/                   # Framework plugin (bundles all skills)
+    ├── .claude-plugin/plugin.json
+    ├── skills/                  # ← Symlinks to plugins/
+    │   ├── commit → ../../plugins/commit/skills/commit
+    │   ├── tdd → ../../plugins/tdd/skills/tdd
+    │   └── ...
+    ├── hooks/hooks.json
+    ├── scripts/setup.sh
+    └── Taskfile.yaml
 ```
+
+**Key:** Skills are maintained in `plugins/`. Framework uses symlinks.
 
 ## Skill Architecture
 
@@ -217,66 +254,22 @@ Each skill directory contains:
 
 | File | Required | Purpose |
 |------|----------|---------|
-| `SKILL.md` | Yes | Human-readable documentation with frontmatter |
-| `skill.yaml` | Yes | Machine-readable procedure definition |
-| `validations.yaml` | No | Automated checks (on_stop, on_warn) |
-| `sharp-edges.yaml` | No | Known edge cases to check proactively |
-| `collaboration.yaml` | No | Dependencies and trigger patterns |
-
-### SKILL.md Frontmatter
-
-```yaml
----
-name: commit
-description: "Create git commits with conventional commit messages."
-user-invocable: true
-allowed-tools:
-  - Read
-  - Bash
-  - Glob
----
-```
-
-### skill.yaml Structure
-
-```yaml
-name: commit
-kind: action          # action, workflow, methodology, utility, integration
-version: "2.0.0"
-description: "..."
-
-purpose: |
-  What this skill does and why.
-
-procedure:
-  - step: "Step 1"
-    detail: "What to do"
-    commands: ["cmd1", "cmd2"]
-
-patterns:
-  - id: pattern-name
-    description: "..."
-
-anti_patterns:
-  - id: anti-pattern-name
-    description: "..."
-    why_bad: "..."
-```
+| `SKILL.md` | Yes | Human-readable documentation |
+| `skill.yaml` | Yes | Machine-readable procedure |
+| `validations.yaml` | No | Automated checks |
+| `sharp-edges.yaml` | No | Known edge cases |
+| `collaboration.yaml` | No | Dependencies and triggers |
 
 ## Creating New Skills
 
-Use the `create-skill` skill:
-
 ```bash
-/framework:create-skill my-new-skill
+/create-skill my-new-skill
 ```
 
 Or manually:
-
-1. Create directory: `framework/skills/my-skill/`
+1. Create directory: `.claude/skills/my-skill/`
 2. Add `SKILL.md` with frontmatter
 3. Add `skill.yaml` with procedure
-4. Add `validations.yaml` (optional)
 
 ## Requirements
 

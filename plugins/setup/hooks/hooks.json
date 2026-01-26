@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "Setup": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/setup.sh",
+            "description": "Install setup skill into project"
+          }
+        ]
+      }
+    ]
+  }
+}

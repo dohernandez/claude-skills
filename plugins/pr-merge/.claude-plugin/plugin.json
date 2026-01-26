@@ -8,5 +8,6 @@
   },
   "keywords": ["git", "github", "pull-request", "pr", "merge"],
   "repository": "https://github.com/genlayerlabs/skills",
-  "skills": "./skills/"
+  "skills": "./skills/",
+  "hooks": "./hooks/hooks.json"
 }

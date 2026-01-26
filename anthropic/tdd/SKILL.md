@@ -17,7 +17,7 @@ Enforce Test-Driven Development discipline. All changes must have tests written 
 
 ## Quick Reference
 
-- **Setup**: `/tdd discover` (run once during framework setup)
+- **Setup**: `/tdd configure` (run once during framework setup)
 - **Usage**: `/tdd` (uses saved config)
 - **Update**: `/tdd learn <path>` (analyze specific path)
 - **Config**: `.claude/skills/tdd.yaml`
@@ -26,13 +26,13 @@ Enforce Test-Driven Development discipline. All changes must have tests written 
 
 | Command | Purpose | When to Use |
 |---------|---------|-------------|
-| `/tdd discover` | Analyze entire project for test patterns | Framework setup / wizard |
+| `/tdd configure` | Analyze entire project for test patterns | Framework setup / wizard |
 | `/tdd learn <path>` | Analyze specific path, update config | New module added |
 | `/tdd` | Write tests using saved patterns | Normal development |
 
 ---
 
-## /tdd discover
+## /tdd configure
 
 **When**: Framework setup wizard (one-time)
 
@@ -167,7 +167,7 @@ Propose adding to config:
 
 **When**: Writing tests during development
 
-**Requires**: `.claude/skills/tdd.yaml` exists (run `/tdd discover` first)
+**Requires**: `.claude/skills/tdd.yaml` exists (run `/tdd configure` first)
 
 ### TDD Cycle
 
@@ -227,8 +227,8 @@ Propose adding to config:
 | Write code first, tests later | Write failing test first |
 | Modify test to pass | Fix the implementation |
 | Invent new test patterns | Use patterns from saved config |
-| Re-discover every time | Read saved `.claude/skills/tdd.yaml` |
-| Skip discovery | Run `/tdd discover` during setup |
+| Re-configure every time | Read saved `.claude/skills/tdd.yaml` |
+| Skip discovery | Run `/tdd configure` during setup |
 
 ## Config Schema
 

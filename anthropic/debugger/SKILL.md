@@ -24,7 +24,7 @@ Guide systematic debugging of production service issues by analyzing alerts and 
 
 ## Quick Reference
 
-- **Setup**: `/debugger discover` (run once during framework setup)
+- **Setup**: `/debugger configure` (run once during framework setup)
 - **Usage**: `/debugger` or `/debug` (uses saved config)
 - **Update**: `/debugger learn <path>` (analyze specific service)
 - **Config**: `.claude/skills/debugger.yaml`
@@ -33,7 +33,7 @@ Guide systematic debugging of production service issues by analyzing alerts and 
 
 | Mode | Trigger | Purpose |
 |------|---------|---------|
-| **discover** | `/debugger discover` | Auto-detect log commands, alert sources, services |
+| **configure** | `/debugger configure` | Auto-detect log commands, alert sources, services |
 | **learn** | `/debugger learn <path>` | Learn patterns from specific service or logs |
 | **debug** | `/debugger` | Debug an alert or error (default) |
 

@@ -20,7 +20,7 @@ config_refs:
 purpose: |
   Four modes for architecture management:
 
-  1. DISCOVER MODE (/arch discover) - Setup
+  1. DISCOVER MODE (/arch configure) - Setup
      User selects ARCHITECTURE_STYLE, then skill auto-discovers project structure
      from documentation and config files. Proposes layers for confirmation.
 
@@ -192,9 +192,9 @@ owns:
   - "Pattern compliance checking"
 
 modes:
-  discover:
+  configure:
     description: "Auto-discover project architecture from docs/configs (run during setup)"
-    trigger: "/arch discover"
+    trigger: "/arch configure"
     inputs:
       - style: "Architecture style selected by user"
     outputs:
@@ -407,7 +407,7 @@ anti_patterns:
     fix: "Split into focused modules in appropriate layers"
 
 procedures:
-  discover:
+  configure:
     description: "Auto-discover project architecture based on selected style"
     steps:
       - step: "Get architecture style from user"
@@ -610,7 +610,7 @@ procedures:
 
       - step: "Compare to documented architecture"
         detail: |
-          If architecture is already configured (from /arch discover):
+          If architecture is already configured (from /arch configure):
           - Compare inferred layers to documented layers
           - Generate drift report
 

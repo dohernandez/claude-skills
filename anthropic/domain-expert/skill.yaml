@@ -18,7 +18,7 @@ config_refs:
 purpose: |
   Four modes for domain knowledge management:
 
-  1. DISCOVER MODE (/domain discover) - Setup
+  1. DISCOVER MODE (/domain configure) - Setup
      Read domain knowledge from existing documentation.
      Extracts glossary, entities, and business rules from docs.
 
@@ -45,9 +45,9 @@ owns:
 # =============================================================================
 
 modes:
-  discover:
+  configure:
     description: "Discover domain knowledge from documentation"
-    trigger: "/domain discover"
+    trigger: "/domain configure"
     outputs:
       - glossary: "Extracted domain terms and definitions"
       - entities: "Discovered domain entities"
@@ -211,7 +211,7 @@ ddd_concepts:
 # =============================================================================
 
 procedures:
-  discover:
+  configure:
     description: "Discover domain knowledge from documentation"
     steps:
       - step: "Search for domain documentation"
@@ -458,7 +458,7 @@ procedures:
 
 examples:
   - name: Discover domain from docs
-    request: "/domain discover"
+    request: "/domain configure"
     flow: |
       1. Find CLAUDE.md with Domain section
       2. Extract glossary: customer, order, product

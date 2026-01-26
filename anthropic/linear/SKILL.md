@@ -37,16 +37,17 @@ This skill handles Linear issue management:
 
 | Mode | Trigger | Purpose |
 |------|---------|---------|
-| **learn** | `/linear learn` | Discover and cache workspace metadata |
+| **configure** | `/linear configure` | Initial setup - discover and cache workspace metadata |
+| **learn** | `/linear learn` | Update cache with new workspace data |
 | **create** | `/linear` | Create a new issue (default) |
 | **update** | `/linear update <id>` | Update an existing issue |
 
-## Learn Mode
+## Configure Mode
 
-Run `/linear learn` to discover and cache your Linear workspace metadata:
+Run `/linear configure` during initial setup to discover and cache your Linear workspace metadata:
 
 ```
-/linear learn
+/linear configure
 ```
 
 This caches:
@@ -59,9 +60,28 @@ This caches:
 Cache is stored in `.claude/linear-cache.yaml` and used for faster lookups.
 
 **When to run:**
-- First time using the skill
+- First time using the skill (during framework setup)
+- After framework updates
+
+## Learn Mode
+
+Run `/linear learn` to update the cache with new workspace data:
+
+```
+/linear learn
+```
+
+**When to run:**
 - After team structure changes (new labels, projects, users)
-- If you see "not found" errors
+- If you see "not found" errors during issue creation
+- When new cycles start
+- Periodically to keep cache fresh
+
+**What it does:**
+1. Fetches current workspace data from Linear API
+2. Compares with existing cache
+3. Reports changes (new labels, projects, etc.)
+4. Updates `.claude/linear-cache.yaml`
 
 ## Configuration
 

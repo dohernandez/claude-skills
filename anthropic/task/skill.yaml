@@ -16,7 +16,7 @@ tags:
 config_location: ".claude/skills/task.yaml"
 
 commands:
-  - name: discover
+  - name: configure
     description: "Analyze project for architecture patterns, test conventions (framework setup)"
     output: ".claude/skills/task.yaml"
     user_approval: required

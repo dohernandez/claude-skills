@@ -25,8 +25,8 @@ purpose: |
 config_location: ".claude/workflow-config.json"
 
 commands:
-  - name: discover
-    description: "Configure worktree preferences (called via workflow discover)"
+  - name: configure
+    description: "Configure worktree preferences (called via workflow configure)"
     output: ".claude/workflow-config.json"
     user_approval: required
     procedure:
@@ -224,7 +224,7 @@ procedure:
     detail: |
       Check if .claude/workflow-config.json exists.
       If exists: load and validate config.
-      If not: error - run `/workflow discover` first to configure.
+      If not: error - run `/workflow configure` first to configure.
 
       Config should have been created during framework setup wizard.
 

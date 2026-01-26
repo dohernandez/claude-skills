@@ -11,7 +11,7 @@ tags:
 config_location: ".claude/skills/deploy-verify.yaml"
 
 commands:
-  - name: discover
+  - name: configure
     description: "Analyze project for deployment platform and services (framework setup)"
     output: ".claude/skills/deploy-verify.yaml"
     user_approval: required
@@ -48,7 +48,7 @@ purpose: |
   3. Startup logs for errors
   4. Application functionality
 
-  Project-specific verification is configured via discover/learn commands.
+  Project-specific verification is configured via configure/learn commands.
 
 owns:
   - "Deployment verification workflow"
@@ -182,10 +182,10 @@ anti_patterns:
 
   - name: hardcoded_service_list
     why_bad: Services change over time, list becomes stale
-    what_to_do: Use discover/learn to keep config current
+    what_to_do: Use configure/learn to keep config current
 
 procedures:
-  - name: discover_deployment_config
+  - name: configure_deployment_config
     description: Auto-detect deployment platform and services
     steps:
       - phase: Detect Platform
@@ -287,7 +287,7 @@ procedures:
 
 examples:
   - name: Discover deployment config
-    request: "/deploy-verify discover"
+    request: "/deploy-verify configure"
     expected_output: |
       Scanning project for deployment configuration...
 

@@ -27,7 +27,7 @@ Deploy services to target environments via CI/CD workflow. Handles environment s
 
 ## Quick Reference
 
-- **Setup**: `/deploy discover` (run once during framework setup)
+- **Setup**: `/deploy configure` (run once during framework setup)
 - **Usage**: `/deploy` (uses saved config)
 - **Update**: `/deploy learn` (re-analyze deployment setup)
 - **Config**: `.claude/skills/deploy.yaml`
@@ -36,7 +36,7 @@ Deploy services to target environments via CI/CD workflow. Handles environment s
 
 | Mode | Trigger | Purpose |
 |------|---------|---------|
-| **discover** | `/deploy discover` | Auto-detect deployment commands, environments |
+| **configure** | `/deploy configure` | Auto-detect deployment commands, environments |
 | **learn** | `/deploy learn` | Update config from recent deployments |
 | **deploy** | `/deploy` | Deploy to environment (default) |
 
@@ -50,7 +50,7 @@ Deploy services to target environments via CI/CD workflow. Handles environment s
 
 ## Step 1: Select Environment
 
-Ask the user which environment to deploy to (configured via discover).
+Ask the user which environment to deploy to (configured via configure).
 
 ## Step 2: Check Deployment Lock
 

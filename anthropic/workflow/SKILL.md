@@ -32,19 +32,19 @@ Manage the development environment lifecycle for ticket-based work. This skill h
 | Command | Description |
 |---------|-------------|
 | `/workflow start <source>` | Setup branch/worktree, then delegate to bugfix or task |
-| `/workflow discover` | Configure workflow preferences (worktree path, IDE) |
+| `/workflow configure` | Configure workflow preferences (worktree path, IDE) |
 | `/workflow continue` | Resume pending workflow in new session |
 | `/workflow status` | Show current workflow context and progress |
 | `/workflow finish` | Cleanup branch after PR is merged |
 
 **Related:** Use `/pr-merge` to merge PRs, `/deploy` to deploy after merge.
 
-## Discover Mode
+## Configure Mode
 
 Configure workflow preferences during framework setup:
 
 ```
-/workflow discover
+/workflow configure
 ```
 
 **Discovers:**

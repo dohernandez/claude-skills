@@ -32,11 +32,11 @@ purpose: |
 # =============================================================================
 
 modes:
-  discover:
+  configure:
     description: |
       Auto-detect project setup requirements by scanning for indicator files.
       Identifies project type, package manager, prerequisites, and commands.
-    trigger: "/setup discover"
+    trigger: "/setup configure"
     outputs:
       - "Detected project configuration (shown to user)"
     procedure:
@@ -119,8 +119,8 @@ modes:
     outputs:
       - ".claude/setup-cache.yaml"
     procedure:
-      - step: "Run discovery if needed"
-        detail: "If discover hasn't been run, run it first"
+      - step: "Run configurey if needed"
+        detail: "If configure hasn't been run, run it first"
 
       - step: "Present for confirmation"
         detail: |

@@ -31,17 +31,17 @@ Guide developers through project setup and environment configuration. Discovers 
 
 | Mode | Trigger | Purpose |
 |------|---------|---------|
-| **discover** | `/setup discover` | Auto-detect project type, prerequisites, setup commands |
+| **configure** | `/setup configure` | Auto-detect project type, prerequisites, setup commands |
 | **learn** | `/setup learn` | Confirm and cache setup configuration |
 | **guide** | `/setup` | Guide through setup steps (default) |
 | **verify** | `/setup verify` | Verify setup is complete and working |
 
-## Discover Mode
+## Configure Mode
 
 Auto-detect project setup requirements:
 
 ```
-/setup discover
+/setup configure
 ```
 
 **Detects:**
@@ -180,7 +180,7 @@ Configured via wizard during framework installation:
 
 ```bash
 # Discover project setup requirements
-/setup discover
+/setup configure
 
 # Learn and cache configuration
 /setup learn

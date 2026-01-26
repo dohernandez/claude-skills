@@ -30,7 +30,7 @@ Structured implementation methodology for non-bugfix work (features, chores, ref
 
 ## Quick Reference
 
-- **Setup**: `/task discover` (run once during framework setup)
+- **Setup**: `/task configure` (run once during framework setup)
 - **Usage**: Invoked by workflow skill for non-bugfix work
 - **Update**: `/task learn <path>` (analyze specific patterns)
 - **Config**: `.claude/skills/task.yaml`
@@ -39,13 +39,13 @@ Structured implementation methodology for non-bugfix work (features, chores, ref
 
 | Mode | Trigger | Purpose |
 |------|---------|---------|
-| **discover** | `/task discover` | Auto-detect project structure, test patterns, architecture |
+| **configure** | `/task configure` | Auto-detect project structure, test patterns, architecture |
 | **learn** | `/task learn <path>` | Learn patterns from specific directory |
 | **execute** | Via workflow | Execute task phases (default) |
 
 ## Discovery Process
 
-During `/task discover`:
+During `/task configure`:
 1. Scan project structure for architecture patterns
 2. Identify test framework and testing conventions
 3. Detect code style and file organization

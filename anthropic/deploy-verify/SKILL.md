@@ -28,7 +28,7 @@ Verify that services deployed correctly after a deployment. Provides a systemati
 
 ## Quick Reference
 
-- **Setup**: `/deploy-verify discover` (run once during framework setup)
+- **Setup**: `/deploy-verify configure` (run once during framework setup)
 - **Usage**: `/deploy-verify` (uses saved config)
 - **Update**: `/deploy-verify learn` (re-analyze deployment setup)
 - **Config**: `.claude/skills/deploy-verify.yaml`
@@ -37,13 +37,13 @@ Verify that services deployed correctly after a deployment. Provides a systemati
 
 | Command | Purpose | When to Use |
 |---------|---------|-------------|
-| `/deploy-verify discover` | Auto-detect deployment platform and services | Framework setup / wizard |
+| `/deploy-verify configure` | Auto-detect deployment platform and services | Framework setup / wizard |
 | `/deploy-verify learn` | Update config from current deployment setup | After infrastructure changes |
 | `/deploy-verify` | Run verification against saved config | Normal usage |
 
 ---
 
-## /deploy-verify discover
+## /deploy-verify configure
 
 **When**: Framework setup wizard (one-time)
 

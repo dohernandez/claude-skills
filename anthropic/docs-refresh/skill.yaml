@@ -11,7 +11,7 @@ tags:
 config_location: ".claude/skills/docs-refresh.yaml"
 
 commands:
-  - name: discover
+  - name: configure
     description: "Detect documentation structure and settings"
     output: ".claude/skills/docs-refresh.yaml"
     user_approval: required
@@ -69,7 +69,7 @@ purpose: |
   - README and getting started guides
   - Configuration documentation
 
-  Project-specific paths are configured via /docs-refresh discover.
+  Project-specific paths are configured via /docs-refresh configure.
 
 owns:
   - "Documentation generation workflow"
@@ -165,11 +165,11 @@ procedure:
 customization_guide: |
   To customize this skill for your project:
 
-  1. Run `/docs-refresh discover` to auto-detect settings
+  1. Run `/docs-refresh configure` to auto-detect settings
   2. Review and approve the proposed configuration
   3. Configuration is saved to .claude/skills/docs-refresh.yaml
 
-  The discover command detects:
+  The configure command detects:
   - Documentation directory location
   - Documentation format (markdown, rst, mdx)
   - Generated vs human-written docs

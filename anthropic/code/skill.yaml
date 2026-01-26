@@ -19,7 +19,7 @@ config_refs:
 purpose: |
   Four modes for code style management:
 
-  1. DISCOVER MODE (/code discover) - Setup
+  1. DISCOVER MODE (/code configure) - Setup
      Read code style from existing linter/formatter configurations.
      Supports multiple languages and tools.
 
@@ -46,9 +46,9 @@ owns:
 # =============================================================================
 
 modes:
-  discover:
+  configure:
     description: "Discover code style from existing configs"
-    trigger: "/code discover"
+    trigger: "/code configure"
     outputs:
       - language: "Detected primary language"
       - style_config: "Discovered style configuration"
@@ -323,7 +323,7 @@ style_templates:
 # =============================================================================
 
 procedures:
-  discover:
+  configure:
     description: "Discover code style from existing configs"
     steps:
       - step: "Detect primary language"
@@ -451,7 +451,7 @@ procedures:
       - step: "Load style configuration"
         detail: |
           Read saved style from skills-config.yaml.
-          Or run discover/learn if not configured.
+          Or run configure/learn if not configured.
 
       - step: "Run language-specific linters"
         detail: |
@@ -636,7 +636,7 @@ mindset:
 
 examples:
   - name: Discover TypeScript style
-    request: "/code discover"
+    request: "/code configure"
     flow: |
       1. Detect language: TypeScript (tsconfig.json)
       2. Find configs: .eslintrc.json, .prettierrc

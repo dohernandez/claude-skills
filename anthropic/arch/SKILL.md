@@ -1,6 +1,6 @@
 ---
 name: arch
-description: Architecture discovery, validation, and planning. Use when user says /arch, /arch discover, /arch learn, /arch check, or /arch plan.
+description: Architecture discovery, validation, and planning. Use when user says /arch, /arch configure, /arch learn, /arch check, or /arch plan.
 user-invocable: true
 allowed-tools:
   - Read
@@ -22,27 +22,27 @@ Discover, validate, and guide project architecture. Ensures code follows layer b
 ## Quick Reference
 
 - **Validates:** Layer boundaries, import directions, architectural compliance
-- **Modes:** discover, learn, check, plan
+- **Modes:** configure, learn, check, plan
 - **Stop hook:** `task claude:validate-skill -- --skill arch`
 
 ## Modes Overview
 
 | Mode | Command | Purpose |
 |------|---------|---------|
-| **discover** | `/arch discover` | Auto-discover from docs/configs (setup) |
+| **configure** | `/arch configure` | Auto-discover from docs/configs (setup) |
 | **learn** | `/arch learn` | Infer from code analysis or description |
 | **check** | `/arch check` | Validate layer boundaries |
 | **plan** | `/arch plan <desc>` | Suggest where new code belongs |
 
 ---
 
-### Discover Mode: `/arch discover` (Setup)
+### Configure Mode: `/arch configure` (Setup)
 
 Auto-discovers your project's architecture based on the selected style.
 
 **Run during framework installation or manually:**
 ```bash
-/arch discover
+/arch configure
 ```
 
 **Discovery Flow:**
@@ -221,7 +221,7 @@ Based on your hexagonal architecture:
 
 ## Discovery Sources
 
-The skill discovers architecture from these sources (in priority order):
+The skill configures architecture from these sources (in priority order):
 
 ### Documentation Files
 

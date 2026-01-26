@@ -21,7 +21,7 @@ Discover, validate, and guide code style. Ensures consistent code patterns acros
 
 ## Quick Reference
 
-- **Setup**: `/code discover` (run once during framework setup)
+- **Setup**: `/code configure` (run once during framework setup)
 - **Usage**: `/code guide`, `/code check`
 - **Update**: `/code learn <path>` (analyze specific path)
 - **Config**: `.claude/skills/code.yaml`
@@ -30,14 +30,14 @@ Discover, validate, and guide code style. Ensures consistent code patterns acros
 
 | Command | Purpose | When to Use |
 |---------|---------|-------------|
-| `/code discover` | Analyze project for code style | Framework setup / wizard |
+| `/code configure` | Analyze project for code style | Framework setup / wizard |
 | `/code learn <path>` | Analyze specific path, update config | New module/patterns |
 | `/code check [path]` | Validate code follows style | Before commit |
 | `/code guide [context]` | Get style guidance | When writing code |
 
 ---
 
-## /code discover
+## /code configure
 
 **When**: Framework setup wizard (one-time)
 

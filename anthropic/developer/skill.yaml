@@ -18,7 +18,7 @@ purpose: |
   3. Implements following project patterns and conventions
   4. Validates changes before completion
 
-  This skill discovers project architecture during setup and uses that knowledge
+  This skill configures project architecture during setup and uses that knowledge
   for all subsequent development tasks.
 
 owns:
@@ -27,7 +27,7 @@ owns:
   - "Domain-to-implementation mapping"
 
 commands:
-  - name: discover
+  - name: configure
     description: "Analyze entire project for architecture patterns (framework setup)"
     procedure:
       - "Scan project structure for architecture style"
@@ -202,7 +202,7 @@ procedure:
       - Domain concepts
       - Naming patterns
 
-      If config doesn't exist, prompt user to run /developer discover first.
+      If config doesn't exist, prompt user to run /developer configure first.
 
   - step: "Understand request in domain terms"
     detail: |
@@ -245,7 +245,7 @@ procedure:
 
 decision_tree:
   - question: "Does config exist?"
-    no: "Prompt user to run /developer discover"
+    no: "Prompt user to run /developer configure"
     yes: "Continue with workflow"
 
   - question: "How many layers affected?"

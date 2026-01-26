@@ -14,13 +14,13 @@ purpose: |
   Implement changes using Test-Driven Development. The core principle:
   write tests that define expected behavior BEFORE writing implementation.
 
-  Discovery model:
-  - /tdd discover: One-time project analysis, saves config
+  Configuration model:
+  - /tdd configure: One-time project analysis, saves config
   - /tdd learn <path>: Contextual update from specific path
   - /tdd: Normal usage, reads saved config
 
 commands:
-  - name: discover
+  - name: configure
     description: "Analyze entire project for test patterns (framework setup)"
     arguments: []
     output: ".claude/skills/tdd.yaml"
@@ -58,12 +58,12 @@ non_negotiables:
     rule: "Use patterns from saved config, don't invent new styles."
 
   - id: config-required
-    rule: "Normal /tdd requires .claude/skills/tdd.yaml (run discover first)."
+    rule: "Normal /tdd requires .claude/skills/tdd.yaml (run configure first)."
 
 # ============================================================================
 # DISCOVER PROCEDURE
 # ============================================================================
-discover:
+configure:
   description: "One-time project analysis during framework setup"
 
   steps:
@@ -163,13 +163,13 @@ learn:
     - phase: "Validate prerequisites"
       actions:
         - check: ".claude/skills/tdd.yaml exists"
-        - if_missing: "Run /tdd discover first"
+        - if_missing: "Run /tdd configure first"
 
     - phase: "Analyze path"
       actions:
         - find: "Test files in specified path"
         - read: "All test files found"
-        - extract: "Patterns (same as discover)"
+        - extract: "Patterns (same as configure)"
 
     - phase: "Compare to existing config"
       actions:
@@ -193,7 +193,7 @@ procedure:
   - step: "Check config exists"
     detail: |
       Read .claude/skills/tdd.yaml
-      If missing: prompt user to run /tdd discover first
+      If missing: prompt user to run /tdd configure first
 
   - step: "Define expected behavior"
     detail: "Write Flow Spec describing what the code should do."
@@ -235,18 +235,18 @@ anti_patterns:
     description: "Using different test patterns than project standard"
     why_bad: "Inconsistent codebase, harder to maintain."
 
-  - id: rediscovering
+  - id: reconfiguring
     description: "Running discovery every time instead of reading config"
     why_bad: "Slow, inconsistent, unnecessary."
 
   - id: skipping-discovery
-    description: "Using /tdd without running /tdd discover first"
+    description: "Using /tdd without running /tdd configure first"
     why_bad: "No saved patterns, will invent inconsistent tests."
 
 context: |
   TDD with discovery model:
 
-  1. SETUP (once): /tdd discover
+  1. SETUP (once): /tdd configure
      - Analyzes entire project
      - User approves findings
      - Saves to .claude/skills/tdd.yaml

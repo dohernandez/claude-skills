@@ -21,19 +21,19 @@ This skill is **not user-invocable**. It is called internally by the `workflow` 
 - Creating an isolated worktree environment for a feature branch
 
 ## Quick Reference
-- **Setup**: Run during framework wizard via `workflow` skill discover
+- **Setup**: Run during framework wizard via `workflow` skill configure
 - **Config**: `.claude/workflow-config.json`
 - **Creates**: Git worktree, copies env files, installs deps, opens IDE
 - **Requires**: Branch name from workflow
 - **Output**: Worktree ready, pending-action.json for session handoff
 - **Stop hook**: `task -t .claude/Taskfile.yaml validate-skill -- --skill workflow-setup`
 
-## Discover Mode
+## Configure Mode
 
 Called during framework setup wizard (via `workflow` skill) to configure worktree preferences:
 
 ```
-/workflow discover  # Includes workflow-setup configuration
+/workflow configure  # Includes workflow-setup configuration
 ```
 
 **Discovers:**
@@ -71,7 +71,7 @@ Called during framework setup wizard (via `workflow` skill) to configure worktre
 
 ## Configuration
 
-Configured via `/workflow discover` during framework setup. Stored in `.claude/workflow-config.json`:
+Configured via `/workflow configure` during framework setup. Stored in `.claude/workflow-config.json`:
 
 | Field | Description | Default |
 |-------|-------------|---------|
@@ -121,10 +121,10 @@ Tells the new Claude session what to do:
 if .claude/workflow-config.json exists:
   load config
 else:
-  error: run `/workflow discover` first
+  error: run `/workflow configure` first
 ```
 
-Config is created during framework setup wizard via `/workflow discover`.
+Config is created during framework setup wizard via `/workflow configure`.
 
 ### Step 2: Update Base Branch
 

@@ -18,7 +18,7 @@ config_refs:
   - DEBUG_ENV         # How to enable debug mode (optional)
 
 commands:
-  - name: discover
+  - name: configure
     description: "Analyze project for log access patterns, alert sources, services (framework setup)"
     output: ".claude/skills/debugger.yaml"
     user_approval: required

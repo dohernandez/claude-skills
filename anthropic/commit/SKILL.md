@@ -21,7 +21,7 @@ Create standardized git commits following Conventional Commits specification. An
 
 ## Quick Reference
 
-- **Setup**: `/commit discover` (run once during framework setup)
+- **Setup**: `/commit configure` (run once during framework setup)
 - **Usage**: `/commit` (uses saved scopes)
 - **Update**: `/commit learn` (re-analyze scopes from recent commits)
 - **Config**: `.claude/skills/commit.yaml`
@@ -30,13 +30,13 @@ Create standardized git commits following Conventional Commits specification. An
 
 | Command | Purpose | When to Use |
 |---------|---------|-------------|
-| `/commit discover` | Analyze project for commit scopes | Framework setup / wizard |
+| `/commit configure` | Analyze project for commit scopes | Framework setup / wizard |
 | `/commit learn` | Update scopes from recent commits | After project changes |
 | `/commit` | Create commit using saved scopes | Normal usage |
 
 ---
 
-## /commit discover
+## /commit configure
 
 **When**: Framework setup wizard (one-time)
 

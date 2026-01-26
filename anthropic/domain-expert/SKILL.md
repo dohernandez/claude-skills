@@ -1,6 +1,6 @@
 ---
 name: domain-expert
-description: Domain knowledge discovery and guidance. Use when user says /domain, /domain discover, /domain learn, /domain explain, or /domain map.
+description: Domain knowledge discovery and guidance. Use when user says /domain, /domain configure, /domain learn, /domain explain, or /domain map.
 user-invocable: true
 allowed-tools:
   - Read
@@ -22,26 +22,26 @@ Discover, learn, and guide domain knowledge. Helps understand project concepts, 
 ## Quick Reference
 
 - **Provides:** Domain knowledge, concept explanations, request mapping
-- **Modes:** discover, learn, explain, map
+- **Modes:** configure, learn, explain, map
 - **Stop hook:** `task claude:validate-skill -- --skill domain-expert`
 
 ## Modes Overview
 
 | Mode | Command | Purpose |
 |------|---------|---------|
-| **discover** | `/domain discover` | Read domain knowledge from docs |
+| **configure** | `/domain configure` | Read domain knowledge from docs |
 | **learn** | `/domain learn` | Infer domain from code analysis |
 | **explain** | `/domain explain <concept>` | Answer questions about a concept |
 | **map** | `/domain map <request>` | Map request to domain concepts |
 
 ---
 
-### Discover Mode: `/domain discover` (Setup)
+### Configure Mode: `/domain configure` (Setup)
 
 Discovers domain knowledge from existing documentation.
 
 ```bash
-/domain discover
+/domain configure
 ```
 
 **What it checks:**

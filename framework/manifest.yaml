@@ -1,9 +1,9 @@
 # Anthropic Claude Code Skills Package
 #
 # Installation commands:
-#   /marketplace add genlayerlabs/skills/anthropic/framework      # Full framework (21 skills)
-#   /marketplace add genlayerlabs/skills/anthropic/commit         # Individual skill
-#   /marketplace add genlayerlabs/skills/anthropic/node-installer # Standalone skill
+#   /marketplace add dohernandez/claude-skills/anthropic/framework      # Full framework (21 skills)
+#   /marketplace add dohernandez/claude-skills/anthropic/commit         # Individual skill
+#   /marketplace add dohernandez/claude-skills/anthropic/node-installer # Standalone skill
 
 name: anthropic
 version: "1.0.0"
@@ -12,7 +12,7 @@ description: "Skills for Anthropic Claude Code - developer workflow tools"
 # =============================================================================
 # FRAMEWORK BUNDLE
 # =============================================================================
-# Installed via: /marketplace add genlayerlabs/skills/anthropic/framework
+# Installed via: /marketplace add dohernandez/claude-skills/anthropic/framework
 #
 # Includes:
 #   - All 21 framework skills
@@ -81,7 +81,7 @@ framework:
 # SKILL DEFINITIONS
 # =============================================================================
 # All skills can be installed individually:
-#   /marketplace add genlayerlabs/skills/anthropic/<skill-name>
+#   /marketplace add dohernandez/claude-skills/anthropic/<skill-name>
 #
 # Installation behavior:
 #   - Copies skill directory + minimal _framework/ dependencies
@@ -282,7 +282,7 @@ skills:
 # STANDALONE SKILLS
 # =============================================================================
 # Not part of the framework bundle. Install individually:
-#   /marketplace add genlayerlabs/skills/anthropic/<skill-name>
+#   /marketplace add dohernandez/claude-skills/anthropic/<skill-name>
 #
 # Installation behavior (same as individual skill install):
 #   - Copies skill directory only (no _framework/ unless needed)

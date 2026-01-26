@@ -3,10 +3,10 @@
   "description": "Deployment workflow with environment selection",
   "version": "1.0.0",
   "author": {
-    "name": "GenLayer Labs",
-    "url": "https://github.com/genlayerlabs"
+    "name": "dohernandez",
+    "url": "https://github.com/dohernandez"
   },
-  "repository": "https://github.com/genlayerlabs/skills",
+  "repository": "https://github.com/dohernandez/claude-skills",
   "skills": "./skills/",
   "hooks": "./hooks/hooks.json"
 }

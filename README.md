@@ -10,10 +10,10 @@ Skills are structured configuration files that guide AI assistants through compl
 
 ```bash
 # 1. Add the marketplace (once)
-/plugin marketplace add https://github.com/genlayerlabs/skills.git
+/plugin marketplace add https://github.com/dohernandez/claude-skills.git
 
 # 2. Install full framework (22 skills)
-/plugin install framework@genlayerlabs-skills
+/plugin install framework@dohernandez-claude-skills
 
 # 3. Initialize - REQUIRED (copies skills to your project)
 claude --init
@@ -30,7 +30,7 @@ After these steps, skills are available as `/commit`, `/tdd`, `/linear`, etc.
 ┌─────────────────────────────────────────────────────────────┐
 │  1. /plugin marketplace add .../skills.git                  │
 │                         ↓                                   │
-│  2. /plugin install framework@genlayerlabs-skills           │
+│  2. /plugin install framework@dohernandez-claude-skills           │
 │     (Plugin cached at ~/.claude/plugins/cache/)             │
 │                         ↓                                   │
 │  3. claude --init                                           │
@@ -80,10 +80,10 @@ Install the full framework or any individual skill:
 
 ```bash
 # 1. Add the marketplace (once)
-/plugin marketplace add https://github.com/genlayerlabs/skills.git
+/plugin marketplace add https://github.com/dohernandez/claude-skills.git
 
 # 2. Install the framework plugin
-/plugin install framework@genlayerlabs-skills
+/plugin install framework@dohernandez-claude-skills
 
 # 3. Initialize - REQUIRED (copies skills to project)
 claude --init
@@ -112,11 +112,11 @@ your-project/
 
 ```bash
 # 1. Add the marketplace (if not already added)
-/plugin marketplace add https://github.com/genlayerlabs/skills.git
+/plugin marketplace add https://github.com/dohernandez/claude-skills.git
 
 # 2. Install specific skill(s)
-/plugin install commit@genlayerlabs-skills
-/plugin install tdd@genlayerlabs-skills
+/plugin install commit@dohernandez-claude-skills
+/plugin install tdd@dohernandez-claude-skills
 
 # 3. Initialize - REQUIRED (copies skills to project)
 claude --init

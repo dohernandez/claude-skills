@@ -19,7 +19,7 @@ Configure the Claude Code Developer Framework after installation. This skill orc
 
 ## When to Use
 
-- After installing the framework plugin: `/plugin install anthropic@genlayerlabs-skills`
+- After installing the framework plugin: `/plugin install anthropic@dohernandez-claude-skills`
 - After running `claude --init`
 - When re-configuring the framework for a project
 - When user says `/framework` or `/framework configure`

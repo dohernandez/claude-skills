@@ -1,9 +1,9 @@
 # Claude Code Plugins Marketplace
 # Plugins for Anthropic's Claude Code
 #
-# Repository: https://github.com/genlayerlabs/claude-plugins
+# Repository: https://github.com/dohernandez/claude-skills
 
-name: genlayerlabs-claude-plugins
+name: dohernandez-claude-skills
 version: "1.0.0"
 description: "Developer workflow plugins for Anthropic's Claude Code"
 

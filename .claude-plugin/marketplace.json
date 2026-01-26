@@ -1,9 +1,9 @@
 {
-  "name": "genlayerlabs-skills",
-  "description": "Claude Code plugins by GenLayer Labs - Developer workflow tools",
+  "name": "dohernandez-claude-skills",
+  "description": "Claude Code plugins - Developer workflow tools",
   "owner": {
-    "name": "GenLayer Labs",
-    "url": "https://github.com/genlayerlabs"
+    "name": "dohernandez",
+    "url": "https://github.com/dohernandez"
   },
   "plugins": [
     {

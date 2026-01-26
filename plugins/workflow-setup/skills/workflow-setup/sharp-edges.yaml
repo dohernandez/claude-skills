@@ -1,0 +1,126 @@
+# Sharp edges for workflow-setup
+#
+# NOTE: The `detect` field is informational only - it shows how to manually
+# check for the edge case. These are NOT automatically enforced by the
+# validation runner. Automated enforcement happens via validations.yaml.
+
+edges:
+  - id: worktree-path-exists
+    description: "Worktree path already exists (directory or previous worktree)"
+    detect: "test -d <basePath>/<branch>"
+    impact: "git worktree add fails, or may overwrite existing work"
+    fix: |
+      Before creating worktree, check if path exists.
+      If exists:
+        - Check if it's already a worktree (git worktree list)
+        - Ask user how to proceed: remove, use existing, or abort
+        - If removing, use: git worktree remove <path> first
+    severity: high
+
+  - id: branch-already-exists
+    description: "Branch already exists in repository"
+    detect: "git branch --list <branch> or git ls-remote --heads origin <branch>"
+    impact: "git worktree add -b <branch> fails"
+    fix: |
+      Check if branch exists before creating worktree.
+      If exists locally: use git worktree add <path> <branch> (without -b)
+      If exists only remotely: checkout and track it
+    severity: medium
+
+  - id: env-files-contain-secrets
+    description: "Copying .env files that contain production secrets"
+    detect: "Manual review of .env* file contents"
+    impact: "Secrets may be in multiple locations, harder to rotate"
+    fix: |
+      This is expected behavior for local development.
+      Ensure .env* files are in .gitignore.
+      Never copy .env.production or similar to worktrees.
+    severity: low
+
+  - id: dependency-install-fails
+    description: "Dependency installation fails in worktree"
+    detect: "Setup command exit code != 0"
+    impact: "Worktree is incomplete, development cannot proceed"
+    fix: |
+      Check setup command output for errors.
+      Common issues:
+        - Runtime version mismatch: ensure correct version is installed
+        - Native module compilation: may need build tools
+        - Network issues: retry or check proxy settings
+        - Missing system dependencies: check error message for hints
+      Report specific error to user for troubleshooting.
+    severity: high
+
+  - id: ide-not-installed
+    description: "Configured IDE is not installed or not in PATH"
+    detect: "which <ide-command> returns empty"
+    impact: "IDE doesn't open, user must open manually"
+    fix: |
+      Verify IDE is installed before attempting to open.
+      If not found:
+        - Warn user and provide worktree path
+        - Ask if they want to configure a different IDE
+        - Continue workflow without blocking
+    severity: low
+
+  - id: config-file-permissions
+    description: "workflow-config.json has incorrect permissions"
+    detect: "stat -f %Lp .claude/workflow-config.json"
+    impact: "Config may be readable by others, exposing paths"
+    fix: |
+      Set appropriate permissions on creation.
+      This is low risk since it only contains local paths, not secrets.
+    severity: low
+
+  - id: worktree-on-different-filesystem
+    description: "Worktree base path is on a different filesystem than repo"
+    detect: "stat -f %d for both paths differ"
+    impact: "May cause issues with file watching, slower operations"
+    fix: |
+      Warn user if filesystems differ.
+      Recommend keeping worktrees on same disk as main repo.
+      Continue anyway as it usually works.
+    severity: low
+
+  - id: pending-action-not-read
+    description: "New Claude session doesn't check for pending-action.json"
+    detect: "Manual verification that CLAUDE.md has continuation instructions"
+    impact: "User must manually tell Claude to continue workflow"
+    fix: |
+      Ensure CLAUDE.md includes instructions to check for pending actions.
+      The check should happen early in session startup.
+      Provide clear prompt to user about continuing.
+    severity: medium
+
+  - id: source-repo-has-uncommitted-changes
+    description: "Source repo has uncommitted changes that won't be in worktree"
+    detect: "git status --porcelain (non-empty output)"
+    impact: "Worktree starts from clean main, missing local changes"
+    fix: |
+      This check should be done by workflow before calling setup.
+      If setup is called directly, warn user about uncommitted changes.
+      Changes need to be committed or stashed before they appear in worktree.
+    severity: medium
+
+  - id: disk-space-insufficient
+    description: "Not enough disk space for worktree + dependencies"
+    detect: "df -h <basePath>"
+    impact: "Worktree creation or dependency install fails partway"
+    fix: |
+      Could check available space before starting (estimate ~500MB for dependencies).
+      If space is low, warn user before proceeding.
+      Clean up partial worktree on failure.
+    severity: medium
+
+  - id: stale-base-branch
+    description: "Creating worktree from stale main branch that's behind remote"
+    detect: "git rev-list --count main..origin/main (after fetch)"
+    impact: "Worktree branches from outdated code, will need rebasing immediately"
+    fix: |
+      CRITICAL: Always update main before creating worktree.
+      Run:
+        git fetch origin main
+        git checkout main
+        git pull origin main
+      Then create the worktree from the updated main.
+    severity: high

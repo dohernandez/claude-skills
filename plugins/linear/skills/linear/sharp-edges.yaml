@@ -1,0 +1,139 @@
+# Sharp Edges: common gotchas and pitfalls
+
+name: linear
+version: "2.0.0"
+
+edges:
+  - id: template-not-available-via-api
+    description: "Linear templates cannot be retrieved via API"
+    detect: "Attempting to use a template parameter in create_issue"
+    impact: "Templates are a web UI feature only. API doesn't support them."
+    fix: |
+      Use the template format defined in this skill's skill.yaml.
+      Format the description manually using the template sections.
+    severity: medium
+
+  - id: team-name-vs-id
+    description: "Team name may not resolve correctly"
+    detect: "Error 'team not found' when using team name"
+    impact: "Issue creation fails."
+    fix: |
+      Use list_teams() to get exact team names.
+      Team names are case-sensitive.
+    severity: high
+
+  - id: cycle-must-be-resolved
+    description: "Cycle 'current' must be resolved to actual ID"
+    detect: "Error when passing cycle='current' to create_issue"
+    impact: "Issue creation fails or goes to wrong cycle."
+    fix: |
+      # First resolve current cycle
+      cycles = list_cycles(teamId="...", type="current")
+      current_cycle_id = cycles[0].id
+
+      # Then use the ID
+      create_issue(..., cycle=current_cycle_id)
+    severity: high
+
+  - id: labels-must-be-array
+    description: "Labels parameter must be an array"
+    detect: "Labels not applied or error on issue creation"
+    impact: "Labels won't be set on the issue."
+    fix: |
+      # Correct
+      labels: ["Bug", "Improvement"]
+
+      # Incorrect
+      labels: "Bug"
+    severity: medium
+
+  - id: empty-description-sections
+    description: "Don't include empty template sections"
+    detect: "Issue description contains placeholder text like '[To be filled]'"
+    impact: "Clutters the issue with useless content."
+    fix: |
+      Only include sections that have actual content.
+      Omit sections entirely if no content is provided.
+    severity: low
+
+  - id: missing-mcp-connection
+    description: "Linear MCP server must be connected"
+    detect: "Error 'mcp__linear-server__* tool not found'"
+    impact: "No Linear operations will work."
+    fix: |
+      Ensure Linear MCP server is configured in Claude settings.
+      The user may need to run /mcp to connect.
+    severity: critical
+
+  - id: project-name-exact-match
+    description: "Project names must match exactly"
+    detect: "Error 'project not found' when using slightly different name"
+    impact: "Issue won't be added to the project."
+    fix: |
+      # List available projects first
+      list_projects(team="team-name")
+
+      # Use exact name from the list (case-sensitive)
+    severity: medium
+
+  - id: priority-values
+    description: "Priority uses specific numeric values"
+    detect: "Wrong priority applied or error on invalid value"
+    impact: "Issue has wrong priority."
+    fix: |
+      Valid values:
+      # 0 = No priority
+      # 1 = Urgent
+      # 2 = High
+      # 3 = Normal
+      # 4 = Low
+
+      Only set if explicitly requested.
+    severity: low
+
+  - id: skip-proposal-wizard
+    description: "Creating issue without showing proposal first"
+    detect: "Issue created immediately without user confirmation"
+    impact: "User doesn't get chance to review/adjust before creation."
+    fix: |
+      ALWAYS show the proposal wizard before creating.
+      Wait for explicit user approval.
+    severity: high
+
+  - id: create-after-change-request
+    description: "Creating issue immediately after user requests changes"
+    detect: "User says 'assign to X' and issue is created without re-showing proposal"
+    impact: "User wanted to change, not create. May need to edit/delete issue."
+    fix: |
+      When user requests ANY changes:
+      1. Apply the changes
+      2. Show FULL updated proposal
+      3. Wait for EXPLICIT approval
+      4. Only then create
+    severity: high
+
+  - id: stale-cache
+    description: "Cache is outdated after workspace changes"
+    detect: "Label/user/project 'not found' but exists in Linear UI"
+    impact: "Issue creation fails or uses wrong IDs."
+    fix: |
+      Re-run learn mode to refresh cache:
+      /linear learn
+
+      Cache may be stale after:
+      - New team members added
+      - Labels created/renamed
+      - Projects created/archived
+      - New cycles started
+    severity: medium
+
+  - id: no-cache-slow-lookups
+    description: "No cache causes repeated API calls"
+    detect: "Every issue creation requires list_teams, list_users, etc."
+    impact: "Slower issue creation, more API calls."
+    fix: |
+      Run learn mode once to cache workspace data:
+      /linear learn
+
+      Cache enables instant lookups without API calls.
+    severity: low

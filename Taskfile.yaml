@@ -1,0 +1,45 @@
+# Claude Code Plugins - Development Taskfile
+# FOR DEVELOPMENT OF THIS PLUGINS REPOSITORY ONLY
+# This is NOT the Taskfile installed to target projects.
+# See: framework/Taskfile.yaml for the installed version.
+#
+# Install Task: https://taskfile.dev/installation/
+# Usage: task <task-name>
+
+version: '3'
+
+includes:
+  claude:
+    taskfile: ./framework/Taskfile.yaml
+    vars:
+      SCRIPTS_DIR: '{{.ROOT_DIR}}/framework/scripts'
+
+vars:
+  # Override for development - skills are in framework/skills/, not .claude/skills/
+  PROJECT_ROOT: '{{.ROOT_DIR}}'
+
+# Set PROJECT_ROOT for all tasks
+env:
+  PROJECT_ROOT: '{{.ROOT_DIR}}'
+
+tasks:
+  # ===========================================================================
+  # DEVELOPMENT TASKS (for this repo only)
+  # ===========================================================================
+
+  lint:
+    desc: "Lint all skill YAML files (dev: validates skill structure)"
+    cmds:
+      - task: claude:check-structure
+
+  test:
+    desc: "Run skill validation tests (dev: checks all skills are valid)"
+    cmds:
+      - task: claude:audit-skills
+      - echo "All skills validated!"
+
+  precommit:
+    desc: "Run pre-commit checks"
+    cmds:
+      - task: lint
+      - task: test

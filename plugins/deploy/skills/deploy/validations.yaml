@@ -1,0 +1,13 @@
+# Validations for deploy skill
+#
+# v1 validations runner supports command validations only.
+# on_stop defines which validations run automatically on Stop hook.
+
+validations:
+  - id: skill-structure
+    type: command
+    description: Validate skill YAML structure
+    command: "task -t .claude/Taskfile.yaml validate-skill -- --skill deploy"
+
+on_stop:
+  - skill-structure

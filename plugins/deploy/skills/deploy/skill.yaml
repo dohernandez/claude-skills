@@ -1,0 +1,232 @@
+name: deploy
+kind: utility
+version: "1.0.0"
+description: "Deployment workflow with environment selection and verification."
+severity: high
+tags:
+  - deployment
+  - ci-cd
+  - release
+
+config_location: ".claude/skills/deploy.yaml"
+
+# Configuration from skills-config.yaml
+# These values are set during framework installation via wizard
+config_refs:
+  - DEPLOY_COMMAND  # Command to deploy (e.g., "npm run deploy", "task deploy:prod")
+  - ENVIRONMENTS    # Available environments (e.g., "staging,production")
+  - DEPLOY_BRANCH   # Branch that triggers production deployment (e.g., "main")
+
+commands:
+  - name: configure
+    description: "Analyze project for deployment configuration (framework setup)"
+    output: ".claude/skills/deploy.yaml"
+    user_approval: required
+    steps:
+      - Scan for CI/CD configuration (.github/workflows, .gitlab-ci.yml, etc.)
+      - Identify deployment commands and scripts
+      - Detect available environments from config files
+      - Check for deployment-related npm scripts or Taskfile tasks
+      - Propose configuration to user for approval
+      - Save approved config to .claude/skills/deploy.yaml
+
+  - name: learn
+    description: "Update deployment config from recent activity"
+    output: "Updates .claude/skills/deploy.yaml"
+    steps:
+      - Read existing config from .claude/skills/deploy.yaml
+      - Analyze recent deployment history (if available)
+      - Check for new environments or changed commands
+      - Propose updates to user
+      - Merge approved updates into config
+
+  - name: default
+    description: "Deploy to target environment using saved configuration"
+    requires: ".claude/skills/deploy.yaml exists"
+    steps:
+      - Load config from .claude/skills/deploy.yaml
+      - Follow deploy_with_prompts procedure
+      - Use configured DEPLOY_COMMAND and ENVIRONMENTS
+
+purpose: |
+  Deploy application to target environments with proper validation:
+  1. Select target environment
+  2. Verify prerequisites
+  3. Check for existing deployments (lock)
+  4. Trigger deployment
+  5. Monitor deployment progress
+  6. Verify deployment success
+
+  Project-specific deployment commands are configured via skills-config.yaml.
+
+owns:
+  - "Deployment workflow orchestration"
+  - "Environment selection"
+  - "Deployment verification"
+
+inputs:
+  - name: environment
+    description: Target environment for deployment
+    required: true
+    prompt: true
+    examples:
+      - staging
+      - production
+
+  - name: force
+    description: Force deployment even if checks fail
+    required: false
+    default: false
+
+outputs:
+  - name: deployment_status
+    description: Final deployment status (success/failure)
+
+  - name: deployment_url
+    description: URL to view the deployment (if applicable)
+
+patterns:
+  deployment_flow:
+    - step: environment_selection
+      description: User selects target environment
+    - step: prerequisite_check
+      description: Verify all prerequisites are met
+    - step: lock_check
+      description: Check for existing deployments
+    - step: trigger_deployment
+      description: Execute deployment command
+    - step: monitor_progress
+      description: Watch deployment progress
+    - step: verify_success
+      description: Confirm deployment succeeded
+
+anti_patterns:
+  - name: deploying_without_tests
+    why_bad: Deploying untested code may introduce bugs
+    what_to_do: Always run tests before deploying
+
+  - name: deploying_wrong_environment
+    why_bad: Deploying to wrong environment affects wrong users
+    what_to_do: Always confirm environment selection with user
+
+  - name: skipping_verification
+    why_bad: Deployment may fail silently
+    what_to_do: Always run deploy-verify skill after deployment
+
+  - name: deploying_uncommitted_changes
+    why_bad: CI/CD deploys from remote, not local changes
+    what_to_do: Commit and push changes before deploying
+
+  - name: deploying_from_wrong_branch
+    why_bad: Deploy may use wrong code
+    what_to_do: Verify on ${DEPLOY_BRANCH} or correct feature branch
+
+procedures:
+  - name: deploy_with_prompts
+    description: Full deployment flow with user prompts
+    steps:
+      - phase: Check Prerequisites
+        actions:
+          - Verify user is on correct branch
+          - Check all changes are committed and pushed
+          - Run tests if not already run
+        commands:
+          - "git status"
+          - "git log origin/${DEPLOY_BRANCH}..HEAD"
+
+      - phase: Select Environment
+        actions:
+          - Ask user which environment to deploy to
+          - Confirm selection before proceeding
+        user_prompt:
+          question: "Which environment should I deploy to?"
+          header: "Environment"
+          options_from: "${ENVIRONMENTS}"
+
+      - phase: Pre-deployment Checks
+        actions:
+          - Check for active deployments (if applicable)
+          - Verify environment is ready for deployment
+          - Confirm final approval from user
+
+      - phase: Execute Deployment
+        actions:
+          - Run deployment command
+          - Monitor output for errors
+          - Capture deployment URL or ID
+        commands:
+          - "${DEPLOY_COMMAND}"
+
+      - phase: Verify Deployment
+        actions:
+          - Wait for deployment to complete
+          - Run verification checks
+          - Report deployment status
+        handoff:
+          skill: deploy-verify
+          when: "Deployment completed"
+
+  - name: deploy_quick
+    description: Quick deployment without prompts (for automation)
+    steps:
+      - phase: Verify
+        actions:
+          - Check prerequisites
+          - Verify environment parameter provided
+
+      - phase: Deploy
+        actions:
+          - Run deployment command with provided environment
+        commands:
+          - "${DEPLOY_COMMAND}"
+
+examples:
+  - name: Interactive deployment to staging
+    request: "Deploy to staging"
+    procedure: deploy_with_prompts
+    flow: |
+      1. Claude: "Which environment should I deploy to?"
+         - staging
+         - production
+      2. User selects: staging
+      3. Claude checks for uncommitted changes (none found)
+      4. Claude: "Ready to deploy to staging. Proceed?"
+      5. User confirms
+      6. Claude runs: ${DEPLOY_COMMAND}
+      7. Claude monitors deployment progress
+      8. After completion: "Deployment complete. Run /deploy-verify to confirm."
+
+  - name: Production deployment
+    request: "Deploy to production"
+    procedure: deploy_with_prompts
+    flow: |
+      1. Claude: "Which environment should I deploy to?"
+      2. User selects: production
+      3. Claude: "You're deploying to PRODUCTION. Are you sure?"
+      4. User confirms
+      5. Claude runs deployment
+      6. Claude suggests running deploy-verify
+
+customization_guide: |
+  To customize this skill for your project:
+
+  1. Set DEPLOY_COMMAND in skills-config.yaml
+     Examples:
+     - "npm run deploy" (Node.js)
+     - "task deploy:prod" (Taskfile)
+     - "gh workflow run deploy.yaml" (GitHub Actions)
+     - "kubectl apply -f k8s/" (Kubernetes)
+
+  2. Set ENVIRONMENTS in skills-config.yaml
+     Examples:
+     - "staging,production"
+     - "dev,staging,prod"
+     - "local,dev,staging,production"
+
+  3. Set DEPLOY_BRANCH in skills-config.yaml
+     Examples:
+     - "main"
+     - "master"
+     - "release"
+
+  4. Update procedures with project-specific steps if needed

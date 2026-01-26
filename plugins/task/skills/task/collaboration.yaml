@@ -1,0 +1,47 @@
+# Collaboration: skill dependencies and composition
+
+name: task
+version: "2.0.0"
+
+dependencies:
+  - skill: domain-expert
+    reason: "Understand domain concepts before planning"
+    optional: false
+
+  - skill: arch
+    reason: "Map changes to correct architecture layers"
+    optional: false
+
+  - skill: developer
+    reason: "Follow code patterns during implementation"
+    optional: false
+
+  - skill: tdd
+    reason: "Write tests alongside implementation"
+    optional: false
+
+composition:
+  - when: "Implementing a feature or chore"
+    sequence:
+      - task  # Scope → Plan → Implement → Verify
+
+  - when: "Full workflow with task"
+    sequence:
+      - workflow-setup  # Create branch
+      - task            # Do the work
+      - commit          # Commit changes
+      - pr-create       # Create PR
+
+triggers:
+  - pattern: "implement|build|create feature|add feature"
+    suggest: task
+  - pattern: "new task|start task|task workflow"
+    suggest: task
+
+provides_to:
+  - skill: workflow
+    data: "Completed implementation ready for commit"
+
+receives_from:
+  - skill: workflow
+    data: "Task description and type from ticket"

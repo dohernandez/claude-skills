@@ -1,0 +1,110 @@
+# Sharp edges for deploy skill
+#
+# NOTE: The `detect` field is informational only - it shows how to manually
+# check for the edge case. These are NOT automatically enforced by the
+# validation runner. Automated enforcement happens via validations.yaml.
+
+edges:
+  - id: concurrent-deployment-race
+    description: "Starting deployment while another is in progress"
+    detect: "Check CI/CD for in-progress deployments"
+    impact: "Race conditions, partial deploys, state conflicts"
+    fix: |
+      Always check for active deployments before triggering:
+      ```bash
+      # GitHub Actions example
+      IN_PROGRESS=$(gh run list --workflow=deploy.yaml --status=in_progress --json databaseId | jq length)
+      if [ "$IN_PROGRESS" -gt 0 ]; then
+        echo "Deployment in progress - wait or cancel"
+        exit 1
+      fi
+      ```
+    severity: critical
+
+  - id: wrong-environment-selection
+    description: "Deploying to wrong environment (e.g., production instead of staging)"
+    detect: "Review environment parameter before triggering"
+    impact: "Affects wrong environment, potential production incident"
+    fix: |
+      Always confirm environment selection with user:
+      - Show environment name clearly before deploying
+      - Use AskUserQuestion to get explicit confirmation
+      - Default to safer option (staging) if ambiguous
+    severity: critical
+
+  - id: uncommitted-local-changes
+    description: "Expecting local changes to deploy when they haven't been pushed"
+    detect: "git status shows uncommitted changes"
+    impact: "Deployed version doesn't include expected changes"
+    fix: |
+      Remind user that CI/CD deploys from remote:
+      1. Commit local changes: git add && git commit
+      2. Push to remote: git push
+      3. Then trigger deployment
+    severity: high
+
+  - id: deploying-from-feature-branch
+    description: "Triggering deploy while on a feature branch"
+    detect: "git branch --show-current != ${DEPLOY_BRANCH}"
+    impact: "Deploy runs from main, not feature branch (unless ref specified)"
+    fix: |
+      Warn user if not on deploy branch:
+      - "You're on branch 'feature-x' but deploy runs from main"
+      - Suggest: merge to main first, or specify --ref if supported
+    severity: medium
+
+  - id: force-build-unnecessary
+    description: "Using force build when not needed"
+    detect: "User specifies force_build=true without clear reason"
+    impact: "Wastes CI time, unnecessary resource usage"
+    fix: |
+      Only use force build when:
+      - Dependencies updated but not detected
+      - Debugging build issues
+      - Base image needs refresh
+      Ask user why they need force build.
+    severity: low
+
+  - id: skipping-verification
+    description: "Not verifying deployment after workflow completes"
+    detect: "User exits after seeing deployment triggered"
+    impact: "Deployment may have failed silently, services unhealthy"
+    fix: |
+      After deployment workflow completes:
+      1. Always suggest running deploy-verify skill
+      2. Or automatically invoke it
+      3. At minimum, check workflow conclusion
+    severity: medium
+
+  - id: version-tag-typo
+    description: "Specifying non-existent version or image tag"
+    detect: "version/tag provided but doesn't exist"
+    impact: "Deployment fails when pulling image or checking out version"
+    fix: |
+      Verify version exists before deploying:
+      - Check git tags: git tag -l | grep <version>
+      - Check container registry for image tag
+      If not found, the version doesn't exist.
+    severity: high
+
+  - id: workflow-stuck-in-progress
+    description: "Deployment appears stuck in in_progress state"
+    detect: "Deployment running for >30 minutes"
+    impact: "Blocks all future deployments"
+    fix: |
+      1. Check deployment logs for the stuck step
+      2. If truly stuck (not just slow), cancel:
+         gh run cancel <run-id>
+      3. Re-trigger deployment
+      Note: Some deployment steps can take 10-15 minutes legitimately.
+    severity: medium
+
+  - id: environment-not-configured
+    description: "Attempting to deploy to an unconfigured environment"
+    detect: "Environment not in ENVIRONMENTS config"
+    impact: "Deployment fails with missing configuration"
+    fix: |
+      Only deploy to configured environments.
+      Check .claude/skills/deploy.yaml for available environments.
+      To add a new environment, update the configuration first.
+    severity: high

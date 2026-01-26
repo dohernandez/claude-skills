@@ -1,0 +1,263 @@
+name: tdd
+kind: methodology
+version: "1.0.0"
+description: "Enforce TDD discipline: tests first, fix code not tests."
+severity: critical
+tags:
+  - tdd
+  - testing
+  - methodology
+
+config_location: ".claude/skills/tdd.yaml"
+
+purpose: |
+  Implement changes using Test-Driven Development. The core principle:
+  write tests that define expected behavior BEFORE writing implementation.
+
+  Configuration model:
+  - /tdd configure: One-time project analysis, saves config
+  - /tdd learn <path>: Contextual update from specific path
+  - /tdd: Normal usage, reads saved config
+
+commands:
+  - name: configure
+    description: "Analyze entire project for test patterns (framework setup)"
+    arguments: []
+    output: ".claude/skills/tdd.yaml"
+    user_approval: required
+
+  - name: learn
+    description: "Analyze specific path, update config with new patterns"
+    arguments:
+      - name: path
+        description: "Path to analyze"
+        required: true
+    output: "Updates .claude/skills/tdd.yaml"
+    user_approval: required
+
+  - name: default
+    description: "Write tests using saved patterns (normal usage)"
+    requires: ".claude/skills/tdd.yaml exists"
+
+owns:
+  - "TDD workflow and discipline"
+  - "Test-first development"
+  - "Test pattern configuration"
+
+non_negotiables:
+  - id: tests-first
+    rule: "Tests must be written before implementation code."
+
+  - id: fix-code-not-tests
+    rule: "If a test fails, fix the implementation, not the test."
+
+  - id: no-behavior-without-tests
+    rule: "Every new function with behavior needs a test."
+
+  - id: match-project-patterns
+    rule: "Use patterns from saved config, don't invent new styles."
+
+  - id: config-required
+    rule: "Normal /tdd requires .claude/skills/tdd.yaml (run configure first)."
+
+# ============================================================================
+# DISCOVER PROCEDURE
+# ============================================================================
+configure:
+  description: "One-time project analysis during framework setup"
+
+  steps:
+    - phase: "Detect test framework"
+      actions:
+        - check: "package.json"
+          patterns: ["jest", "vitest", "mocha", "ava", "@testing-library"]
+          language: typescript
+        - check: "pyproject.toml, requirements.txt, setup.py"
+          patterns: ["pytest", "unittest", "nose"]
+          language: python
+        - check: "go.mod, *_test.go"
+          patterns: ["testing"]
+          language: go
+        - check: "Cargo.toml"
+          patterns: ["#[test]", "#[cfg(test)]"]
+          language: rust
+
+    - phase: "Find test locations"
+      actions:
+        - find: "*.test.ts, *.test.js, *.spec.ts, *.spec.js"
+          indicates: co-located
+        - find: "*_test.py, test_*.py"
+          indicates: python-style
+        - find: "*_test.go"
+          indicates: go-style
+        - find: "tests/, __tests__/, test/"
+          indicates: separate-directory
+
+    - phase: "Analyze test structure"
+      actions:
+        - read: "5-10 test files"
+        - extract:
+            - organization: "describe/it, class-based, function-based"
+            - assertions: "expect, assert, require patterns"
+            - mocks: "vi.fn, jest.mock, @patch, gomock patterns"
+            - fixtures: "beforeEach, setUp, conftest.py patterns"
+
+    - phase: "Detect test commands"
+      actions:
+        - check: "Taskfile.yaml"
+          look_for: "test, test:unit, test:integration"
+        - check: "package.json scripts"
+          look_for: "test, test:*"
+        - check: "Makefile"
+          look_for: "test target"
+
+    - phase: "Propose to user"
+      actions:
+        - format: "YAML proposal with all discovered patterns"
+        - include: "Actual examples from project"
+        - wait: "User approval or modifications"
+
+    - phase: "Save config"
+      actions:
+        - location: ".claude/skills/tdd.yaml"
+        - include: "version, discovered_at timestamp"
+
+  output_schema:
+    version: 1
+    discovered_at: "ISO timestamp"
+    framework: "vitest | jest | pytest | go | cargo"
+    language: "typescript | python | go | rust"
+    test_locations:
+      pattern: "glob pattern"
+      style: "co-located | separate"
+      directories: []
+    structure:
+      organization: "describe-it | class-based | function-based"
+      naming: "pattern"
+      example: "actual example"
+    assertions:
+      library: "name"
+      style: "expect | assert"
+      example: "actual example"
+    mocks:
+      library: "name"
+      pattern: "pattern"
+      example: "actual example"
+    fixtures:
+      setup: "beforeEach | setUp | etc"
+      teardown: "afterEach | tearDown | etc"
+      data_location: "path or null"
+    commands:
+      all: "task test"
+      unit: "command"
+      watch: "command"
+      single: "command with {file} placeholder"
+
+# ============================================================================
+# LEARN PROCEDURE
+# ============================================================================
+learn:
+  description: "Contextual analysis of specific path to update config"
+
+  steps:
+    - phase: "Validate prerequisites"
+      actions:
+        - check: ".claude/skills/tdd.yaml exists"
+        - if_missing: "Run /tdd configure first"
+
+    - phase: "Analyze path"
+      actions:
+        - find: "Test files in specified path"
+        - read: "All test files found"
+        - extract: "Patterns (same as configure)"
+
+    - phase: "Compare to existing config"
+      actions:
+        - diff: "New patterns vs saved config"
+        - identify: "New patterns not in config"
+
+    - phase: "Propose updates"
+      actions:
+        - show: "New patterns found"
+        - ask: "Add to config? [Approve / Modify / Skip]"
+
+    - phase: "Update config"
+      actions:
+        - merge: "New patterns into .claude/skills/tdd.yaml"
+        - update: "discovered_at timestamp"
+
+# ============================================================================
+# NORMAL USAGE PROCEDURE
+# ============================================================================
+procedure:
+  - step: "Check config exists"
+    detail: |
+      Read .claude/skills/tdd.yaml
+      If missing: prompt user to run /tdd configure first
+
+  - step: "Define expected behavior"
+    detail: "Write Flow Spec describing what the code should do."
+
+  - step: "Write failing test (RED)"
+    detail: |
+      Write test using patterns from saved config:
+      - Use project's test structure (describe/it, class, function)
+      - Use project's assertion style
+      - Use project's mock patterns
+      Run test - it must FAIL.
+
+  - step: "Write minimal code (GREEN)"
+    detail: "Write just enough code to make the test pass."
+
+  - step: "Refactor"
+    detail: "Clean up while keeping tests green."
+
+  - step: "Verify"
+    detail: "Run task test and ensure all tests pass."
+
+definition_of_done:
+  - ".claude/skills/tdd.yaml exists"
+  - "Tests fail before code and pass after"
+  - "Tests match project patterns from config"
+  - "task test passes"
+  - "task precommit passes"
+
+anti_patterns:
+  - id: test-after-code
+    description: "Writing code first, then backfilling tests"
+    why_bad: "Tests become documentation, not specification."
+
+  - id: weakening-tests
+    description: "Modifying tests to pass instead of fixing code"
+    why_bad: "Hides bugs, defeats TDD purpose."
+
+  - id: inventing-patterns
+    description: "Using different test patterns than project standard"
+    why_bad: "Inconsistent codebase, harder to maintain."
+
+  - id: reconfiguring
+    description: "Running discovery every time instead of reading config"
+    why_bad: "Slow, inconsistent, unnecessary."
+
+  - id: skipping-discovery
+    description: "Using /tdd without running /tdd configure first"
+    why_bad: "No saved patterns, will invent inconsistent tests."
+
+context: |
+  TDD with discovery model:
+
+  1. SETUP (once): /tdd configure
+     - Analyzes entire project
+     - User approves findings
+     - Saves to .claude/skills/tdd.yaml
+
+  2. USAGE (every time): /tdd
+     - Reads saved config
+     - Writes tests matching project patterns
+     - No re-discovery needed
+
+  3. UPDATE (as needed): /tdd learn <path>
+     - Analyzes specific path
+     - Updates config with new patterns
+
+  This ensures consistent test patterns across the project.

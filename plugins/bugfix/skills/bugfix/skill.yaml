@@ -1,0 +1,176 @@
+kind: methodology
+ownership: engineering
+stop_hook: null
+
+description: |
+  Structured debugging methodology for fixing bugs. Ensures bugs are properly
+  understood before fixing, captured in tests to prevent regression, and fixed
+  with minimal changes.
+
+  Phases: Reproduce → Plan → Failing Test → Fix → Verify
+
+inputs:
+  - name: bug_description
+    description: Description of the bug from ticket or user
+    required: true
+
+  - name: reproduction_steps
+    description: Steps to reproduce the bug
+    required: false
+
+outputs:
+  - name: fix_plan
+    description: Root cause analysis and approved fix approach
+
+  - name: failing_test
+    description: Test file capturing the bug
+
+  - name: fix_description
+    description: What was changed to fix the bug
+
+patterns:
+  phases:
+    - id: B1
+      name: Reproduce
+      goal: Confirm bug exists and understand trigger
+      output: Reproduction confirmed with steps
+      can_skip: false
+
+    - id: B2
+      name: Plan
+      goal: Identify root cause, design fix, get user approval
+      output: Root cause + fix plan approved by user
+      can_skip: false
+      uses: /developer
+
+    - id: B3
+      name: Failing Test
+      goal: Capture bug in a failing test
+      output: Test that fails for the right reason
+      can_skip: false
+
+    - id: B4
+      name: Fix
+      goal: Minimal change to fix root cause
+      output: Test now passes, debug logs removed
+      can_skip: false
+
+    - id: B5
+      name: Verify
+      goal: Ensure no regression
+      output: All tests pass
+      can_skip: false
+
+  debug_logging:
+    use: "project's debug logger"
+    avoid: "print statements to stdout"
+    patterns:
+      typescript: "logger.debug('checkpoint', { var1, var2 });"
+      python: "logger.debug(f'checkpoint: {var1=}, {var2=}')"
+      go: "log.Printf(\"checkpoint: var1=%v var2=%v\", var1, var2)"
+    cleanup: Remove all debug logs after fix
+
+  test_commands:
+    # Framework provides standardized task commands
+    run_all: "task test"
+    precommit: "task precommit"
+
+anti_patterns:
+  - name: fix_without_reproduction
+    why_bad: Can't verify fix works if can't reproduce bug
+    what_to_do: Always reproduce first, document steps
+
+  - name: fix_without_approval
+    why_bad: May take wrong approach, wasted effort
+    what_to_do: Get user approval on fix plan before proceeding
+
+  - name: fix_without_failing_test
+    why_bad: No proof bug existed, no regression prevention
+    what_to_do: Write test that fails BEFORE fixing
+
+  - name: guess_and_fix
+    why_bad: May fix symptom not cause, introduces new bugs
+    what_to_do: Trace code path, add debug logs, understand first
+
+  - name: change_code_to_debug
+    why_bad: Mixes debugging with fixing, hard to track
+    what_to_do: Add debug logs only, analyze, then make fix
+
+  - name: fix_plus_refactor
+    why_bad: Hard to review, may introduce bugs
+    what_to_do: Minimal fix only, refactor in separate PR
+
+  - name: skip_regression_tests
+    why_bad: Fix may break other functionality
+    what_to_do: Always run full test suite before committing
+
+procedures:
+  - name: bugfix_flow
+    description: Complete bug fix from report to verified fix
+    steps:
+      - phase: B1 - Reproduce
+        actions:
+          - Read bug description and any logs/screenshots
+          - Identify reproduction steps
+          - Execute steps in local environment
+          - Document observed vs expected behavior
+        failure_action: Ask user for more context
+
+      - phase: B2 - Plan
+        actions:
+          - Trace code path from reproduction
+          - Read relevant source files
+          - Form hypothesis about cause
+          - If unclear, add debug logging
+          - Document root cause location and explanation
+          - Use /developer for code patterns
+          - Design minimal fix approach
+          - Get user approval on fix plan
+        failure_action: Add more debug logs, re-analyze
+
+      - phase: B3 - Failing Test
+        actions:
+          - Identify appropriate test file
+          - Write test exercising reproduction scenario
+          - Run test to confirm it FAILS
+          - Verify test fails for right reason (not typo)
+        failure_action: Re-examine reproduction steps
+
+      - phase: B4 - Fix
+        actions:
+          - Make minimal change to fix root cause
+          - Run failing test - should now PASS
+          - Remove any debug logging
+        failure_action: Re-analyze, fix may be incomplete
+
+      - phase: B5 - Verify
+        actions:
+          - Run full test suite
+          - Run precommit checks
+          - Verify all tests pass
+        failure_action: Analyze if failure related to fix
+
+examples:
+  - name: Off-by-one error
+    bug: "Array processing fails on last element"
+    reproduction: "Call processItems with index equal to array length"
+    root_cause: "Uses < instead of <= in boundary comparison"
+    fix: "Change < to <= on line 42"
+
+  - name: Null pointer
+    bug: "Service crashes when user not found"
+    reproduction: "Query for non-existent user ID"
+    root_cause: "No null check on lookup result"
+    fix: "Add early return if user is null"
+
+context: |
+  This methodology is invoked by /workflow when the ticket type is 'fix'.
+  It ensures disciplined debugging that produces:
+  1. An approved fix plan (prevents wrong approach)
+  2. A test capturing the bug (prevents regression)
+  3. A minimal fix (easy to review)
+  4. Full regression verification (no side effects)
+
+  The key insight is: understand before changing. Most bugs are fixed
+  incorrectly because developers jump to fixing without understanding
+  the root cause.

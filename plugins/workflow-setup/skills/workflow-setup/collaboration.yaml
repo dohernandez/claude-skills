@@ -1,0 +1,30 @@
+# Collaboration: skill dependencies and composition
+#
+# NOTE: composition.sequence lists skill names only.
+
+name: workflow-setup
+version: "1.0.0"
+
+dependencies:
+  - skill: workflow
+    reason: "Called by workflow during start phase"
+    optional: false
+    direction: "inbound"
+
+# This skill does not directly call other skills.
+# The handoff to developer happens via pending-action.json
+# when a new Claude session opens in the worktree.
+
+composition:
+  - when: "Starting work on a ticket with worktree setup"
+    sequence:
+      - workflow      # Detects source, generates branch name
+      - workflow-setup # Creates worktree, copies files, opens IDE
+      # --- Session boundary ---
+      # New Claude session in IDE reads pending-action.json
+      - developer     # Plans implementation (in new session)
+
+triggers:
+  # This skill is not directly invoked by users.
+  # It's called internally by workflow.
+  []

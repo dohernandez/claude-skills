@@ -1,0 +1,12 @@
+# Claude Code local settings
+.claude/settings.local.json
+
+# Dependencies
+
+# OS files
+.DS_Store
+
+# Editor
+.idea/
+.vscode/
+*.swp

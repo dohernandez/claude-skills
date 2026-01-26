@@ -51,6 +51,37 @@ When a skill is invoked:
 4. Use config_wizard structure for interactive configuration
 5. Run post-installation validations
 
+## Available Skills
+
+### Core Skills
+- `commit` - Git commits with conventional format
+- `pr-create` - Create GitHub pull requests
+- `pr-merge` - Merge pull requests with CI validation
+- `bugfix` - Structured bug investigation
+- `task` - Task execution and management
+- `test` - Smart test runner with watch and coverage
+- `tdd` - Test-driven development workflow
+- `workflow` - Development workflow orchestrator
+- `workflow-setup` - Initialize workflow with branch creation
+- `workflow-finish` - Complete workflow with cleanup
+- `linear` - Linear issue management
+- `slack` - Slack integration
+
+### Customizable Skills
+- `arch` - Architecture patterns and layer boundaries
+- `code` - Code style enforcement
+- `developer` - Development orchestration
+- `docs-refresh` - Documentation generation
+- `setup` - Project setup and onboarding
+- `domain-expert` - Domain knowledge and terminology
+- `debugger` - Production issue debugging
+- `deploy` - Deployment workflow
+- `deploy-verify` - Post-deployment verification
+
+### Meta Skills
+- `framework` - Configure all skills at once
+- `create-skill` - Scaffold new skills
+
 ## Security Constraints
 
 Skills that handle secrets must follow strict masking requirements:

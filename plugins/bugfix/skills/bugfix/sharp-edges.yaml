@@ -1,0 +1,111 @@
+# Sharp edges for bugfix
+
+edges:
+  - id: skipping-reproduction
+    description: "Jumping to fix without reproducing the bug first"
+    detect: "No reproduction steps documented before making code changes"
+    impact: "May fix wrong thing, can't verify fix works"
+    fix: |
+      Always start with B1 (Reproduce):
+      1. Read the bug report carefully
+      2. Execute reproduction steps locally
+      3. Document observed vs expected behavior
+      4. Only proceed when you can trigger the bug
+    severity: critical
+
+  - id: fixing-without-test
+    description: "Making code changes without a failing test first"
+    detect: "Code changes made before test written and verified to fail"
+    impact: "No proof bug existed, no regression prevention"
+    fix: |
+      Write the failing test BEFORE fixing (B2):
+      1. Create test that exercises the exact bug scenario
+      2. Run test - it must FAIL
+      3. Verify it fails for the RIGHT reason (the bug)
+      4. Only then proceed to B3/B4
+    severity: critical
+
+  - id: test-fails-wrong-reason
+    description: "Test fails but not due to the bug"
+    detect: "Test error message doesn't match bug description"
+    impact: "Test doesn't actually capture the bug"
+    fix: |
+      Verify test fails for the right reason:
+      - Error message should relate to the bug
+      - Test should pass after fix is applied
+      - If test fails for different reason (typo, setup), fix the test first
+    severity: high
+
+  - id: changing-code-to-debug
+    description: "Modifying implementation code while investigating"
+    detect: "Code changes made during B3 (Root Cause) phase"
+    impact: "Mixes debugging with fixing, hard to track what changed"
+    fix: |
+      During B3, only add debug logging:
+      1. Use logger.debug(), not console.log
+      2. Add logs at key checkpoints
+      3. Run and analyze output
+      4. Remove logs after understanding cause
+      5. Only make implementation changes in B4
+    severity: medium
+
+  - id: over-engineering-fix
+    description: "Refactoring or improving code beyond the minimal fix"
+    detect: "Changes to code not directly related to the bug"
+    impact: "Harder to review, may introduce new bugs"
+    fix: |
+      In B4, make MINIMAL changes only:
+      - Fix the specific root cause
+      - Don't refactor surrounding code
+      - Don't add "improvements"
+      - Don't clean up unrelated issues
+      - Save refactoring for a separate PR
+    severity: medium
+
+  - id: forgetting-to-remove-debug-logs
+    description: "Leaving debug logging in production code"
+    detect: "logger.debug or console.log added during debugging still present"
+    impact: "Noisy logs, potential info leakage"
+    fix: |
+      At end of B4:
+      1. Search for any logger.debug you added
+      2. Remove all temporary debug logging
+      3. Keep only permanent logging that was there before
+    severity: low
+
+  - id: skipping-regression-tests
+    description: "Not running full test suite after fix"
+    detect: "Only running the new test, not all tests"
+    impact: "Fix may break other functionality"
+    fix: |
+      In B5, always run full suite:
+      ```bash
+      task test             # All tests
+      task precommit        # Lint + tests
+      ```
+      All must pass before committing.
+    severity: high
+
+  - id: related-test-failures
+    description: "Other tests fail after fix but treated as unrelated"
+    detect: "Test failures dismissed as 'flaky' without analysis"
+    impact: "Fix may have unintended side effects"
+    fix: |
+      When other tests fail after fix:
+      1. Analyze if failure is related to your change
+      2. If related: your fix may have side effects, re-analyze
+      3. If truly unrelated: investigate separately, don't just dismiss
+      4. Never commit with failing tests
+    severity: high
+
+  - id: cant-reproduce-proceeding-anyway
+    description: "Proceeding to fix when bug can't be reproduced"
+    detect: "Bug not reproduced but code changes made anyway"
+    impact: "Fixing blind - may not fix actual bug, can't verify"
+    fix: |
+      If you can't reproduce:
+      1. Ask user for more context
+      2. Check environment differences (versions, config)
+      3. Check if bug is intermittent (timing, race condition)
+      4. DO NOT proceed without reproduction
+    severity: critical

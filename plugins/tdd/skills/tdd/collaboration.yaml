@@ -1,0 +1,64 @@
+description: |
+  How tdd skill collaborates with other skills in the framework.
+
+relationships:
+  - skill: bugfix
+    type: complementary
+    description: |
+      bugfix uses TDD principles in phase B3 (failing test before fix).
+      tdd provides the overall methodology that bugfix applies to bug fixes.
+
+  - skill: workflow
+    type: upstream
+    description: |
+      workflow may invoke tdd when implementing features or fixes.
+      tdd provides testing discipline for code changes.
+
+boundaries:
+  this_skill_handles:
+    - "TDD workflow and discipline"
+    - "Test-first development"
+    - "Flow Spec requirements"
+    - "Test organization patterns"
+    - "Mock and fixture patterns"
+
+  this_skill_does_not_handle:
+    - "Bug reproduction and fix workflow (use bugfix)"
+    - "Code style and formatting"
+    - "Deployment and infrastructure"
+
+triggers:
+  - pattern: "tdd|test first|test-first|write tests"
+    suggest: tdd
+
+  - pattern: "implement|add feature|new feature"
+    suggest: tdd
+
+  - pattern: "unit tests|test coverage"
+    suggest: tdd
+
+common_questions:
+  - question: "When should I write tests?"
+    answer: |
+      Always write tests BEFORE implementation (TDD).
+      The test defines expected behavior - write it first,
+      verify it fails, then implement to make it pass.
+
+  - question: "What if a test fails and I think the test is wrong?"
+    answer: |
+      Think carefully before changing the test. The test defines expected behavior.
+      If you're certain the test is wrong, discuss with team first.
+      Usually, the implementation should be fixed, not the test.
+
+  - question: "Do I need tests for every function?"
+    answer: |
+      Yes, every function with behavior needs a test.
+      Pure utility functions with simple logic may share test cases.
+      Private implementation details don't need direct tests
+      if covered by public API tests.
+
+  - question: "How do I know if I'm testing too much implementation detail?"
+    answer: |
+      If your test breaks when you refactor code but the behavior
+      is unchanged, you're testing implementation details.
+      Test WHAT the code does (behavior), not HOW it does it.

@@ -1,0 +1,20 @@
+# Validations for debugger
+# v1 supports command validations only
+
+name: debugger
+version: "1.0.0"
+
+validations:
+  - id: skill-files-exist
+    type: command
+    command: "test -f .claude/skills/debugger/SKILL.md"
+    description: "Debugger skill files are present"
+    failure_message: "Debugger skill not installed properly."
+
+  - id: yaml-syntax-valid
+    type: command
+    command: "task -t .claude/Taskfile.yaml validate-skill -- --skill debugger"
+    description: "Skill YAML files are valid"
+    failure_message: "Debugger skill YAML validation failed."
+
+# No on_stop - debugger is diagnostic, not implementation

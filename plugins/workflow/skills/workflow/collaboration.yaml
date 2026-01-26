@@ -1,0 +1,61 @@
+# Collaboration: skill dependencies and composition
+#
+# NOTE: composition.sequence lists skill names only.
+
+name: workflow
+version: "1.0.0"
+
+dependencies:
+  - skill: workflow-setup
+    reason: "Creates worktree, copies files, opens IDE during start phase"
+    optional: false
+  - skill: developer
+    reason: "Invoked after setup to plan implementation (in new Claude session)"
+    optional: false
+  - skill: pr-merge
+    reason: "Handles PR merge with strict CI validation (delegated from /workflow merge)"
+    optional: false
+
+# workflow-setup handles the environment setup
+# developer handles planning (invoked by new Claude session via pending-action.json)
+# pr-merge handles the merge logic with strict CI validation
+
+composition:
+  - when: "Starting work on a ticket"
+    sequence:
+      - workflow       # Detects source, generates branch name
+      - workflow-setup # Creates worktree, copies files, opens IDE
+      # --- Session boundary: new Claude opens in IDE ---
+      - developer      # Plans implementation (reads pending-action.json)
+
+  - when: "Merging PR after review/checks"
+    sequence:
+      - pr-merge  # Delegated: checks CI, merge state, executes merge
+
+  - when: "Finishing ticket work"
+    sequence:
+      - workflow  # Captures learnings, updates skills knowledge, cleans up
+
+triggers:
+  - pattern: "start ticket|start work|new ticket|begin work|workflow start"
+    suggest: workflow
+  - pattern: "merge pr|merge pull request|workflow merge|ready to merge|pr-merge"
+    suggest: pr-merge  # Delegated to dedicated skill
+  - pattern: "finish ticket|done with ticket|cleanup branch|workflow finish|capture learnings"
+    suggest: workflow
+  - pattern: "ticket status|workflow status|current ticket"
+    suggest: workflow
+
+# Memory provider: workflow can write MEMORY.md files to any skill
+writes_memory_to:
+  - developer
+  - tdd-core
+  - domain-expert
+  - add-service
+  - add-contract
+  - arch-check
+  - reporter
+  - infra-service
+  - linear
+  - code
+  - create-skill

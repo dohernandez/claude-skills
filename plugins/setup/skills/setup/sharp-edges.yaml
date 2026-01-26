@@ -1,0 +1,111 @@
+# Sharp edges for setup skill
+# Common setup issues and their solutions
+
+name: setup
+version: "2.0.0"
+
+edges:
+  - id: missing-runtime
+    description: "Required runtime not installed or wrong version"
+    detect: "Runtime check command fails or returns wrong version"
+    impact: "Features may not work, syntax errors, import issues"
+    fix: |
+      Install the required runtime:
+
+      Node.js:
+        brew install node
+        # or use nvm:
+        nvm install 22
+
+      Python:
+        brew install python
+        # or use pyenv:
+        pyenv install 3.11
+
+      Go:
+        brew install go
+
+      Rust:
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+    severity: critical
+
+  - id: missing-task-cli
+    description: "Taskfile CLI not installed"
+    detect: "command -v task || echo 'not found'"
+    impact: "Cannot run task commands from framework"
+    fix: |
+      Install Taskfile CLI:
+        brew install go-task/tap/go-task
+    severity: high
+
+  - id: missing-env-file
+    description: "Running without environment configuration"
+    detect: "test -f .env || echo 'missing'"
+    impact: "Missing required environment variables"
+    fix: |
+      Create .env file from template:
+        cp .env.example .env
+        # Edit .env with your values
+    severity: critical
+
+  - id: dependencies-not-installed
+    description: "Running before installing dependencies"
+    detect: "Dependencies directory missing (node_modules, venv, etc.)"
+    impact: "Cannot find modules, import failures"
+    fix: |
+      Run the setup command for your project:
+
+      Node.js:
+        npm install
+
+      Python:
+        pip install -r requirements.txt
+        # or: poetry install
+
+      Go:
+        go mod download
+
+      Rust:
+        cargo build
+    severity: critical
+
+  - id: stale-cache
+    description: "Setup cache is outdated after project changes"
+    detect: "Cache file older than package.json/pyproject.toml/etc."
+    impact: "Using outdated setup configuration"
+    fix: |
+      Re-run learn mode to update cache:
+        /setup learn
+    severity: medium
+
+  - id: missing-env-vars
+    description: "Environment file exists but missing required variables"
+    detect: "Application fails with 'missing environment variable' error"
+    impact: "Application won't start or features won't work"
+    fix: |
+      1. Check .env.example for required variables
+      2. Add missing variables to .env
+      3. See project README for variable descriptions
+    severity: high
+
+  - id: wrong-package-manager
+    description: "Using wrong package manager for the project"
+    detect: "Lock file mismatch (e.g., yarn.lock exists but running npm)"
+    impact: "Dependency version conflicts, missing packages"
+    fix: |
+      Use the package manager matching the lock file:
+      - package-lock.json → npm
+      - yarn.lock → yarn
+      - pnpm-lock.yaml → pnpm
+      - poetry.lock → poetry
+      - Pipfile.lock → pipenv
+    severity: medium
+
+  - id: outdated-dependencies
+    description: "Dependencies out of sync with lock file"
+    detect: "Lock file newer than dependencies directory"
+    impact: "Using outdated packages, potential issues"
+    fix: |
+      Re-run setup command:
+        npm install  # or equivalent
+    severity: medium

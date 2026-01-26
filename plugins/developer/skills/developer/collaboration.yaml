@@ -1,0 +1,71 @@
+name: developer
+version: "2.0.0"
+
+dependencies:
+  - skill: code
+    required: true
+    reason: "Must follow code style patterns throughout implementation"
+
+  - skill: tdd
+    required: false
+    reason: "Used for test-first development on core logic"
+
+composition:
+  - when: "Implementing any code change"
+    sequence:
+      - developer  # orchestrates the workflow
+      - code       # enforces style
+
+  - when: "Creating new functionality with tests"
+    sequence:
+      - developer  # plans implementation
+      - tdd        # test-first discipline
+      - code       # style enforcement
+
+triggers:
+  - pattern: "implement|add feature|create new|build|develop|write code"
+    suggest: developer
+    priority: high
+
+  - pattern: "change|modify|update|refactor|improve|enhance"
+    suggest: developer
+    priority: high
+
+  - pattern: "fix bug|debug|troubleshoot|repair"
+    suggest: developer
+    priority: high
+
+  - pattern: "architecture|layer|module|component"
+    suggest: developer
+    priority: high
+    hint: "Architecture-related request - use developer to respect layer boundaries"
+
+  - pattern: "add|new|create"
+    suggest: developer
+    priority: medium
+    hint: "Creation request - use developer to determine correct approach"
+
+complements:
+  - skill: code
+    relationship: "developer uses code for style enforcement throughout"
+
+  - skill: tdd
+    relationship: "developer uses tdd for test-first discipline on core logic"
+
+  - skill: bugfix
+    relationship: "developer delegates to bugfix for structured debugging"
+
+usage_hints:
+  - "Use for any code change requiring architecture awareness"
+  - "Use when you need to understand where to place new code"
+  - "Use to ensure changes follow project conventions"
+  - "Enforces bottom-up implementation for multi-layer changes"
+  - "Run /developer discover first to analyze project architecture"
+
+orchestration_rules:
+  - "Load architecture config first"
+  - "Map request to domain concepts"
+  - "Implement bottom-up for multi-layer changes"
+  - "Validate after each layer"
+  - "Apply code patterns throughout"
+  - "Run pre-commit checks before marking complete"

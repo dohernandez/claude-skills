@@ -1,0 +1,173 @@
+name: framework
+kind: meta
+version: "1.0.0"
+description: "Configure the Claude Code Developer Framework after installation."
+severity: low
+tags:
+  - framework
+  - configuration
+  - setup
+  - meta
+
+purpose: |
+  Orchestrates configuration of the entire framework:
+  1. Framework-level settings (PROJECT_NAME, LINT_COMMAND, etc.)
+  2. Skill-level configuration (/skill configure for each skill)
+  3. Verification and summary
+
+  Run after:
+  - Installing the framework plugin
+  - Running `claude --init`
+  - Re-configuring for a new project
+
+owns:
+  - "Framework-level configuration"
+  - "Orchestrating skill configuration"
+  - ".claude/skills-config.env management"
+
+commands:
+  - name: configure
+    description: "Run full configuration wizard"
+    trigger: "/framework configure or /framework"
+    procedure:
+      - step: "Phase 1: Framework Configuration"
+        detail: |
+          Ask for project-level settings using AskUserQuestion:
+
+          1. PROJECT_NAME (required): Project name for generated code/docs
+          2. LINT_COMMAND (optional): Command to run linter
+          3. TEST_COMMAND (optional): Command to run tests
+          4. TEST_WATCH_COMMAND (optional): Command for test watch mode
+          5. TEST_COVERAGE_COMMAND (optional): Command for test coverage
+          6. PRECOMMIT_COMMAND (optional): Pre-commit validation command
+
+          Save to .claude/skills-config.env
+
+      - step: "Phase 2: Skill Configuration"
+        detail: |
+          For each skill with configure: true in manifest, run /skill configure:
+
+          Order (dependencies first):
+          1. arch - Architecture style (others may depend on layers)
+          2. code - Code style (from linter configs)
+          3. tdd - Test patterns
+          4. commit - Commit scopes
+          5. developer - Development patterns
+          6. domain - Domain knowledge
+          7. workflow - Worktree preferences
+          8. deploy - Deployment commands
+          9. deploy-verify - Verification
+          10. debugger - Log commands
+          11. docs-refresh - Doc paths
+          12. setup - Setup commands
+          13. linear - Linear workspace (optional)
+
+          For each skill:
+          - Announce which skill is being configured
+          - Run the skill's configure procedure
+          - Show result (success/failure)
+          - Continue to next skill
+
+      - step: "Phase 3: Verification"
+        detail: |
+          Show summary:
+          - List of configured skills with config file paths
+          - Any skills that failed configuration
+          - Instructions for re-configuring individual skills
+
+  - name: status
+    description: "Show current configuration status"
+    trigger: "/framework status"
+    procedure:
+      - step: "Check framework config"
+        detail: |
+          Read .claude/skills-config.env and show:
+          - PROJECT_NAME
+          - LINT_COMMAND
+          - TEST_COMMAND
+          - TEST_WATCH_COMMAND
+          - TEST_COVERAGE_COMMAND
+          - PRECOMMIT_COMMAND
+
+          Mark each as ✓ if set, ✗ if missing
+
+      - step: "Check skill configs"
+        detail: |
+          For each skill with configure: true:
+          - Check if .claude/skills/<skill>.yaml exists
+          - Mark as ✓ if exists, ✗ if missing
+
+      - step: "Show summary"
+        detail: |
+          Display table of configuration status.
+          Recommend running /framework configure for missing configs.
+
+config_location: ".claude/skills-config.env"
+
+skills_requiring_configure:
+  - arch
+  - code
+  - tdd
+  - commit
+  - developer
+  - domain-expert
+  - workflow
+  - workflow-finish
+  - deploy
+  - deploy-verify
+  - debugger
+  - docs-refresh
+  - setup
+  - linear
+  - task
+
+patterns:
+  - id: progressive-configuration
+    description: |
+      Configure skills in dependency order:
+      1. Foundation skills first (arch, code)
+      2. Workflow skills second (tdd, commit, developer)
+      3. Integration skills last (linear, deploy)
+
+  - id: fail-continue
+    description: |
+      If a skill's configure fails:
+      1. Log the error
+      2. Continue with next skill
+      3. Report failures at the end
+
+      Don't block the entire configuration on one failure.
+
+  - id: idempotent-config
+    description: |
+      Configuration is idempotent:
+      - Running /framework configure multiple times is safe
+      - Each skill's configure overwrites previous config
+      - User can re-configure individual skills anytime
+
+anti_patterns:
+  - id: skip-user-confirmation
+    description: "Auto-configuring without user approval"
+    why_bad: "User should review and approve each configuration"
+    solution: "Always show proposed config and wait for confirmation"
+
+  - id: silent-failures
+    description: "Failing silently during configuration"
+    why_bad: "User won't know which skills failed"
+    solution: "Log errors and show summary at the end"
+
+outputs:
+  - name: skills-config.env
+    location: ".claude/skills-config.env"
+    description: "Framework-level configuration"
+    format: |
+      PROJECT_NAME=my-project
+      LINT_COMMAND=npm run lint
+      TEST_COMMAND=npm test
+      TEST_WATCH_COMMAND=npm test -- --watch
+      TEST_COVERAGE_COMMAND=npm test -- --coverage
+      PRECOMMIT_COMMAND=
+
+  - name: skill-configs
+    location: ".claude/skills/<skill>.yaml"
+    description: "Per-skill configuration files"

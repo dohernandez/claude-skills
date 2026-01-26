@@ -1,0 +1,125 @@
+# Sharp edges for deploy-verify
+#
+# NOTE: The `detect` field is informational only - it shows how to manually
+# check for the edge case. These are NOT automatically enforced by the
+# validation runner. Automated enforcement happens via validations.yaml.
+
+edges:
+  - id: workflow-success-not-service-health
+    description: "Assuming workflow success means services are healthy"
+    detect: "Manual review - check if verification stops at workflow status"
+    impact: "Services may be deployed but unhealthy (crash loops, config errors)"
+    fix: |
+      Always complete all verification phases:
+      1. Workflow/CI status
+      2. Service status (running, ready conditions)
+      3. Error logs check
+      4. Startup logs verification
+      5. Health endpoint check
+    severity: high
+
+  - id: wrong-time-range-for-logs
+    description: "Using wrong time range when checking logs"
+    detect: "Log queries return no results or stale data"
+    impact: "Missing recent errors or startup logs"
+    fix: |
+      Use time filters relative to deployment time:
+      - For startup logs: last 30 minutes or since deployment
+      - For error check: last 1 hour
+      - Always verify log timestamps are AFTER deployment
+    severity: medium
+
+  - id: missing-service-in-verification
+    description: "Not verifying all deployed services"
+    detect: "Service list in config doesn't match actual deployed services"
+    impact: "May miss unhealthy services"
+    fix: |
+      Run /deploy-verify learn to update service list.
+      Compare config services with actual deployed services.
+    severity: high
+
+  - id: startup-log-timing
+    description: "Checking for startup logs before new version started"
+    detect: "Startup logs show old version messages"
+    impact: "May incorrectly verify old deployment, not current one"
+    fix: |
+      1. Note the deployment timestamp from CI/workflow
+      2. Filter logs to timestamps AFTER deployment
+      3. Verify version/revision in logs matches expected
+    severity: high
+
+  - id: transient-errors-vs-persistent
+    description: "Alarming on transient errors that resolved"
+    detect: "Error logs present but service is now healthy"
+    impact: "May trigger unnecessary investigation"
+    fix: |
+      Check error timestamps relative to current time:
+      - Errors during startup/rollover are often transient
+      - Look for recent healthy activity to confirm recovery
+      - Check if errors are from old (retired) version
+    severity: low
+
+  - id: health-endpoint-auth
+    description: "Health endpoint requires authentication"
+    detect: "Health check returns 401/403 instead of 200"
+    impact: "False alarm - endpoint may be healthy but requires auth"
+    fix: |
+      Either:
+      1. Use internal health checks (kubectl exec, docker exec)
+      2. Add auth headers to health check commands
+      3. Use platform-specific health status (kubectl get pods)
+    severity: medium
+
+  - id: config-out-of-sync
+    description: "Config doesn't match current deployment setup"
+    detect: "Services or endpoints in config don't exist"
+    impact: "Verification may pass incorrectly or fail on missing services"
+    fix: |
+      Run /deploy-verify learn to rescan deployment configuration.
+      Keep config updated when infrastructure changes.
+    severity: high
+
+  - id: scale-to-zero-confusion
+    description: "Expecting activity from scale-to-zero service"
+    detect: "No recent logs from service configured to scale to zero"
+    impact: "False alarm - service intentionally has no instances when idle"
+    fix: |
+      Check if service is configured for scale-to-zero:
+      - Kubernetes: HPA with minReplicas=0
+      - Cloud Run: min-instances=0
+      - These services only run when triggered
+    severity: medium
+
+  - id: wrong-environment
+    description: "Verifying wrong environment/namespace"
+    detect: "Commands target different environment than intended"
+    impact: "Verification results don't reflect actual deployment"
+    fix: |
+      Always verify environment/namespace before running:
+      - Check config file for correct environment
+      - Verify kubectl context or cloud project
+      - Confirm deployment target matches verification target
+    severity: critical
+
+  - id: partial-rollout
+    description: "Checking health during rolling deployment"
+    detect: "Mixed old/new versions responding"
+    impact: "May see inconsistent results during rollout"
+    fix: |
+      Either:
+      1. Wait for rollout to complete before verification
+      2. Verify all replicas show same version
+      3. Check rollout status explicitly first
+    severity: medium
+
+  - id: dependency-failures
+    description: "Service healthy but dependencies failing"
+    detect: "Health endpoint 200 but errors in logs about connections"
+    impact: "Service appears healthy but can't process requests"
+    fix: |
+      Health checks should verify dependencies:
+      - Database connections
+      - External service connectivity
+      - Required environment variables
+      Consider adding /ready endpoint that checks dependencies.
+    severity: high

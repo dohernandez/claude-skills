@@ -1,0 +1,55 @@
+description: |
+  How slack skill collaborates with other skills in the framework.
+
+relationships:
+  - skill: debugger
+    type: provides-to
+    description: |
+      slack provides message retrieval that debugger may use
+      for reading production alerts during debugging sessions.
+    handoff:
+      from_debugger: |
+        debugger needs to retrieve alerts from Slack.
+        Uses slack patterns to fetch messages (MCP, API, or manual).
+      to_debugger: |
+        slack returns message text, debugger analyzes content.
+
+  - skill: workflow
+    type: may-use
+    description: |
+      workflow may use slack to post status updates,
+      such as "PR ready for review" or "deployment complete".
+    handoff:
+      optional: true
+      when: |
+        - Team wants visibility into workflow progress
+        - Automated notifications for PR/merge status
+
+standalone_usage:
+  description: |
+    slack can be used standalone for ad-hoc Slack operations without
+    invoking other skills.
+  examples:
+    - "Show me recent messages from Slack"
+    - "Post an update to Slack"
+    - "Check if Slack is configured"
+
+invocation_patterns:
+  - trigger: "read messages from slack"
+    skill: slack
+    direct: true
+
+  - trigger: "post to slack"
+    skill: slack
+    direct: true
+
+  - trigger: "check slack configuration"
+    skill: slack
+    direct: true
+
+access_method_selection:
+  description: |
+    The skill automatically selects the best available access method:
+    1. MCP Server - If Slack MCP tools are available
+    2. Bot Token + API - If SLACK_BOT_TOKEN is configured
+    3. Manual - User copies messages from Slack UI (fallback)

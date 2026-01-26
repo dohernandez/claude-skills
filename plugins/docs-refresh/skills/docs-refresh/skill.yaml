@@ -1,0 +1,181 @@
+name: docs-refresh
+kind: gate
+version: "1.0.0"
+description: "Refresh documentation with deterministic generation from source files."
+severity: medium
+tags:
+  - documentation
+  - automation
+  - maintenance
+
+config_location: ".claude/skills/docs-refresh.yaml"
+
+commands:
+  - name: configure
+    description: "Detect documentation structure and settings"
+    output: ".claude/skills/docs-refresh.yaml"
+    user_approval: required
+    procedure:
+      - step: "Detect documentation directory"
+        detail: |
+          Check common locations in order:
+            1. docs/
+            2. documentation/
+            3. wiki/
+            4. doc/
+          Use first existing directory, or suggest "docs/" as default.
+      - step: "Detect documentation format"
+        detail: |
+          Check file extensions in docs directory:
+            - .md → markdown
+            - .rst → rst
+            - .mdx → mdx
+          Default to markdown if no docs exist yet.
+      - step: "Find CLAUDE.md"
+        detail: |
+          Check for CLAUDE.md in project root.
+          If missing, note that it should be created.
+      - step: "Identify generated docs"
+        detail: |
+          Look for indicators of generated documentation:
+            - docs/api/ with source references
+            - Generator configs in Taskfile or package.json
+            - Files with "generated" or "auto" in comments
+      - step: "Identify human docs"
+        detail: |
+          Common human-written docs:
+            - README.md
+            - CONTRIBUTING.md
+            - docs/guides/
+            - docs/*.md (non-generated)
+      - step: "Propose configuration"
+        detail: |
+          Show proposed config to user:
+            - paths.docs_directory
+            - paths.claude_md
+            - format
+            - generated_docs list
+            - human_docs list
+          Use AskUserQuestion for approval/modification.
+      - step: "Save configuration"
+        detail: |
+          Write approved config to .claude/skills/docs-refresh.yaml
+
+purpose: |
+  Keep generated documentation in sync with source files.
+
+  This skill handles:
+  - Generated documentation (API docs, reference docs)
+  - README and getting started guides
+  - Configuration documentation
+
+  Project-specific paths are configured via /docs-refresh configure.
+
+owns:
+  - "Documentation generation workflow"
+  - "Documentation freshness verification"
+  - "Doc-source synchronization"
+
+permissions:
+  - "You MUST run docs refresh before committing documentation changes"
+  - "You MUST NOT manually edit generated documentation files"
+  - "You MUST keep source files and docs in sync"
+
+inputs_required:
+  - id: mode
+    description: "Refresh mode"
+    options:
+      - value: quick
+        description: "Regenerate main documentation only"
+      - value: full
+        description: "Regenerate all documentation"
+    default: quick
+
+documentation_sources:
+  readme:
+    description: "Main project README"
+    sources:
+      - path: "README.md"
+    update_trigger: "When project features change significantly"
+
+  api_docs:
+    description: "API documentation (if applicable)"
+    sources:
+      - path: "docs/api/"
+    update_trigger: "When API endpoints change"
+
+  guides:
+    description: "User and developer guides"
+    sources:
+      - path: "docs/"
+    update_trigger: "When workflows or processes change"
+
+patterns:
+  - id: refresh-before-commit
+    description: "Always refresh docs before committing documentation changes"
+
+  - id: check-in-ci
+    description: "CI should verify docs are in sync"
+
+  - id: never-edit-generated
+    description: "Generated docs should never be manually edited"
+    example: |
+      BAD: vim docs/api/generated.md
+      GOOD: Update source code, then regenerate docs
+
+  - id: docs-with-code
+    description: "Update docs when changing related code"
+    example: |
+      When adding a new feature:
+      1. Implement the feature
+      2. Update relevant documentation
+      3. Regenerate any generated docs
+      4. Commit code and docs together
+
+anti_patterns:
+  - id: skip-refresh
+    description: "Modifying source without regenerating docs"
+    why_bad: "Documentation becomes stale and misleading"
+
+  - id: edit-generated-doc
+    description: "Manually editing generated documentation"
+    why_bad: "Changes will be overwritten on next refresh"
+
+  - id: commit-without-check
+    description: "Committing changes without verifying docs are current"
+    why_bad: "Docs may be out of sync with code"
+
+  - id: docs-only-commit
+    description: "Committing documentation updates without related code"
+    why_bad: "May indicate docs are out of sync or premature"
+
+procedure:
+  - step: "Check documentation status"
+    detail: "Identify which docs need updating"
+
+  - step: "Regenerate documentation"
+    detail: "Run documentation generators for affected areas"
+
+  - step: "Verify changes"
+    detail: "Review generated documentation for accuracy"
+
+  - step: "Commit"
+    detail: "Include documentation in commit with related code changes"
+
+customization_guide: |
+  To customize this skill for your project:
+
+  1. Run `/docs-refresh configure` to auto-detect settings
+  2. Review and approve the proposed configuration
+  3. Configuration is saved to .claude/skills/docs-refresh.yaml
+
+  The configure command detects:
+  - Documentation directory location
+  - Documentation format (markdown, rst, mdx)
+  - Generated vs human-written docs
+  - CLAUDE.md location
+
+  You can manually edit .claude/skills/docs-refresh.yaml to:
+  - Add custom generator commands
+  - Define additional documentation sources
+  - Specify output locations

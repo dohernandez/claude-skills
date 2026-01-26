@@ -1,0 +1,12 @@
+{
+  "name": "debugger",
+  "description": "Production issue debugging through logs and alerts",
+  "version": "1.0.0",
+  "author": {
+    "name": "dohernandez",
+    "url": "https://github.com/dohernandez"
+  },
+  "repository": "https://github.com/dohernandez/claude-skills",
+  "skills": "./skills/",
+  "hooks": "./hooks/hooks.json"
+}

@@ -15,6 +15,8 @@ echo "CLAUDE_PROJECT_DIR: ${CLAUDE_PROJECT_DIR:-not set}" >> "$DEBUG_LOG"
 
 set -euo pipefail
 
+echo "After pipefail" >> "$DEBUG_LOG"
+
 # Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -68,11 +70,13 @@ CONFIGURABLE_SKILLS=(
 # ============================================================================
 
 main() {
+    echo "Inside main()" >> "$DEBUG_LOG"
     local force_reinstall=false
     if [[ "${1:-}" == "--force" ]]; then
         force_reinstall=true
     fi
 
+    echo "About to log_header" >> "$DEBUG_LOG"
     log_header "Claude Code Framework Setup"
 
     echo "Plugin source: $PLUGIN_ROOT"
@@ -220,4 +224,6 @@ show_configure_reminder() {
 # RUN
 # ============================================================================
 
+echo "About to call main..." >> "$DEBUG_LOG"
 main "$@"
+echo "Main completed" >> "$DEBUG_LOG"

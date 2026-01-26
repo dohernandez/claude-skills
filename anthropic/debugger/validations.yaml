@@ -1,0 +1,97 @@
+validations:
+  structural:
+    - name: skill_files_exist
+      check: All required skill files are present
+      files:
+        - SKILL.md
+        - skill.yaml
+        - sharp-edges.yaml
+        - collaboration.yaml
+        - validations.yaml
+      automated: true
+      command: task -t .claude/Taskfile.yaml validate-skill-yaml
+
+    - name: yaml_syntax_valid
+      check: All YAML files parse without errors
+      automated: true
+      command: task -t .claude/Taskfile.yaml validate-skill-yaml
+
+  semantic:
+    - name: multi_yaml_pattern_compliance
+      check: Skill follows multi-YAML pattern (thin SKILL.md, rich YAMLs)
+      automated: true
+      command: task -t .claude/Taskfile.yaml audit-skills-strict
+
+    - name: documented_in_claude_md
+      check: Skill is listed in CLAUDE.md skills table
+      automated: true
+      command: task -t .claude/Taskfile.yaml audit-skills
+
+  content:
+    - name: error_categories_comprehensive
+      check: Common error types are categorized with indicators
+      manual: true
+      verification: |
+        Ensure skill.yaml patterns.error_categories covers:
+        - connection_failures
+        - timeout_errors
+        - data_errors
+        - authentication_errors
+        Each with indicators and common_causes
+
+    - name: sharp_edges_actionable
+      check: Each sharp edge has concrete how_to_avoid guidance
+      manual: true
+      verification: |
+        Review sharp-edges.yaml - each entry must have:
+        - Symptom (what you see)
+        - Why it happens (root cause)
+        - How to avoid (specific steps)
+        - Example (bad vs good)
+
+    - name: collaboration_dependencies_valid
+      check: Referenced skills actually exist
+      manual: true
+      verification: |
+        Check collaboration.yaml dependencies reference real skills:
+        - slack (exists)
+        - code (exists)
+        - workflow (exists)
+        - linear (exists)
+
+  usage:
+    - name: diagnostic_not_implementation
+      check: Skill focuses on diagnosis, not fixing
+      manual: true
+      verification: |
+        Review procedures in skill.yaml:
+        - Should identify root cause
+        - Should suggest next steps
+        - Should NOT implement fixes directly
+        - Should hand off to workflow for fixes
+
+    - name: procedures_follow_phases
+      check: Debugging procedure follows 5-phase structure
+      manual: true
+      verification: |
+        debug_production_alert procedure should have:
+        - Phase 1: Alert Triage
+        - Phase 2: Service Identification
+        - Phase 3: Log Analysis
+        - Phase 4: Root Cause Hypothesis
+        - Phase 5: Next Steps
+
+post_creation_checks:
+  - Run `task -t .claude/Taskfile.yaml validate-skill-yaml` to check YAML syntax and structure
+  - Run `task -t .claude/Taskfile.yaml audit-skills` to verify skill is documented in CLAUDE.md
+  - Run `task -t .claude/Taskfile.yaml audit-skills-strict` to verify multi-YAML pattern compliance
+
+stop_hook: null
+
+notes: |
+  This is a diagnostic skill with no automated Stop hook.
+  Validation is primarily structural (YAML syntax, file presence) and
+  semantic (multi-YAML pattern compliance, documentation in CLAUDE.md).
+
+  Content validation is manual because it requires domain knowledge
+  (verifying error categories are comprehensive, etc.).

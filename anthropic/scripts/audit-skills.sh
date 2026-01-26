@@ -51,7 +51,9 @@ set -euo pipefail
 # CONSTANTS
 # ============================================================================
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-readonly PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+# PROJECT_ROOT can be set via environment variable, or computed from script location
+# In plugin structure: scripts is at anthropic/scripts/, so go up 2 levels
+readonly PROJECT_ROOT="${PROJECT_ROOT:-$(cd "$SCRIPT_DIR/../.." && pwd)}"
 readonly SCRIPT_NAME="$(basename "$0")"
 
 # Exit codes
@@ -830,10 +832,18 @@ main() {
     # Parse command line arguments
     parse_arguments "$@"
 
-    local skills_dir="$PROJECT_ROOT/.claude/skills"
+    # Determine skills directory (development mode vs installed mode)
+    local skills_dir
+    if [[ -d "$PROJECT_ROOT/anthropic/skills" ]] && [[ -f "$PROJECT_ROOT/anthropic/manifest.yaml" ]]; then
+        # Development mode: plugin structure
+        skills_dir="$PROJECT_ROOT/anthropic/skills"
+    else
+        # Installed mode: standard .claude/skills
+        skills_dir="$PROJECT_ROOT/.claude/skills"
+    fi
 
     if [[ ! -d "$skills_dir" ]]; then
-        echo "No .claude/skills directory found"
+        echo "No skills directory found (tried anthropic/skills and .claude/skills)"
         exit $ERR_GENERAL
     fi
 

@@ -1,0 +1,16 @@
+{
+  "name": "genlayerlabs-skills",
+  "description": "Skills and plugins for Claude Code by GenLayer Labs",
+  "owner": {
+    "name": "GenLayer Labs",
+    "url": "https://github.com/genlayerlabs"
+  },
+  "plugins": [
+    {
+      "name": "anthropic",
+      "source": "anthropic",
+      "description": "Complete developer workflow framework with 21 integrated skills",
+      "tags": ["workflow", "git", "testing", "deployment", "developer-tools"]
+    }
+  ]
+}

@@ -1,0 +1,72 @@
+{
+  "name": "anthropic",
+  "description": "Claude Code Developer Framework - Complete developer workflow with 21 integrated skills",
+  "version": "1.0.0",
+  "author": {
+    "name": "GenLayer Labs",
+    "url": "https://github.com/genlayerlabs"
+  },
+  "keywords": [
+    "workflow",
+    "git",
+    "commit",
+    "pull-request",
+    "testing",
+    "tdd",
+    "deployment",
+    "architecture",
+    "developer-tools"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/genlayerlabs/skills.git"
+  },
+  "skills": {
+    "core": [
+      "commit",
+      "pr-create",
+      "pr-merge",
+      "bugfix",
+      "task",
+      "tdd",
+      "workflow",
+      "workflow-setup",
+      "workflow-finish",
+      "create-skill",
+      "linear",
+      "slack"
+    ],
+    "customizable": [
+      "arch",
+      "code",
+      "developer",
+      "docs-refresh",
+      "setup",
+      "domain-expert",
+      "debugger",
+      "deploy",
+      "deploy-verify"
+    ]
+  },
+  "configuration": {
+    "wizard": {
+      "PROJECT_NAME": {
+        "prompt": "What is your project name?",
+        "required": true
+      },
+      "LINT_COMMAND": {
+        "prompt": "What command runs your linter?",
+        "required": false
+      },
+      "TEST_COMMAND": {
+        "prompt": "What command runs your tests?",
+        "required": false
+      },
+      "PRECOMMIT_COMMAND": {
+        "prompt": "What command runs pre-commit validation?",
+        "required": false
+      }
+    },
+    "output": ".claude/skills-config.env"
+  }
+}

@@ -5,8 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/setup.sh",
-            "description": "Install framework skills into project"
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/setup.sh"
           }
         ]
       }

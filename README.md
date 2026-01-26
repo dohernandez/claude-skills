@@ -142,49 +142,51 @@ your-project/
 |------|---------|------|
 | 1. Add marketplace | `/plugin marketplace add ...` | Once per machine |
 | 2. Install plugin | `/plugin install <name>@...` | Once per project |
-| 3. **Initialize** | `claude --init` | **REQUIRED** - Copies skills to project |
-| 4. **Configure** | `/framework configure` or `/skill configure` | **REQUIRED** - For skills that need it |
+| 3. **Initialize** | `claude --init` | **REQUIRED** - Copies ALL skills to project |
+| 4. **Configure** | `/framework configure` or `/skill configure` | **REQUIRED** - For skills marked with ✓ below |
 
-**Important:** Without `claude --init`, skills won't be copied to your project. Without configure, skills that require configuration won't work properly.
+**Important:**
+- `claude --init` is required for ALL skills - it copies them from the plugin cache to your project
+- Skills marked with ✓ in the Configure column below won't work properly without running `/skill configure`
 
 ## Framework Skills (22)
 
 ### Meta Skills (2)
 
 | Skill | Configure | Description |
-|-------|-----------|-------------|
-| `framework` | yes | Configure the framework |
-| `create-skill` | no | Scaffold new skills |
+|-------|:---------:|-------------|
+| `framework` | ✓ | Configure all skills at once |
+| `create-skill` | | Scaffold new skills |
 
 ### Core Skills (11)
 
 | Skill | Configure | Description |
-|-------|-----------|-------------|
-| `commit` | no | Git commits with conventional format |
-| `pr-create` | no | Create GitHub pull requests |
-| `pr-merge` | no | Merge pull requests with validation |
-| `bugfix` | no | Structured bug investigation |
-| `task` | yes | Task execution and management |
-| `tdd` | yes | Test-driven development workflow |
-| `workflow` | no | Development workflow orchestrator |
-| `workflow-setup` | yes | Initialize workflow with branch creation |
-| `workflow-finish` | yes | Complete workflow with cleanup |
-| `linear` | no | Linear issue management |
-| `slack` | no | Slack integration |
+|-------|:---------:|-------------|
+| `commit` | | Git commits with conventional format |
+| `pr-create` | | Create GitHub pull requests |
+| `pr-merge` | | Merge pull requests with validation |
+| `bugfix` | | Structured bug investigation |
+| `task` | ✓ | Task execution and management |
+| `tdd` | ✓ | Test-driven development workflow |
+| `workflow` | | Development workflow orchestrator |
+| `workflow-setup` | ✓ | Initialize workflow with branch creation |
+| `workflow-finish` | ✓ | Complete workflow with cleanup |
+| `linear` | ✓ | Linear issue management (templates) |
+| `slack` | | Slack integration |
 
 ### Customizable Skills (9)
 
 | Skill | Configure | Description |
-|-------|-----------|-------------|
-| `arch` | no | Architecture guidance and validation |
-| `code` | no | Code style discovery and enforcement |
-| `developer` | yes | Development orchestration |
-| `docs-refresh` | yes | Documentation generation |
-| `setup` | no | Project setup and onboarding |
-| `domain-expert` | no | Domain knowledge and terminology |
-| `debugger` | yes | Debug production issues |
-| `deploy` | yes | Deployment workflow |
-| `deploy-verify` | yes | Post-deployment verification |
+|-------|:---------:|-------------|
+| `arch` | ✓ | Architecture guidance and validation |
+| `code` | ✓ | Code style discovery and enforcement |
+| `developer` | ✓ | Development orchestration |
+| `docs-refresh` | ✓ | Documentation generation |
+| `setup` | ✓ | Project setup and onboarding |
+| `domain-expert` | ✓ | Domain knowledge and terminology |
+| `debugger` | ✓ | Debug production issues |
+| `deploy` | ✓ | Deployment workflow |
+| `deploy-verify` | ✓ | Post-deployment verification |
 
 ## Configuration
 

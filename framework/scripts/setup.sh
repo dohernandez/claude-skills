@@ -94,15 +94,15 @@ main() {
             local dest="$PROJECT_ROOT/.claude/skills/$skill_name"
 
             if [[ ! -d "$dest" ]]; then
-                # New skill - install it
-                cp -r "$skill_dir" "$dest"
+                # New skill - install it (use -L to follow symlinks)
+                cp -rL "$skill_dir" "$dest"
                 log_success "Installed: $skill_name"
                 ((installed++))
             elif [[ "$force_reinstall" == true ]]; then
                 # Force reinstall - replace skill definition only
                 # Config file (.claude/skills/<skill>.yaml) is preserved
                 rm -rf "$dest"
-                cp -r "$skill_dir" "$dest"
+                cp -rL "$skill_dir" "$dest"
                 log_success "Updated: $skill_name"
                 ((updated++))
             else
@@ -125,9 +125,9 @@ main() {
     # Install infrastructure (always update)
     log_info "Updating infrastructure..."
 
-    # Hooks
+    # Hooks (use -L to follow symlinks)
     if [[ -d "$PLUGIN_ROOT/hooks" ]]; then
-        cp -r "$PLUGIN_ROOT/hooks/"* "$PROJECT_ROOT/.claude/hooks/" 2>/dev/null || true
+        cp -rL "$PLUGIN_ROOT/hooks/"* "$PROJECT_ROOT/.claude/hooks/" 2>/dev/null || true
         log_success "Updated hooks"
     fi
 

@@ -23,8 +23,8 @@ purpose: |
 modes:
   configure:
     description: |
-      Discover and cache Linear workspace metadata for faster issue creation.
-      Caches: teams, users, projects, labels, cycles.
+      Discover Linear workspace metadata and configure issue templates.
+      Caches: teams, users, projects, labels, cycles, templates.
       Run once per workspace or when metadata changes.
     trigger: "/linear configure"
     outputs:
@@ -56,6 +56,42 @@ modes:
         extract: "id, number, name, startsAt, endsAt, team"
         note: "Cache cycle numbers, not 'current'/'next' which are dynamic"
 
+      - step: "Configure issue templates"
+        detail: |
+          Show the default template and ask user to approve or customize:
+
+          "I have a default issue template. Would you like to:
+          1. Use the default template (recommended)
+          2. Customize the default template
+          3. Add your own template"
+
+          Default template includes:
+          - Problem Statement (required)
+          - Proposed Solution
+          - Acceptance Criteria
+          - Implementation Plan
+          - Technical Notes
+
+          If user chooses to customize or add:
+          - Show current template structure
+          - Ask which sections to add/remove/modify
+          - Save to templates map
+
+      - step: "Link templates to projects/topics"
+        detail: |
+          Ask user if they want to link templates to specific projects or topics:
+
+          "Would you like to link templates to specific projects or issue types?
+
+          Examples:
+          - 'bug' topic → Bug Report template
+          - 'feature' topic → Feature Request template
+          - 'Backend' project → Technical Spec template
+
+          You can add these mappings now or later with '/linear template add'"
+
+          Save mappings to template_mappings in cache.
+
       - step: "Write cache"
         detail: |
           Write discovered data to .claude/linear-cache.yaml:
@@ -86,28 +122,94 @@ modes:
               - id: "label-123"
                 name: "Bug"
                 color: "#ff0000"
-              - id: "label-456"
-                name: "Feature"
-                color: "#00ff00"
 
           cycles:
             Engineering:
               - id: "cycle-123"
                 number: 25
                 name: "Sprint 25"
-                startsAt: "2024-01-15"
-                endsAt: "2024-01-29"
+
+          # Issue templates
+          templates:
+            default:
+              name: "Standard Issue"
+              sections:
+                - id: problem_statement
+                  title: "Problem Statement"
+                  required: true
+                - id: proposed_solution
+                  title: "Proposed Solution"
+                  required: false
+                - id: acceptance_criteria
+                  title: "Acceptance Criteria"
+                  required: false
+                - id: implementation_plan
+                  title: "Implementation Plan"
+                  required: false
+                - id: technical_notes
+                  title: "Technical Notes"
+                  required: false
+
+            bug:
+              name: "Bug Report"
+              sections:
+                - id: description
+                  title: "Bug Description"
+                  required: true
+                - id: steps_to_reproduce
+                  title: "Steps to Reproduce"
+                  required: true
+                - id: expected_behavior
+                  title: "Expected Behavior"
+                  required: true
+                - id: actual_behavior
+                  title: "Actual Behavior"
+                  required: true
+                - id: environment
+                  title: "Environment"
+                  required: false
+
+            feature:
+              name: "Feature Request"
+              sections:
+                - id: problem_statement
+                  title: "Problem Statement"
+                  required: true
+                - id: proposed_solution
+                  title: "Proposed Solution"
+                  required: true
+                - id: user_stories
+                  title: "User Stories"
+                  required: false
+                - id: acceptance_criteria
+                  title: "Acceptance Criteria"
+                  required: false
+
+          # Template mappings (topic/project -> template)
+          template_mappings:
+            topics:
+              bug: "bug"
+              feature: "feature"
+              improvement: "default"
+              refactor: "default"
+            projects:
+              # project_name: template_name
+              # "Backend": "technical"
+
+          default_template: "default"
           ```
 
       - step: "Confirm with user"
         detail: |
           Show summary:
-          "Discovered Linear workspace:
+          "Configured Linear workspace:
           - Teams: 3 (Engineering, Product, Design)
           - Users: 12
           - Projects: 8
           - Labels: 15
           - Cycles: 10 (current: Sprint 25)
+          - Templates: 3 (default, bug, feature)
+          - Mappings: bug→bug, feature→feature
 
           Cache saved to .claude/linear-cache.yaml"
 
@@ -129,6 +231,7 @@ modes:
           Re-fetch all entities from Linear API:
           - Teams, users, projects, labels, cycles
           Same as configure, but merges with existing cache.
+          Preserves existing templates and mappings.
 
       - step: "Identify changes"
         detail: |
@@ -143,6 +246,7 @@ modes:
           - Add new entries
           - Update changed entries
           - Optionally remove stale entries (ask user)
+          - Keep templates and mappings unchanged
 
       - step: "Report changes"
         detail: |
@@ -150,7 +254,45 @@ modes:
           "Updated Linear cache:
           - Added 2 new labels: 'P0', 'Security'
           - Added 1 new project: 'Infrastructure'
-          - Cycles refreshed (current: Sprint 26)"
+          - Cycles refreshed (current: Sprint 26)
+          - Templates unchanged (3 templates)"
+
+  template:
+    description: |
+      Manage issue templates. Add, edit, remove, or list templates.
+    trigger: "/linear template <action>"
+    actions:
+      - name: "list"
+        trigger: "/linear template list"
+        detail: "Show all configured templates and their mappings"
+
+      - name: "add"
+        trigger: "/linear template add <name>"
+        detail: |
+          Add a new template. Prompts for:
+          - Template name (e.g., "technical-spec")
+          - Sections (id, title, required)
+          - Optional: link to project or topic
+
+      - name: "edit"
+        trigger: "/linear template edit <name>"
+        detail: "Edit an existing template's sections"
+
+      - name: "remove"
+        trigger: "/linear template remove <name>"
+        detail: "Remove a template (cannot remove 'default')"
+
+      - name: "map"
+        trigger: "/linear template map <template> <target>"
+        detail: |
+          Map a template to a project or topic.
+          Examples:
+          - /linear template map bug topic:bug
+          - /linear template map technical project:Backend
+
+      - name: "default"
+        trigger: "/linear template default <name>"
+        detail: "Set the default template for new issues"
 
   create:
     description: "Create a new Linear issue (default mode)"
@@ -185,57 +327,97 @@ config:
     required: false
     note: "If not set, skill will prompt user to select team each time"
 
-template:
-  name: "Standard Issue Template"
-  sections:
-    - id: problem_statement
-      title: "Problem Statement"
-      placeholder: "[What problem are we solving and why?]"
-      required: true
+# =============================================================================
+# DEFAULT TEMPLATES (used during configure if no custom templates exist)
+# =============================================================================
+default_templates:
+  default:
+    name: "Standard Issue"
+    description: "General purpose issue template"
+    sections:
+      - id: problem_statement
+        title: "Problem Statement"
+        placeholder: "[What problem are we solving and why?]"
+        required: true
+      - id: proposed_solution
+        title: "Proposed Solution"
+        placeholder: "[High-level approach]"
+        required: false
+      - id: acceptance_criteria
+        title: "Acceptance Criteria"
+        placeholder: "[Given/When/Then specifications]"
+        required: false
+      - id: implementation_plan
+        title: "Implementation Plan"
+        placeholder: "[Specific steps to implement]"
+        required: false
+      - id: technical_notes
+        title: "Technical Notes"
+        placeholder: "[Implementation details, gotchas]"
+        required: false
 
-    - id: proposed_solution
-      title: "Proposed Solution"
-      placeholder: "[High-level approach]"
-      required: false
+  bug:
+    name: "Bug Report"
+    description: "Template for reporting bugs"
+    sections:
+      - id: description
+        title: "Bug Description"
+        placeholder: "[What is the bug?]"
+        required: true
+      - id: steps_to_reproduce
+        title: "Steps to Reproduce"
+        placeholder: "[1. Do X, 2. Do Y, 3. See error]"
+        required: true
+      - id: expected_behavior
+        title: "Expected Behavior"
+        placeholder: "[What should happen?]"
+        required: true
+      - id: actual_behavior
+        title: "Actual Behavior"
+        placeholder: "[What actually happens?]"
+        required: true
+      - id: environment
+        title: "Environment"
+        placeholder: "[OS, browser, version, etc.]"
+        required: false
 
-    - id: acceptance_criteria
-      title: "Acceptance Criteria"
-      placeholder: |
-        1. Given X, when Y, then Z (behavior specifications)
-        2. [Performance requirements (if applicable)]
-        3. [Testing requirements (if applicable)]
-      required: false
+  feature:
+    name: "Feature Request"
+    description: "Template for new feature requests"
+    sections:
+      - id: problem_statement
+        title: "Problem Statement"
+        placeholder: "[What user problem does this solve?]"
+        required: true
+      - id: proposed_solution
+        title: "Proposed Solution"
+        placeholder: "[How should this work?]"
+        required: true
+      - id: user_stories
+        title: "User Stories"
+        placeholder: "[As a X, I want Y, so that Z]"
+        required: false
+      - id: acceptance_criteria
+        title: "Acceptance Criteria"
+        placeholder: "[Definition of done]"
+        required: false
 
-    - id: implementation_plan
-      title: "Implementation Plan"
-      placeholder: "[Specific steps to implement the solution]"
-      required: false
+# Default topic-to-template mappings
+default_template_mappings:
+  topics:
+    bug: "bug"
+    feature: "feature"
+    improvement: "default"
+    refactor: "default"
+    chore: "default"
+  projects: {}
+  default: "default"
 
-    - id: technical_notes
-      title: "Technical Notes"
-      placeholder: "[Implementation details, gotchas, considerations]"
-      required: false
+# Template format (how sections are rendered in issue description)
+template_format: |
+  ## {section_title}
 
-  format: |
-    ## Problem Statement
-
-    {problem_statement}
-
-    ## Proposed Solution
-
-    {proposed_solution}
-
-    ## Acceptance Criteria
-
-    {acceptance_criteria}
-
-    ## Implementation Plan
-
-    {implementation_plan}
-
-    ## Technical Notes
-
-    {technical_notes}
+  {section_content}
 
 inputs_required:
   - id: team
@@ -254,9 +436,33 @@ inputs_required:
       - "Fix memory leak in service"
       - "Implement monitoring alerts"
 
+  - id: template
+    description: "Template to use for issue description"
+    required: false
+    note: |
+      Template selection priority:
+      1. Explicit template name (e.g., "bug", "feature")
+      2. Inferred from project mapping
+      3. Inferred from topic/label (bug, feature, etc.)
+      4. Default template from cache
+    examples:
+      - "default"
+      - "bug"
+      - "feature"
+
+  - id: topic
+    description: "Issue topic/type for template selection"
+    required: false
+    note: "Used to auto-select template if not explicitly specified"
+    examples:
+      - "bug"
+      - "feature"
+      - "improvement"
+
+  # Template section fields (vary by template)
   - id: problem_statement
     description: "What problem are we solving and why?"
-    required: true
+    required: "depends on template"
 
   - id: proposed_solution
     description: "High-level approach to solve the problem"
@@ -272,6 +478,28 @@ inputs_required:
 
   - id: technical_notes
     description: "Implementation details, gotchas, considerations"
+    required: false
+
+  # Bug template specific fields
+  - id: steps_to_reproduce
+    description: "Steps to reproduce the bug"
+    required: "if template=bug"
+
+  - id: expected_behavior
+    description: "What should happen"
+    required: "if template=bug"
+
+  - id: actual_behavior
+    description: "What actually happens"
+    required: "if template=bug"
+
+  - id: environment
+    description: "Environment details (OS, browser, version)"
+    required: false
+
+  # Feature template specific fields
+  - id: user_stories
+    description: "User stories in As/I want/So that format"
     required: false
 
   - id: assignee
@@ -585,16 +813,56 @@ procedure:
       - Engineering (ENG)
       - Product (PROD)"
 
+  - step: "Select template"
+    detail: |
+      Determine which template to use (priority order):
+
+      1. **Explicit template**: If user specifies template name
+         - e.g., "use bug template" or template="bug"
+
+      2. **Project mapping**: If project is specified, check template_mappings.projects
+         - e.g., project="Backend" → template_mappings.projects.Backend
+
+      3. **Topic/label mapping**: Check template_mappings.topics
+         - e.g., labels include "Bug" → template_mappings.topics.bug
+
+      4. **Default template**: Use default_template from cache
+
+      Load the selected template's sections from cache.templates.
+
+      If template not found in cache:
+      - Fall back to default_templates from skill.yaml
+      - Suggest running "/linear configure" to set up templates
+
+      Show user which template was selected:
+      "Using template: Bug Report (matched from label 'Bug')"
+
   - step: "Receive request"
     detail: |
       When invoked, determine the source:
       - Direct invocation: User provides issue details directly
       - From developer skill: Expect plan data to be provided
 
-      If no plan or issue details provided, ask:
-      "Please provide the issue details or plan. I need at minimum:
+      Based on selected template, determine required fields.
+      If required fields are missing, prompt for them:
+
+      For 'default' template:
+      "Please provide the issue details. I need at minimum:
       - Title
       - Problem Statement"
+
+      For 'bug' template:
+      "Please provide bug details:
+      - Title
+      - Bug Description
+      - Steps to Reproduce
+      - Expected vs Actual Behavior"
+
+      For 'feature' template:
+      "Please provide feature details:
+      - Title
+      - Problem Statement
+      - Proposed Solution"
 
   - step: "Extract content from plan"
     detail: |
@@ -610,10 +878,12 @@ procedure:
       ## Ticket Proposal
 
       **Title:** [inferred title]
+      **Template:** [template name] (matched from [reason])
 
       ### Metadata
       | Field | Value | Reasoning |
       |-------|-------|-----------|
+      | Template | [name] | [why this template] |
       | Labels | [value] | [why this label] |
       | Project | [value] | [why this project] |
       | Estimate | [value] | [calculation breakdown] |
@@ -621,10 +891,11 @@ procedure:
       | State | [value] | [auto from cycle] |
 
       ### Description Preview
-      [First 3-5 lines of each section]
+      [Rendered template sections with content]
 
       ---
       **Ready to create?** Or adjust any options?
+      (You can also change the template with "use [template] template")
       ```
 
       Wait for user confirmation before proceeding.

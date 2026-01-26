@@ -4,6 +4,7 @@ description: Create and manage Linear issues using structured templates. Use whe
 user-invocable: true
 allowed-tools:
   - Read
+  - Write
   - Grep
   - Glob
   - AskUserQuestion
@@ -29,16 +30,18 @@ Create and manage Linear issues using structured templates.
 ## Overview
 
 This skill handles Linear issue management:
-- Creates issues using a standard template format
+- Creates issues using configurable templates (default, bug, feature)
 - Converts plans/reports into properly formatted Linear issues
+- Supports template mapping to projects and topics
 - Supports creating issues in backlog or specific cycles
 
 ## Modes
 
 | Mode | Trigger | Purpose |
 |------|---------|---------|
-| **configure** | `/linear configure` | Initial setup - discover and cache workspace metadata |
+| **configure** | `/linear configure` | Initial setup - discover workspace and configure templates |
 | **learn** | `/linear learn` | Update cache with new workspace data |
+| **template** | `/linear template <action>` | Manage issue templates |
 | **create** | `/linear` | Create a new issue (default) |
 | **update** | `/linear update <id>` | Update an existing issue |
 
@@ -56,12 +59,19 @@ This caches:
 - **Projects** - Per-team project list
 - **Labels** - Per-team label list with colors
 - **Cycles** - Cycle numbers and IDs (not "current"/"next" which are dynamic)
+- **Templates** - Issue templates (default, bug, feature) with sections
+- **Template Mappings** - Topic/project to template associations
+
+During configuration, you'll be asked to:
+1. **Approve or customize templates** - Use defaults or modify sections
+2. **Link templates to projects/topics** - e.g., "bug" topic → Bug Report template
 
 Cache is stored in `.claude/linear-cache.yaml` and used for faster lookups.
 
 **When to run:**
 - First time using the skill (during framework setup)
 - After framework updates
+- When you want to change template configuration
 
 ## Learn Mode
 
@@ -82,6 +92,33 @@ Run `/linear learn` to update the cache with new workspace data:
 2. Compares with existing cache
 3. Reports changes (new labels, projects, etc.)
 4. Updates `.claude/linear-cache.yaml`
+5. Preserves templates and mappings (not overwritten)
+
+## Template Mode
+
+Manage issue templates with `/linear template <action>`:
+
+| Action | Command | Description |
+|--------|---------|-------------|
+| **list** | `/linear template list` | Show all templates and mappings |
+| **add** | `/linear template add <name>` | Create a new template |
+| **edit** | `/linear template edit <name>` | Modify template sections |
+| **remove** | `/linear template remove <name>` | Delete a template (except 'default') |
+| **map** | `/linear template map <template> <target>` | Link template to project/topic |
+| **default** | `/linear template default <name>` | Set the default template |
+
+### Template Mapping Examples
+
+```bash
+# Map bug template to 'bug' topic
+/linear template map bug topic:bug
+
+# Map technical template to 'Backend' project
+/linear template map technical project:Backend
+
+# Set 'feature' as default template
+/linear template default feature
+```
 
 ## Configuration
 
@@ -93,33 +130,74 @@ Optional configuration (set during framework installation):
 
 If not configured, the skill will prompt you to select a team (or use cached teams from learn mode).
 
-## Issue Template
+## Issue Templates
 
-All issues are created with this structure:
+The skill includes three default templates. Templates are selected automatically based on topic/project mappings, or can be specified explicitly.
+
+### Default Template (Standard Issue)
 
 ```markdown
 ## Problem Statement
-
 [What problem are we solving and why?]
 
 ## Proposed Solution
-
 [High-level approach]
 
 ## Acceptance Criteria
-
-1. Given X, when Y, then Z (behavior specifications)
-2. [Performance requirements (if applicable)]
-3. [Testing requirements (if applicable)]
+[Given/When/Then specifications]
 
 ## Implementation Plan
-
-[Specific steps to implement the solution]
+[Specific steps to implement]
 
 ## Technical Notes
-
-[Implementation details, gotchas, considerations]
+[Implementation details, gotchas]
 ```
+
+### Bug Report Template
+
+Used automatically when topic is "bug" or label includes "Bug".
+
+```markdown
+## Bug Description
+[What is the bug?]
+
+## Steps to Reproduce
+[1. Do X, 2. Do Y, 3. See error]
+
+## Expected Behavior
+[What should happen?]
+
+## Actual Behavior
+[What actually happens?]
+
+## Environment
+[OS, browser, version, etc.]
+```
+
+### Feature Request Template
+
+Used automatically when topic is "feature" or label includes "Feature".
+
+```markdown
+## Problem Statement
+[What user problem does this solve?]
+
+## Proposed Solution
+[How should this work?]
+
+## User Stories
+[As a X, I want Y, so that Z]
+
+## Acceptance Criteria
+[Definition of done]
+```
+
+### Template Selection Priority
+
+1. **Explicit template** - User specifies: `use bug template`
+2. **Project mapping** - Project linked to template in `template_mappings.projects`
+3. **Topic mapping** - Label/topic linked in `template_mappings.topics`
+4. **Default** - Falls back to configured default template
 
 ## Content Extraction from Plans
 
@@ -144,11 +222,13 @@ Before creating a ticket, show a proposal for discussion:
 ## Ticket Proposal
 
 **Title:** [inferred title]
+**Template:** [template name] (matched from [reason])
 
 ### Metadata
 | Field | Value | Reasoning |
 |-------|-------|-----------|
-| Labels | Improvement | Code quality enhancement |
+| Template | Bug Report | Matched from label 'Bug' |
+| Labels | Bug | [reasoning] |
 | Project | [project] | [reasoning] |
 | Estimate | 2pt | [file count], [complexity] |
 | Cycle | next | User specified |
@@ -159,6 +239,7 @@ Before creating a ticket, show a proposal for discussion:
 
 ---
 **Ready to create?** Or adjust any options?
+(You can also change the template with "use [template] template")
 ```
 
 Wait for user approval before creating.
@@ -190,13 +271,28 @@ Wait for user approval before creating.
 ### Creates
 - Linear issues in configured team with proper template formatting
 
-### Required Fields
+### Required Fields (depends on template)
+
+**Default template:**
 - **title** - Issue title
 - **problem_statement** - What problem are we solving?
+
+**Bug template:**
+- **title** - Issue title
+- **description** - Bug description
+- **steps_to_reproduce** - Steps to reproduce
+- **expected_behavior** - What should happen
+- **actual_behavior** - What actually happens
+
+**Feature template:**
+- **title** - Issue title
+- **problem_statement** - What user problem does this solve?
+- **proposed_solution** - How should this work?
 
 ### Optional Metadata
 | Field | Description | Example |
 |-------|-------------|---------|
+| template | Template to use | "default", "bug", "feature" |
 | assignee | Who will work on it | "me", "name" |
 | labels | Issue labels | ["Bug", "Improvement"] |
 | project | Project name | "Project Name" |

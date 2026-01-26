@@ -1,0 +1,45 @@
+# Skills Framework Taskfile
+# FOR DEVELOPMENT OF THIS SKILLS REPOSITORY ONLY
+# This is NOT the Taskfile installed to target projects.
+# See: anthropic/_framework/Taskfile.yaml for the installed version.
+#
+# Install Task: https://taskfile.dev/installation/
+# Usage: task <task-name>
+
+version: '3'
+
+includes:
+  claude:
+    taskfile: ./anthropic/_framework/Taskfile.yaml
+    vars:
+      SCRIPTS_DIR: '{{.ROOT_DIR}}/anthropic/_framework/scripts'
+
+vars:
+  # Override for development - skills are in anthropic/, not .claude/skills/
+  PROJECT_ROOT: '{{.ROOT_DIR}}'
+
+# Set PROJECT_ROOT for all tasks
+env:
+  PROJECT_ROOT: '{{.ROOT_DIR}}'
+
+tasks:
+  # ===========================================================================
+  # DEVELOPMENT TASKS (for this repo only)
+  # ===========================================================================
+
+  lint:
+    desc: "Lint all skill YAML files (dev: validates skill structure)"
+    cmds:
+      - task: claude:check-structure
+
+  test:
+    desc: "Run skill validation tests (dev: checks all skills are valid)"
+    cmds:
+      - task: claude:audit-skills
+      - echo "All skills validated!"
+
+  precommit:
+    desc: "Run pre-commit checks"
+    cmds:
+      - task: lint
+      - task: test

@@ -9,7 +9,7 @@ validations:
   - id: skill-structure-valid
     name: "Skill has required files and valid YAML"
     type: command
-    command: "task -t .claude/Taskfile.yaml claude:check-structure"
+    command: "task -t .claude/Taskfile.yaml check-structure"
     expect: "exit 0"
     message: "Skill structure validation failed (missing files or invalid YAML)."
 

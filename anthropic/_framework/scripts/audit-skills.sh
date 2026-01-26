@@ -87,16 +87,27 @@ ALL_SKILLS=()
 COLLAB_SKILL_REFS=()
 
 # ============================================================================
-# SOURCE SHARED FUNCTIONS
+# UTILITY FUNCTIONS (inline - no external dependencies)
 # ============================================================================
-SCRIPT_SHARED_DIR="$PROJECT_ROOT/taskfiles/scripts"
 
-# Source the shared logger functions
-source "$SCRIPT_SHARED_DIR/logger.sh"
+# Simple logging functions
+log_error() {
+    echo "[ERROR] $1" >&2
+}
 
-# ============================================================================
-# UTILITY FUNCTIONS
-# ============================================================================
+log_warn() {
+    echo "[WARN] $1" >&2
+}
+
+log_info() {
+    echo "[INFO] $1"
+}
+
+log_debug() {
+    if [[ "${DEBUG:-false}" == "true" ]]; then
+        echo "[DEBUG] $1" >&2
+    fi
+}
 
 die() {
     log_error "$1"
@@ -508,9 +519,13 @@ check_stop_hook_discipline() {
         return 0
     fi
 
-    local expected="task claude:validate-skill -- --skill $skill"
-    if [[ "$FM_HOOKS_STOP" != *"$expected"* ]]; then
-        ERRORS+=("$skill: Stop hook must call '$expected'")
+    # Accept either format:
+    # - task claude:validate-skill -- --skill X (project with includes)
+    # - task -t .claude/Taskfile.yaml validate-skill -- --skill X (framework direct)
+    local expected1="task claude:validate-skill -- --skill $skill"
+    local expected2="task -t .claude/Taskfile.yaml validate-skill -- --skill $skill"
+    if [[ "$FM_HOOKS_STOP" != *"$expected1"* ]] && [[ "$FM_HOOKS_STOP" != *"$expected2"* ]]; then
+        ERRORS+=("$skill: Stop hook must call validate-skill (expected '$expected2' or '$expected1')")
     fi
 }
 

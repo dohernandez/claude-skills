@@ -57,16 +57,27 @@ MAKE_TARGET_CACHE_KEYS=""
 MAKE_TARGET_CACHE_VALS=""
 
 # ============================================================================
-# SOURCE SHARED FUNCTIONS
+# UTILITY FUNCTIONS (inline - no external dependencies)
 # ============================================================================
-SCRIPT_SHARED_DIR="$PROJECT_ROOT/taskfiles/scripts"
 
-# Source the shared logger functions
-source "$SCRIPT_SHARED_DIR/logger.sh"
+# Simple logging functions
+log_error() {
+    echo "[ERROR] $1" >&2
+}
 
-# ============================================================================
-# UTILITY FUNCTIONS
-# ============================================================================
+log_warn() {
+    echo "[WARN] $1" >&2
+}
+
+log_info() {
+    echo "[INFO] $1"
+}
+
+log_debug() {
+    if [[ "${DEBUG:-false}" == "true" ]]; then
+        echo "[DEBUG] $1" >&2
+    fi
+}
 
 die() {
     log_error "$1"

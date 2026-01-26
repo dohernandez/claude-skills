@@ -348,7 +348,8 @@ run_validation() {
     echo "    Running: $vcmd"
 
     set +e
-    eval "$vcmd"
+    # Run from PROJECT_ROOT so relative paths like .claude/Taskfile.yaml work
+    (cd "$PROJECT_ROOT" && eval "$vcmd")
     local result=$?
     set -e
 

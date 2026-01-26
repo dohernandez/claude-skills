@@ -19,7 +19,9 @@ vars:
   TEST_COMMAND: '{{.TEST_COMMAND | default ""}}'
   PRECOMMIT_COMMAND: '{{.PRECOMMIT_COMMAND | default ""}}'
 
-dotenv: ['.claude/skills-config.env', '.env']
+# NOTE: dotenv is intentionally NOT set here to allow including this file.
+# Target projects should add this to their root Taskfile.yaml:
+#   dotenv: ['.claude/skills-config.env', '.env']
 
 tasks:
   # ===========================================================================

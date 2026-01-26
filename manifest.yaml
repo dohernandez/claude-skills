@@ -1,11 +1,17 @@
-# Root manifest for genlayerlabs/skills repository
-# Lists all available packages that can be installed
+# Claude Code Plugins Marketplace
+# Plugins for Anthropic's Claude Code
+#
+# Repository: https://github.com/genlayerlabs/claude-plugins
 
-name: genlayerlabs/skills
+name: genlayerlabs-claude-plugins
 version: "1.0.0"
-description: "Reusable skills for AI coding assistants"
+description: "Developer workflow plugins for Anthropic's Claude Code"
 
-packages:
-  - name: anthropic
-    path: anthropic/
-    description: "Skills for Anthropic Claude Code"
+plugins:
+  - name: framework
+    path: framework/
+    description: "Complete developer workflow with 22 integrated skills"
+  # Future standalone plugins:
+  # - name: commit
+  #   path: commit/
+  #   description: "Git commit with conventional commit format"

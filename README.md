@@ -1,6 +1,6 @@
-# Claude Code Skills Framework
+# Claude Code Plugins
 
-Reusable skills for AI coding assistants, specifically designed for Anthropic's Claude Code.
+Developer workflow plugins for Anthropic's Claude Code. This repository is a marketplace of plugins that can be installed into your Claude Code projects.
 
 ## Overview
 
@@ -12,10 +12,10 @@ Skills are structured configuration files that guide AI assistants through compl
 
 ```bash
 # Add the marketplace
-/plugin marketplace add https://github.com/genlayerlabs/skills.git
+/plugin marketplace add https://github.com/genlayerlabs/claude-plugins.git
 
 # Install the framework plugin
-/plugin install anthropic@genlayerlabs-skills
+/plugin install framework@genlayerlabs-claude-plugins
 ```
 
 This installs:
@@ -37,19 +37,17 @@ The `/framework configure` wizard will:
 2. Run `/skill configure` for each skill that requires configuration
 3. Save all configs to `.claude/skills-config.env` and `.claude/skills/*.yaml`
 
-### Install Individual Skill
+### Install Individual Skill (Future)
+
+Individual skills will be available as separate plugins:
 
 ```bash
 # Add the marketplace (if not already added)
-/plugin marketplace add https://github.com/genlayerlabs/skills.git
+/plugin marketplace add https://github.com/genlayerlabs/claude-plugins.git
 
-# Install a specific skill
-/plugin install anthropic/commit@genlayerlabs-skills
+# Install a specific skill plugin
+/plugin install commit@genlayerlabs-claude-plugins
 ```
-
-Installs:
-- The specified skill
-- Minimal framework dependencies (Taskfile, validation scripts)
 
 **After installation:**
 ```bash
@@ -57,24 +55,13 @@ Installs:
 /commit configure
 ```
 
-### Install Standalone Skill
-
-Standalone skills are not part of the framework bundle:
-
-```bash
-/plugin install anthropic/node-installer@genlayerlabs-skills
-```
-
-**After installation, run configure if required:**
-```bash
-/node-installer configure
-```
+> **Note:** Currently only the full `framework` plugin is available. Individual skill plugins will be added in future releases.
 
 ## Installation Behavior
 
 | Step | Framework Install | Individual Skill Install |
 |------|-------------------|--------------------------|
-| 1. Plugin install | `/plugin install anthropic@...` | `/plugin install anthropic/commit@...` |
+| 1. Plugin install | `/plugin install framework@...` | `/plugin install commit@...` |
 | 2. Validate | `claude --init` | `claude --init` |
 | 3. Configure | `/framework configure` | `/commit configure` |
 

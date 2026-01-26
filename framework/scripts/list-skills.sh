@@ -36,8 +36,8 @@ PROJECT_ROOT="$(find_project_root)"
 # In installed mode: .claude/skills/ contains skills
 find_skills_dir() {
     # Development mode: if anthropic/ exists with skill files, use it
-    if [[ -d "$PROJECT_ROOT/anthropic/skills" ]] && [[ -f "$PROJECT_ROOT/anthropic/manifest.yaml" ]]; then
-        echo "$PROJECT_ROOT/anthropic/skills"
+    if [[ -d "$PROJECT_ROOT/framework/skills" ]] && [[ -f "$PROJECT_ROOT/anthropic/manifest.yaml" ]]; then
+        echo "$PROJECT_ROOT/framework/skills"
     elif [[ -d "$PROJECT_ROOT/.claude/skills" ]]; then
         echo "$PROJECT_ROOT/.claude/skills"
     else

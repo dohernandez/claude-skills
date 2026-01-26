@@ -1,6 +1,6 @@
 {
-  "name": "anthropic",
-  "description": "Claude Code Developer Framework - Complete developer workflow with 22 integrated skills",
+  "name": "framework",
+  "description": "Claude Code Developer Framework - Complete developer workflow with 22 integrated skills for Anthropic's Claude Code",
   "version": "1.0.0",
   "author": {
     "name": "GenLayer Labs",

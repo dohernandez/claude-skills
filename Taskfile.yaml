@@ -1,7 +1,7 @@
-# Skills Framework Taskfile
-# FOR DEVELOPMENT OF THIS SKILLS REPOSITORY ONLY
+# Claude Code Plugins - Development Taskfile
+# FOR DEVELOPMENT OF THIS PLUGINS REPOSITORY ONLY
 # This is NOT the Taskfile installed to target projects.
-# See: anthropic/Taskfile.yaml for the installed version.
+# See: framework/Taskfile.yaml for the installed version.
 #
 # Install Task: https://taskfile.dev/installation/
 # Usage: task <task-name>
@@ -10,12 +10,12 @@ version: '3'
 
 includes:
   claude:
-    taskfile: ./anthropic/Taskfile.yaml
+    taskfile: ./framework/Taskfile.yaml
     vars:
-      SCRIPTS_DIR: '{{.ROOT_DIR}}/anthropic/scripts'
+      SCRIPTS_DIR: '{{.ROOT_DIR}}/framework/scripts'
 
 vars:
-  # Override for development - skills are in anthropic/skills/, not .claude/skills/
+  # Override for development - skills are in framework/skills/, not .claude/skills/
   PROJECT_ROOT: '{{.ROOT_DIR}}'
 
 # Set PROJECT_ROOT for all tasks

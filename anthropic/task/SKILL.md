@@ -12,7 +12,7 @@ allowed-tools:
 hooks:
   Stop:
     - type: command
-      command: "task -t .claude/Taskfile.yaml claude:validate-skill -- --skill task"
+      command: "task -t .claude/Taskfile.yaml validate-skill -- --skill task"
 ---
 
 # Task
@@ -21,7 +21,38 @@ hooks:
 
 Structured implementation methodology for non-bugfix work (features, chores, refactors, docs). Ensures work is properly scoped, planned, implemented with proper patterns, and verified before completion.
 
+## When to Use
+
+- Implementing new features
+- Refactoring existing code
+- Adding documentation
+- Chore/maintenance tasks
+
 ## Quick Reference
+
+- **Setup**: `/task discover` (run once during framework setup)
+- **Usage**: Invoked by workflow skill for non-bugfix work
+- **Update**: `/task learn <path>` (analyze specific patterns)
+- **Config**: `.claude/skills/task.yaml`
+
+## Modes
+
+| Mode | Trigger | Purpose |
+|------|---------|---------|
+| **discover** | `/task discover` | Auto-detect project structure, test patterns, architecture |
+| **learn** | `/task learn <path>` | Learn patterns from specific directory |
+| **execute** | Via workflow | Execute task phases (default) |
+
+## Discovery Process
+
+During `/task discover`:
+1. Scan project structure for architecture patterns
+2. Identify test framework and testing conventions
+3. Detect code style and file organization
+4. Find common patterns for each layer
+5. Save to `.claude/skills/task.yaml`
+
+## Phases Overview
 
 - **Phases**: Scope → Plan → Implement → Verify
 - **Key Rule**: Understand before building
@@ -103,7 +134,7 @@ Structured implementation methodology for non-bugfix work (features, chores, ref
 **Guidelines:**
 - Follow layer boundaries (see `/arch`)
 - Use established patterns (see `/code`)
-- Write tests alongside code (see `/tdd-core`)
+- Write tests alongside code (see `/tdd`)
 - Don't over-engineer
 
 **Output:** Working code with tests

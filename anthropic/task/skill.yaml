@@ -13,6 +13,43 @@ tags:
   - workflow
   - implementation
 
+config_location: ".claude/skills/task.yaml"
+
+commands:
+  - name: discover
+    description: "Analyze project for architecture patterns, test conventions (framework setup)"
+    output: ".claude/skills/task.yaml"
+    user_approval: required
+    steps:
+      - Scan project structure for architecture patterns (layers, modules)
+      - Identify test framework and testing conventions
+      - Detect code organization patterns
+      - Find common file naming and placement conventions
+      - Propose configuration to user for approval
+      - Save approved config to .claude/skills/task.yaml
+
+  - name: learn
+    description: "Learn implementation patterns from specific directory"
+    arguments:
+      - name: path
+        required: true
+        description: "Directory to analyze for patterns"
+    output: "Updates .claude/skills/task.yaml"
+    steps:
+      - Read existing config from .claude/skills/task.yaml
+      - Analyze specified path for patterns
+      - Extract file organization and naming conventions
+      - Propose updates to user
+      - Merge approved updates into config
+
+  - name: default
+    description: "Execute task phases using saved configuration"
+    requires: ".claude/skills/task.yaml exists"
+    steps:
+      - Load config from .claude/skills/task.yaml
+      - Follow task_flow procedure
+      - Use learned patterns for implementation guidance
+
 inputs:
   - name: task_description
     description: Description of the task from ticket or user
@@ -62,7 +99,7 @@ patterns:
     domain_understanding: domain-expert
     architecture_mapping: arch
     code_patterns: developer
-    testing: tdd-core
+    testing: tdd
 
   # Uses framework Taskfile commands (configured via wizard)
   test_commands:

@@ -1,6 +1,29 @@
+---
+name: domain-expert
+description: Domain knowledge discovery and guidance. Use when user says /domain, /domain discover, /domain learn, /domain explain, or /domain map.
+user-invocable: true
+allowed-tools:
+  - Read
+  - Bash
+  - Glob
+  - Grep
+hooks:
+  Stop:
+    - type: command
+      command: "task -t .claude/Taskfile.yaml claude:validate-skill -- --skill domain-expert"
+---
+
 # Domain Expert Skill
 
-Domain knowledge discovery, learning, and guidance for understanding project concepts and terminology.
+## Purpose
+
+Discover, learn, and guide domain knowledge. Helps understand project concepts, terminology, and how to map requests to domain patterns.
+
+## Quick Reference
+
+- **Provides:** Domain knowledge, concept explanations, request mapping
+- **Modes:** discover, learn, explain, map
+- **Stop hook:** `task claude:validate-skill -- --skill domain-expert`
 
 ## Modes Overview
 

@@ -55,6 +55,16 @@ install_infrastructure() {
 }
 
 # ============================================================================
+# ADD SKILL TO CLAUDE.MD
+# ============================================================================
+add_to_claudemd() {
+    local script="$PROJECT_ROOT/.claude/scripts/add-skill-to-claudemd.sh"
+    if [[ -x "$script" ]]; then
+        "$script" --skill "$SKILL_NAME"
+    fi
+}
+
+# ============================================================================
 # MAIN
 # ============================================================================
 main() {
@@ -79,6 +89,9 @@ main() {
 
     # Install infrastructure if missing
     install_infrastructure
+
+    # Add skill to CLAUDE.md
+    add_to_claudemd
 
     log_header "Installation Complete"
     echo "Skill is now available as: /$SKILL_NAME"

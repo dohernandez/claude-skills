@@ -143,6 +143,9 @@ main() {
     # (e.g., git-workflow.md is in pr-create skill)
     # GitHub templates are offered during /framework configure
 
+    # Note: framework skill is NOT added to CLAUDE.md
+    # Only user-facing skills (commit, test, etc.) are added by their setup.sh
+
     echo "=== Setup completed at $(date) ===" >> "$DEBUG_LOG"
 
     # ========================================================================

@@ -1,0 +1,67 @@
+# Sharp edges for create-skill
+#
+# NOTE: The `detect` field is informational only - it shows how to manually
+# check for the edge case. These are NOT automatically enforced by the
+# validation runner. Automated enforcement happens via validations.yaml.
+
+edges:
+  - id: stop-hook-skill-arg-mismatch
+    description: "Stop hook uses wrong --skill value (not the folder basename)"
+    detect: "task -t .claude/Taskfile.yaml claude:check-structure (automated)"
+    impact: "Stop hook won't run the intended validations for that skill."
+    fix: |
+      In SKILL.md frontmatter:
+        command: "task -t .claude/Taskfile.yaml claude:validate-skill -- --skill {folder-name}"
+      Ensure {folder-name} exactly matches the directory name.
+    severity: critical
+
+  - id: on-stop-target-does-not-exist
+    description: "New skill validations.yaml references a Task target that isn't defined"
+    detect: "task --list | grep <target>"
+    impact: "Stop hook becomes a no-op or fails unexpectedly."
+    fix: |
+      - Run capability discovery first to list available targets (task --list)
+      - Prefer existing Task targets
+      - If missing, add a Task target and reference that (don't embed bespoke shell)
+    severity: high
+
+  - id: yaml-indentation-breaks-parse
+    description: "YAML parses fail due to indentation or unquoted colons"
+    detect: "task -t .claude/Taskfile.yaml claude:check-structure (automated)"
+    impact: "CI and local validation fail; skills become unusable in automation."
+    fix: |
+      - Use consistent 2-space indentation
+      - Quote strings containing ':' or special characters
+      - Re-run: task -t .claude/Taskfile.yaml claude:check-structure
+    severity: high
+
+  - id: on-stop-ids-not-defined
+    description: "validations.yaml:on_stop references missing validation IDs"
+    detect: "task claude:validate-skill -- --skill {folder-name} --mode all"
+    impact: "Stop hook appears to pass but required checks never ran."
+    fix: "Ensure every on_stop entry has a matching validations[].id."
+    severity: high
+
+  - id: patterns-duplicated-in-skillmd
+    description: "SKILL.md restates patterns/anti-patterns instead of pointing to YAML"
+    detect: "Manual review of SKILL.md for duplicate rule content"
+    impact: "Rules drift and the multi-YAML system stops being canonical."
+    fix: "Move details into skill.yaml and keep SKILL.md pointer-level only."
+    severity: medium
+
+  - id: skipped-capability-discovery
+    description: "New skill created without first scanning available Task targets"
+    detect: "Manual check that capability scan was run before writing validations.yaml"
+    impact: "Validations may reference non-existent targets, causing silent failures."
+    fix: |
+      Before writing validations.yaml, run:
+      - task --list
+      - task --list | grep <namespace>
+    severity: medium
+
+  - id: name-mismatch
+    description: "SKILL.md frontmatter name differs from folder basename"
+    detect: "Compare folder name to name: field in SKILL.md"
+    impact: "Breaks lookup conventions and validate-skill --skill {folder-name} discipline."
+    fix: "Ensure folder name exactly matches SKILL.md frontmatter name: field."
+    severity: critical

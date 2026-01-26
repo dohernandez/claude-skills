@@ -1,0 +1,85 @@
+# Claude Skills Framework Taskfile
+# This file is installed to .claude/Taskfile.yaml in target projects
+#
+# Usage from project root:
+#   task -t .claude/Taskfile.yaml claude:validate-skill -- --skill commit
+#
+# Or add to your project's Taskfile.yaml:
+#   includes:
+#     claude:
+#       taskfile: .claude/Taskfile.yaml
+
+version: '3'
+
+vars:
+  SCRIPTS_DIR: '{{.TASKFILE_DIR}}/scripts'
+  # These are set during framework installation wizard
+  # Saved to .claude/skills-config.env
+  LINT_COMMAND: '{{.LINT_COMMAND | default ""}}'
+  TEST_COMMAND: '{{.TEST_COMMAND | default ""}}'
+  PRECOMMIT_COMMAND: '{{.PRECOMMIT_COMMAND | default ""}}'
+
+dotenv: ['.claude/skills-config.env', '.env']
+
+tasks:
+  # ===========================================================================
+  # COMMON TASKS (user-facing, configured via wizard)
+  # ===========================================================================
+
+  lint:
+    desc: "Run project linter"
+    cmds:
+      - cmd: '{{if .LINT_COMMAND}}{{.LINT_COMMAND}}{{else}}echo "LINT_COMMAND not configured - skipping"{{end}}'
+
+  test:
+    desc: "Run project tests"
+    cmds:
+      - cmd: '{{if .TEST_COMMAND}}{{.TEST_COMMAND}}{{else}}echo "TEST_COMMAND not configured - skipping"{{end}}'
+
+  precommit:
+    desc: "Run pre-commit checks"
+    cmds:
+      - cmd: '{{if .PRECOMMIT_COMMAND}}{{.PRECOMMIT_COMMAND}}{{else}}echo "Running lint + test..."{{end}}'
+      - task: lint
+      - task: test
+
+  # ===========================================================================
+  # SKILL VALIDATION (claude: namespace)
+  # ===========================================================================
+
+  validate-skill:
+    desc: "Run validation commands from a skill's validations.yaml"
+    summary: |
+      Validate a skill by running commands defined in its validations.yaml.
+
+      Usage:
+        task claude:validate-skill -- --skill commit
+        task claude:validate-skill -- --skill commit --mode all
+        task claude:validate-skill -- --skill arch --mode on-stop
+
+      Options:
+        --skill SKILL    Skill name (folder name under .claude/skills/) [required]
+        --mode MODE      Which validations to run: "on-stop" (default) or "all"
+        --debug          Enable debug logging
+
+      Exit codes:
+        0 - All validations passed
+        1 - One or more validations failed
+    cmds:
+      - '{{.SCRIPTS_DIR}}/validate-skill.sh {{.CLI_ARGS}}'
+
+  check-structure:
+    desc: "Check skill structure for all skills"
+    summary: |
+      Validates all skills have required files, valid YAML, consistent names.
+
+      Usage:
+        task claude:check-structure
+        task claude:check-structure -- --skill commit
+    cmds:
+      - '{{.SCRIPTS_DIR}}/check-skill-structure.sh {{.CLI_ARGS}}'
+
+  list-skills:
+    desc: "List all available skills"
+    cmds:
+      - '{{.SCRIPTS_DIR}}/list-skills.sh'

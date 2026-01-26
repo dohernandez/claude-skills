@@ -1,0 +1,38 @@
+# Collaboration: skill dependencies and composition
+
+collaborates_with:
+  - skill: arch
+    relationship: "complementary"
+    handoff: |
+      If the new skill changes code organization or touches layer boundaries,
+      use arch skill to validate architecture compliance.
+
+  - skill: code
+    relationship: "complementary"
+    handoff: |
+      If the new skill defines coding patterns or style guidelines,
+      use code skill to validate style compliance.
+
+boundaries:
+  this_skill_handles:
+    - "Skill scaffolding under .claude/skills/*/"
+    - "Multi-YAML canonical file layout"
+    - "Stop hook discipline"
+
+  this_skill_does_not_handle:
+    - "Skill content/procedure design"
+    - "Validation target creation"
+    - "Project-specific configurations"
+
+triggers:
+  - pattern: "create a skill|new skill|add skill|scaffold skill|skill template"
+    suggest: create-skill
+
+  - pattern: "/create-skill"
+    suggest: create-skill
+
+composition:
+  - when: "Creating a brand new skill"
+    sequence:
+      - create-skill
+      - "Run validation: task claude:validate-skill -- --skill {folder-name}"

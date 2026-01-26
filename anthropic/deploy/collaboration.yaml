@@ -1,0 +1,84 @@
+# Collaboration configuration for deploy skill
+#
+# Defines how this skill works with other skills in the system.
+
+skill: deploy
+
+dependencies:
+  - skill: deploy-verify
+    relationship: triggers
+    description: Should invoke deploy-verify after successful deployment
+
+triggers:
+  # When to suggest using this skill
+  - condition: "User says 'deploy' or '/deploy'"
+    action: "Use deploy skill"
+
+  - condition: "User wants to push changes to production"
+    action: "Use deploy skill"
+
+  - condition: "User mentions 'release' or 'ship'"
+    action: "Consider deploy skill after confirming intent"
+
+  - condition: "After merging PR to main"
+    action: "Suggest deploy skill if user wants to deploy changes"
+
+handoffs:
+  # When to hand off to another skill
+  - to: deploy-verify
+    when: "Deployment workflow completed successfully"
+    context: "Pass environment name for verification"
+
+  - to: debugger
+    when: "Deployment failed and user wants to debug"
+    context: "Check logs for deployment errors"
+
+composition:
+  # How this skill composes with others
+  part_of:
+    - workflow: "Release workflow"
+      sequence:
+        - "Code merged to main"
+        - "deploy triggers CI/CD"
+        - "deploy-verify confirms health"
+
+    - workflow: "Hotfix workflow"
+      sequence:
+        - "Hotfix merged to main"
+        - "deploy with force_build if needed"
+        - "deploy-verify confirms fix deployed"
+
+  can_invoke:
+    - deploy-verify  # After deployment completes
+
+  invoked_by:
+    - workflow  # After PR merge, asks for environment and deploys
+    - developer  # When ready to deploy changes manually
+
+user_prompts:
+  # Questions to ask user during execution
+  environment_selection:
+    question: "Which environment should I deploy to?"
+    header: "Environment"
+    multiSelect: false
+    options_from: "${ENVIRONMENTS}"  # Configured via discover
+
+  deployment_confirmation:
+    question: "Ready to deploy. Should I proceed?"
+    header: "Confirm"
+    multiSelect: false
+    options:
+      - label: "Yes, deploy now"
+        description: "Trigger the deployment workflow"
+      - label: "No, cancel"
+        description: "Abort deployment"
+
+  force_build_prompt:
+    question: "Should I force rebuild?"
+    header: "Build"
+    multiSelect: false
+    options:
+      - label: "No, auto-detect (Recommended)"
+        description: "Build only if code changed"
+      - label: "Yes, force rebuild"
+        description: "Rebuild even if no code changes"

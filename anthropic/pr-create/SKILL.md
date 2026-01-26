@@ -6,7 +6,7 @@ allowed-tools: [Bash, Read, Grep, Glob]
 hooks:
   Stop:
     - type: command
-      command: "task -t .claude/Taskfile.yaml claude:validate-skill -- --skill pr-create"
+      command: "task -t .claude/Taskfile.yaml validate-skill -- --skill pr-create"
 ---
 
 # PR Create
@@ -18,7 +18,7 @@ Follows the project's git workflow conventions from `.claude/docs/git-workflow.m
 ## Quick Reference
 - Creates: GitHub PR via `gh pr create`
 - Requires: GitHub CLI installed and authenticated, committed changes on a feature branch
-- Stop hook: `task -t .claude/Taskfile.yaml claude:validate-skill -- --skill pr-create`
+- Stop hook: `task -t .claude/Taskfile.yaml validate-skill -- --skill pr-create`
 
 ## Prerequisites
 

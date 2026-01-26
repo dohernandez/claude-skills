@@ -22,7 +22,7 @@ purpose: |
 owns:
   - "Skill scaffolding under .claude/skills/*/"
   - "Multi-YAML canonical file layout for skills"
-  - "Stop hook discipline: Stop hook must call task -t .claude/Taskfile.yaml claude:validate-skill -- --skill {folder-name}"
+  - "Stop hook discipline: Stop hook must call task -t .claude/Taskfile.yaml validate-skill -- --skill {folder-name}"
 
 inputs_required:
   - id: folder_name
@@ -97,13 +97,13 @@ patterns:
   - id: stop-hook-calls-validate-skill
     description: |
       Stop hook MUST call:
-        task -t .claude/Taskfile.yaml claude:validate-skill -- --skill {folder-name}
+        task -t .claude/Taskfile.yaml validate-skill -- --skill {folder-name}
       This guarantees Stop runs exactly what validations.yaml:on_stop lists.
     example: |
       hooks:
         Stop:
           - type: command
-            command: "task -t .claude/Taskfile.yaml claude:validate-skill -- --skill commit"
+            command: "task -t .claude/Taskfile.yaml validate-skill -- --skill commit"
 
   - id: command-only-validations-v1
     description: |
@@ -202,7 +202,7 @@ procedure:
 
   - step: "Validate"
     detail: |
-      - task -t .claude/Taskfile.yaml claude:validate-skill -- --skill {folder-name}
+      - task -t .claude/Taskfile.yaml validate-skill -- --skill {folder-name}
 
 # =============================================================================
 # HANDOFFS

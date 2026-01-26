@@ -6,7 +6,7 @@ allowed-tools: [Bash, Read]
 hooks:
   Stop:
     - type: command
-      command: "task -t .claude/Taskfile.yaml claude:validate-skill -- --skill pr-merge"
+      command: "task -t .claude/Taskfile.yaml validate-skill -- --skill pr-merge"
 ---
 
 # PR Merge
@@ -18,7 +18,7 @@ Enforces the rule: **NEVER bypass failed CI checks**. Only offers bypass for mis
 ## Quick Reference
 - Merges: GitHub PR via `gh pr merge --squash`
 - Requires: GitHub CLI installed and authenticated, PR exists for branch
-- Stop hook: `task -t .claude/Taskfile.yaml claude:validate-skill -- --skill pr-merge`
+- Stop hook: `task -t .claude/Taskfile.yaml validate-skill -- --skill pr-merge`
 
 ## Critical Rule
 

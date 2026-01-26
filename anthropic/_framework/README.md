@@ -16,11 +16,15 @@ target-project/
 │   │   └── list-skills.sh
 │   ├── hooks/                     # ← From _framework/hooks/
 │   │   └── check-skill-structure.sh
+│   ├── docs/                      # ← From _framework/docs/
+│   │   └── git-workflow.md
 │   ├── skills/                    # ← From anthropic/*/
 │   │   ├── commit/
 │   │   ├── arch/
 │   │   └── ...
 │   └── skills-config.yaml         # Wizard responses
+├── .github/
+│   └── PULL_REQUEST_TEMPLATE.md   # ← From _framework/github/ (if missing)
 └── CLAUDE.md
 ```
 
@@ -89,7 +93,7 @@ name: commit
 hooks:
   Stop:
     - type: command
-      command: "task -t .claude/Taskfile.yaml claude:validate-skill -- --skill commit"
+      command: "task -t .claude/Taskfile.yaml validate-skill -- --skill commit"
 ---
 ```
 
@@ -127,6 +131,16 @@ To enable, add to your `.claude/settings.json`:
   }
 }
 ```
+
+## GitHub Templates
+
+The framework provides default GitHub templates installed to `.github/` if the project doesn't already have them:
+
+| Template | Purpose |
+|----------|---------|
+| `PULL_REQUEST_TEMPLATE.md` | Standard PR format with description, types of changes, checklist |
+
+These templates are **only installed if missing** - existing templates are not overwritten.
 
 ## Scripts
 

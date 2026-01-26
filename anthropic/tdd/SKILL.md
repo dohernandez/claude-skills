@@ -6,7 +6,7 @@ allowed-tools: [Read, Write, Edit, Bash, Grep, Glob]
 hooks:
   Stop:
     - type: command
-      command: "task -t .claude/Taskfile.yaml claude:validate-skill -- --skill tdd"
+      command: "task -t .claude/Taskfile.yaml validate-skill -- --skill tdd"
 ---
 
 # TDD

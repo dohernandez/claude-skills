@@ -82,7 +82,12 @@ human_docs:
 
 ## Commands
 
-Project-specific commands are configured in the project's Taskfile:
+```bash
+# Generate skills reference documentation (outputs: docs/skills/REFERENCE.md)
+task -t .claude/Taskfile.yaml skills-reference
+```
+
+Project-specific documentation commands are configured in the project's Taskfile:
 
 ```bash
 # Regenerate all documentation (project-specific)

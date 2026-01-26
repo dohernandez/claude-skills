@@ -10,7 +10,7 @@ allowed-tools:
 hooks:
   Stop:
     - type: command
-      command: "task -t .claude/Taskfile.yaml claude:validate-skill -- --skill commit"
+      command: "task -t .claude/Taskfile.yaml validate-skill -- --skill commit"
 ---
 
 # Commit

@@ -11,7 +11,7 @@ edges:
     impact: "Stop hook won't run the intended validations for that skill."
     fix: |
       In SKILL.md frontmatter:
-        command: "task -t .claude/Taskfile.yaml claude:validate-skill -- --skill {folder-name}"
+        command: "task -t .claude/Taskfile.yaml validate-skill -- --skill {folder-name}"
       Ensure {folder-name} exactly matches the directory name.
     severity: critical
 

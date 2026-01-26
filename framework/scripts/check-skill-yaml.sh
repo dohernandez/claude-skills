@@ -343,7 +343,8 @@ parse_collaboration_yaml() {
         local triggers
         triggers=$(yq '.triggers[].suggest // ""' "$collab_yaml" 2>/dev/null || echo "")
         while IFS= read -r ref; do
-            if [[ -n "$ref" ]] && [[ "$ref" != "null" ]]; then
+            # Only include if it looks like a skill name (alphanumeric + hyphens, no spaces)
+            if [[ -n "$ref" ]] && [[ "$ref" != "null" ]] && [[ "$ref" =~ ^[a-zA-Z][a-zA-Z0-9_-]*$ ]]; then
                 COLLAB_SKILL_REFS+=("$ref")
             fi
         done <<< "$triggers"

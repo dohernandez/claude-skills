@@ -1,0 +1,16 @@
+version: 1
+description: "Validations for task skill"
+
+# Task skill validations:
+# - Skill structure is valid
+
+validations:
+  - id: skill-structure-valid
+    name: "Skill has required files and valid YAML"
+    type: command
+    command: "task -t .claude/Taskfile.yaml claude:check-structure -- --skill task"
+    expect: "exit 0"
+    message: "Skill structure validation failed."
+
+on_stop:
+  - skill-structure-valid

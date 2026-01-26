@@ -1,0 +1,106 @@
+# Sharp edges for task implementation
+
+name: task
+version: "2.0.0"
+
+edges:
+  - id: coding-before-scope
+    description: "Starting to write code before scope is clear"
+    detect: "Code changes made before scope documented"
+    impact: "May build wrong thing, wasted effort"
+    fix: |
+      Always complete T1 (Scope) first:
+      1. Read the full task description
+      2. Identify what IS and IS NOT in scope
+      3. Ask clarifying questions if anything is ambiguous
+      4. Document scope before moving to T2
+    severity: critical
+
+  - id: skipping-plan-approval
+    description: "Implementing without user approval on the plan"
+    detect: "Code written before plan shown to user"
+    impact: "May take wrong approach, significant rework"
+    fix: |
+      In T2 (Plan), always:
+      1. Document the planned approach
+      2. List files to create/modify
+      3. Show plan to user
+      4. Wait for explicit approval
+      5. Only then proceed to T3
+    severity: high
+
+  - id: scope-creep
+    description: "Adding features or improvements not in original scope"
+    detect: "Changes to files or functionality not in the plan"
+    impact: "Larger PR, harder to review, potential bugs"
+    fix: |
+      During T3 (Implement):
+      1. Check each change against the approved plan
+      2. If you notice something that "should" be improved, note it
+      3. Don't implement improvements - save for separate task
+      4. Stay strictly within approved scope
+    severity: medium
+
+  - id: skipping-tests
+    description: "Implementing without writing tests"
+    detect: "Implementation code without corresponding tests"
+    impact: "No regression protection, harder to maintain"
+    fix: |
+      In T3, follow TDD pattern:
+      1. Write test first (it should fail)
+      2. Implement minimum code to pass
+      3. Refactor if needed
+      4. Run tests frequently during development
+    severity: high
+
+  - id: ignoring-architecture
+    description: "Putting code in wrong layer or violating boundaries"
+    detect: "Imports that violate layer rules, misplaced files"
+    impact: "Tech debt, harder to maintain, may break other code"
+    fix: |
+      During T2 (Plan):
+      1. Use /arch to understand layer boundaries
+      2. Map each change to correct layer
+      3. Verify imports will be valid
+
+      During T3:
+      1. Check architecture periodically
+      2. Fix any violations immediately
+    severity: high
+
+  - id: incomplete-verification
+    description: "Not running full test suite before commit"
+    detect: "Only running specific tests, not full suite"
+    impact: "May break unrelated functionality"
+    fix: |
+      In T4 (Verify), always run:
+      1. task -t .claude/Taskfile.yaml test (all tests)
+      2. task -t .claude/Taskfile.yaml precommit (lint + tests)
+      3. Check IDE diagnostics for errors
+      All must pass before considering work complete.
+    severity: critical
+
+  - id: vague-scope
+    description: "Scope defined but too vague to implement"
+    detect: "Scope doesn't specify concrete deliverables"
+    impact: "Ambiguity leads to wrong implementation"
+    fix: |
+      Scope must be specific:
+      - BAD: "Improve notifications"
+      - GOOD: "Add Slack notification when user signs up"
+
+      If scope is vague, ask user for specifics before proceeding.
+    severity: medium
+
+  - id: plan-without-files
+    description: "Plan doesn't specify which files to change"
+    detect: "Plan is conceptual but lacks file paths"
+    impact: "May start changing wrong files, discover issues late"
+    fix: |
+      Plan should always include:
+      1. Specific file paths to create
+      2. Specific file paths to modify
+      3. Which tests to add/update
+
+      If unsure which files, explore codebase first.
+    severity: medium

@@ -1,0 +1,155 @@
+name: task
+kind: methodology
+version: "2.0.0"
+description: |
+  Structured implementation methodology for non-bugfix work (features, chores,
+  refactors, docs). Ensures work is properly scoped, planned, implemented with
+  proper patterns, and verified before completion.
+
+  Phases: Scope → Plan → Implement → Verify
+
+tags:
+  - methodology
+  - workflow
+  - implementation
+
+inputs:
+  - name: task_description
+    description: Description of the task from ticket or user
+    required: true
+
+  - name: task_type
+    description: Type of task (feat, chore, refactor, docs, test)
+    required: false
+
+outputs:
+  - name: scope_document
+    description: Clear definition of what is in/out of scope
+
+  - name: implementation_plan
+    description: Files and approach for implementation
+
+  - name: verification_result
+    description: Test results and pre-commit status
+
+patterns:
+  phases:
+    - id: T1
+      name: Scope
+      goal: Understand requirements and define boundaries
+      output: Clear scope with deliverables and exclusions
+      can_skip: false
+
+    - id: T2
+      name: Plan
+      goal: Design approach before writing code
+      output: Implementation plan with files and approach
+      can_skip: false
+
+    - id: T3
+      name: Implement
+      goal: Write code following project patterns
+      output: Working code with tests
+      can_skip: false
+
+    - id: T4
+      name: Verify
+      goal: Ensure implementation is complete and correct
+      output: All tests pass, ready for commit
+      can_skip: false
+
+  delegation:
+    domain_understanding: domain-expert
+    architecture_mapping: arch
+    code_patterns: developer
+    testing: tdd-core
+
+  # Uses framework Taskfile commands (configured via wizard)
+  test_commands:
+    run_all: "task -t .claude/Taskfile.yaml test"
+    precommit: "task -t .claude/Taskfile.yaml precommit"
+
+anti_patterns:
+  - name: code_before_scope
+    why_bad: May build the wrong thing
+    what_to_do: Always clarify scope first, ask questions
+
+  - name: skip_plan_approval
+    why_bad: May take wrong approach, wasted effort
+    what_to_do: Show plan to user, get explicit approval
+
+  - name: over_engineering
+    why_bad: Scope creep, harder to review
+    what_to_do: Minimal changes only, save extras for later
+
+  - name: skip_verification
+    why_bad: May break existing functionality
+    what_to_do: Always run full test suite before commit
+
+  - name: ignore_architecture
+    why_bad: Creates tech debt, violates layer boundaries
+    what_to_do: Use arch skill to map changes to correct layer
+
+procedures:
+  - name: task_flow
+    description: Complete task from request to verified implementation
+    steps:
+      - phase: T1 - Scope
+        actions:
+          - Read task description and any context
+          - Identify core requirements
+          - Identify out-of-scope items
+          - Clarify ambiguities with user
+          - Document scope
+        failure_action: Ask user for clarification
+
+      - phase: T2 - Plan
+        actions:
+          - Consult domain-expert for domain understanding
+          - Use arch to map to architecture
+          - Identify files to create/modify
+          - Determine test strategy
+          - Document plan
+          - Get user approval
+        failure_action: Revise plan based on feedback
+
+      - phase: T3 - Implement
+        actions:
+          - Follow TDD (test first)
+          - Use developer patterns
+          - Work in small increments
+          - Run tests frequently
+          - Keep changes minimal
+        failure_action: Fix issues, iterate
+
+      - phase: T4 - Verify
+        actions:
+          - Run full test suite
+          - Run pre-commit checks
+          - Check IDE diagnostics
+          - Review against scope
+        failure_action: Fix failing tests, re-verify
+
+examples:
+  - name: Add notification feature
+    task: "Add user notification system"
+    scope: "Notify users via email/Slack, no history UI"
+    plan: "New domain module, add handlers, channel integration"
+    result: "Notifications working, tests pass, ready for commit"
+
+  - name: Refactor service
+    task: "Refactor event handler to use new event system"
+    scope: "Update event handling, maintain existing behavior"
+    plan: "Replace old event system, update tests, verify no regression"
+    result: "Refactored, all tests pass, cleaner code"
+
+context: |
+  This methodology is invoked by /workflow when the ticket type is NOT 'fix'.
+  It ensures disciplined implementation that produces:
+  1. Clear scope (prevents scope creep)
+  2. Approved plan (prevents wasted effort)
+  3. Clean implementation (follows patterns)
+  4. Verified code (no regressions)
+
+  The key insight is: plan before building. Most features go wrong because
+  developers start coding before understanding what's needed.

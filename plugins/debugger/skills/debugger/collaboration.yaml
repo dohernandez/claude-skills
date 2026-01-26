@@ -42,15 +42,6 @@ dependencies:
         Provide: service name, error description, impact, root cause, logs excerpt
         Receive: Linear issue created with debugging context
 
-  parallel_with:
-    - skill: reporter
-      why: |
-        Can generate incident reports or debugging summaries while investigating.
-      when: |
-        - Need to document incident for postmortem
-        - Creating summary for team communication
-        - Building debugging report with findings
-
 works_with:
   - name: Log aggregation system
     type: external_tool

@@ -18,10 +18,8 @@ jobs:
       - name: Check skill structure
         run: ./framework/scripts/check-skill-structure.sh
 
-      - name: Check skill YAML (warnings only)
-        run: ./framework/scripts/check-skill-yaml.sh || echo "::warning::Skill YAML validation found issues (see above)"
-        continue-on-error: true
+      - name: Check skill YAML
+        run: ./framework/scripts/check-skill-yaml.sh
 
       - name: Audit skills
-        run: ./framework/scripts/audit-skills.sh || echo "::warning::Skill audit found issues (see above)"
-        continue-on-error: true
+        run: ./framework/scripts/audit-skills.sh

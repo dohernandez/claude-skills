@@ -385,9 +385,13 @@ check_stop_hook_discipline() {
         return 0
     fi
 
-    local expected="task claude:validate-skill -- --skill $skill"
-    if [[ "$FM_HOOKS_STOP" != *"$expected"* ]]; then
-        ERRORS+=("$skill: Stop hook must call '$expected' (validations.yaml exists)")
+    # Accept both formats:
+    # - task claude:validate-skill -- --skill <name>
+    # - task -t .claude/Taskfile.yaml validate-skill -- --skill <name>
+    local expected1="task claude:validate-skill -- --skill $skill"
+    local expected2="task -t .claude/Taskfile.yaml validate-skill -- --skill $skill"
+    if [[ "$FM_HOOKS_STOP" != *"$expected1"* ]] && [[ "$FM_HOOKS_STOP" != *"$expected2"* ]]; then
+        ERRORS+=("$skill: Stop hook must call validate-skill for '$skill' (validations.yaml exists)")
     fi
 }
 

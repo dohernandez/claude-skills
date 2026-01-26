@@ -834,11 +834,13 @@ main() {
 
     # Determine skills directory (development mode vs installed mode)
     local skills_dir
-    if [[ -d "$PROJECT_ROOT/framework/skills" ]] && [[ -f "$PROJECT_ROOT/anthropic/manifest.yaml" ]]; then
+    if [[ -d "$PROJECT_ROOT/framework/skills" ]] && [[ -d "$PROJECT_ROOT/framework/.claude-plugin" ]]; then
         # Development mode: plugin structure
         skills_dir="$PROJECT_ROOT/framework/skills"
-    else
+    elif [[ -d "$PROJECT_ROOT/.claude/skills" ]]; then
         # Installed mode: standard .claude/skills
+        skills_dir="$PROJECT_ROOT/.claude/skills"
+    else
         skills_dir="$PROJECT_ROOT/.claude/skills"
     fi
 

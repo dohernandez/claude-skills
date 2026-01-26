@@ -9,6 +9,10 @@ allowed-tools:
   - Glob
   - Grep
   - AskUserQuestion
+hooks:
+  Stop:
+    - type: command
+      command: "task -t .claude/Taskfile.yaml validate-skill -- --skill framework"
 ---
 
 # Framework Configuration

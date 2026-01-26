@@ -6,10 +6,10 @@ version: "2.0.0"
 
 validations:
   - id: config-exists
-    type: file
-    path: ".claude/skills/developer.yaml"
-    description: "Developer config exists (run /developer discover first)"
-    failure_message: "Developer config not found. Run /developer discover to analyze project architecture."
+    type: command
+    command: "test -f .claude/skills/developer.yaml"
+    description: "Developer config exists (run /developer configure first)"
+    failure_message: "Developer config not found. Run /developer configure to analyze project architecture."
 
   - id: precommit
     type: command

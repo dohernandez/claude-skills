@@ -16,7 +16,7 @@ dependencies:
     reason: "Follow code patterns during implementation"
     optional: false
 
-  - skill: tdd-core
+  - skill: tdd
     reason: "Write tests alongside implementation"
     optional: false
 

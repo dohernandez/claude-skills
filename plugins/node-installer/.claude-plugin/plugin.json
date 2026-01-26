@@ -1,0 +1,12 @@
+{
+  "name": "node-installer",
+  "description": "Node.js version management and installation",
+  "version": "1.0.0",
+  "author": {
+    "name": "GenLayer Labs",
+    "url": "https://github.com/genlayerlabs"
+  },
+  "keywords": ["nodejs", "nvm", "fnm", "installation", "version-manager"],
+  "repository": "https://github.com/genlayerlabs/skills",
+  "skills": "./skills/"
+}

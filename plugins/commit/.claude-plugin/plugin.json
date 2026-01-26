@@ -1,0 +1,12 @@
+{
+  "name": "commit",
+  "description": "Git commits with conventional commit format",
+  "version": "1.0.0",
+  "author": {
+    "name": "GenLayer Labs",
+    "url": "https://github.com/genlayerlabs"
+  },
+  "keywords": ["git", "commit", "conventional-commits"],
+  "repository": "https://github.com/genlayerlabs/skills",
+  "skills": "./skills/"
+}

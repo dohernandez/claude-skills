@@ -1,6 +1,6 @@
 {
   "name": "framework",
-  "description": "Claude Code Developer Framework - Complete developer workflow with 22 integrated skills for Anthropic's Claude Code",
+  "description": "Claude Code Developer Framework - Complete developer workflow with 22 integrated skills",
   "version": "1.0.0",
   "author": {
     "name": "GenLayer Labs",
@@ -17,64 +17,7 @@
     "architecture",
     "developer-tools"
   ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/genlayerlabs/skills.git"
-  },
-  "hooks": "./hooks/hooks.json",
-  "skills": {
-    "meta": [
-      "framework",
-      "create-skill"
-    ],
-    "core": [
-      "commit",
-      "pr-create",
-      "pr-merge",
-      "bugfix",
-      "task",
-      "tdd",
-      "workflow",
-      "workflow-setup",
-      "workflow-finish",
-      "linear",
-      "slack"
-    ],
-    "customizable": [
-      "arch",
-      "code",
-      "developer",
-      "docs-refresh",
-      "setup",
-      "domain-expert",
-      "debugger",
-      "deploy",
-      "deploy-verify"
-    ]
-  },
-  "postInstall": {
-    "message": "Run '/framework configure' to set up the framework for your project.",
-    "setupHook": "Run 'claude --init' to validate prerequisites."
-  },
-  "configuration": {
-    "wizard": {
-      "PROJECT_NAME": {
-        "prompt": "What is your project name?",
-        "required": true
-      },
-      "LINT_COMMAND": {
-        "prompt": "What command runs your linter?",
-        "required": false
-      },
-      "TEST_COMMAND": {
-        "prompt": "What command runs your tests?",
-        "required": false
-      },
-      "PRECOMMIT_COMMAND": {
-        "prompt": "What command runs pre-commit validation?",
-        "required": false
-      }
-    },
-    "output": ".claude/skills-config.env"
-  }
+  "repository": "https://github.com/genlayerlabs/skills",
+  "skills": "./skills/",
+  "hooks": "./hooks/hooks.json"
 }

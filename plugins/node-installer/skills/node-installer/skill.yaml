@@ -1,0 +1,62 @@
+name: node-installer
+kind: utility
+version: "1.0.0"
+description: "Install and manage Node.js versions using nvm or fnm"
+
+purpose: |
+  Detect required Node.js version from project files and install it using
+  the appropriate version manager (nvm, fnm, or direct install).
+
+procedure:
+  - step: "Detect required version"
+    detail: "Check .nvmrc, .node-version, package.json engines, or volta config"
+    commands:
+      - "cat .nvmrc 2>/dev/null"
+      - "cat .node-version 2>/dev/null"
+      - "jq -r '.engines.node // empty' package.json 2>/dev/null"
+
+  - step: "Detect version manager"
+    detail: "Check for fnm (preferred) or nvm"
+    commands:
+      - "command -v fnm"
+      - "[ -s \"$NVM_DIR/nvm.sh\" ] && echo nvm"
+
+  - step: "Install Node.js"
+    detail: "Use detected version manager to install required version"
+    decision_point:
+      question: "Which version manager is available?"
+      options:
+        - name: "fnm"
+          commands: ["fnm install", "fnm use"]
+        - name: "nvm"
+          commands: ["nvm install", "nvm use"]
+        - name: "none"
+          action: "Guide user to install fnm or nvm first"
+
+  - step: "Verify installation"
+    detail: "Confirm correct version is active"
+    commands:
+      - "node --version"
+      - "npm --version"
+
+patterns:
+  - id: auto-install
+    description: "Auto-detect and install from .nvmrc"
+    example: "fnm install && fnm use"
+
+  - id: specific-version
+    description: "Install specific version"
+    example: "fnm install 20.11.0 && fnm use 20.11.0"
+
+anti_patterns:
+  - id: global-install
+    description: "Installing Node.js globally without version manager"
+    why_bad: "Cannot manage multiple versions, hard to upgrade"
+
+  - id: ignore-nvmrc
+    description: "Ignoring project's .nvmrc file"
+    why_bad: "May use incompatible Node.js version"
+
+  - id: sudo-npm
+    description: "Using sudo with npm install -g"
+    why_bad: "Creates permission issues, security risk"

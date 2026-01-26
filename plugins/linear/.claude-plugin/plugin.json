@@ -1,0 +1,12 @@
+{
+  "name": "linear",
+  "description": "Linear issue management and ticket workflows",
+  "version": "1.0.0",
+  "author": {
+    "name": "GenLayer Labs",
+    "url": "https://github.com/genlayerlabs"
+  },
+  "keywords": ["linear", "issues", "project-management", "tickets"],
+  "repository": "https://github.com/genlayerlabs/skills",
+  "skills": "./skills/"
+}

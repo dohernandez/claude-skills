@@ -1,0 +1,12 @@
+{
+  "name": "pr-create",
+  "description": "Create GitHub pull requests with standardized format",
+  "version": "1.0.0",
+  "author": {
+    "name": "GenLayer Labs",
+    "url": "https://github.com/genlayerlabs"
+  },
+  "keywords": ["git", "github", "pull-request", "pr"],
+  "repository": "https://github.com/genlayerlabs/skills",
+  "skills": "./skills/"
+}

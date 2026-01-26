@@ -1,6 +1,6 @@
 {
-  "name": "genlayerlabs-claude-plugins",
-  "description": "Claude Code plugins by GenLayer Labs - Developer workflow tools for Anthropic's Claude Code",
+  "name": "genlayerlabs-skills",
+  "description": "Claude Code plugins by GenLayer Labs - Developer workflow tools",
   "owner": {
     "name": "GenLayer Labs",
     "url": "https://github.com/genlayerlabs"
@@ -11,6 +11,37 @@
       "source": "framework",
       "description": "Complete developer workflow framework with 22 integrated skills",
       "tags": ["workflow", "git", "testing", "deployment", "developer-tools"]
+    },
+    {
+      "name": "commit",
+      "source": "plugins/commit",
+      "description": "Git commits with conventional commit format",
+      "tags": ["git", "commit"]
+    },
+    {
+      "name": "linear",
+      "source": "plugins/linear",
+      "description": "Linear issue management and ticket workflows",
+      "tags": ["linear", "issues", "project-management"]
+    },
+    {
+      "name": "pr-create",
+      "source": "plugins/pr-create",
+      "description": "Create GitHub pull requests with standardized format",
+      "tags": ["git", "github", "pull-request"]
+    },
+    {
+      "name": "pr-merge",
+      "source": "plugins/pr-merge",
+      "description": "Merge GitHub pull requests with proper validation",
+      "tags": ["git", "github", "pull-request"]
+    },
+    {
+      "name": "node-installer",
+      "source": "plugins/node-installer",
+      "description": "Node.js version management and installation",
+      "tags": ["nodejs", "nvm", "installation"],
+      "standalone": true
     }
   ]
 }

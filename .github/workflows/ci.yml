@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate-skills:
+    name: Validate Skills
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check skill structure
+        run: ./framework/scripts/check-skill-structure.sh
+
+      - name: Check skill YAML (warnings only)
+        run: ./framework/scripts/check-skill-yaml.sh || echo "::warning::Skill YAML validation found issues (see above)"
+        continue-on-error: true
+
+      - name: Audit skills
+        run: ./framework/scripts/audit-skills.sh || echo "::warning::Skill audit found issues (see above)"
+        continue-on-error: true

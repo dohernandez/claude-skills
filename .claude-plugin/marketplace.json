@@ -7,11 +7,6 @@
   },
   "plugins": [
     {
-      "name": "framework",
-      "source": "./framework",
-      "description": "Install and configure Claude Code skills - orchestrates tier-based skill installation"
-    },
-    {
       "name": "arch",
       "source": "./plugins/arch",
       "description": "Architecture patterns, layer boundaries, and structural validation"

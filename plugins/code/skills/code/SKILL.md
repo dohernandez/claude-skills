@@ -134,9 +134,18 @@ examples:
 
 ### Save Location
 
-```
-.claude/skills/code.yaml
-```
+Config path depends on how the plugin was installed:
+
+| Plugin Scope | Config File | Git |
+|--------------|-------------|-----|
+| **project** | `.claude/skills/code.yaml` | Committed (shared) |
+| **local** | `.claude/skills/code.local.yaml` | Ignored (personal) |
+| **user** | `.claude/skills/code.local.yaml` | Ignored (personal) |
+
+**Precedence when reading** (first found wins):
+1. `.claude/skills/code.local.yaml`
+2. `.claude/skills/code.yaml`
+3. Skill defaults
 
 ---
 

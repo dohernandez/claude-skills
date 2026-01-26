@@ -72,9 +72,20 @@ Cleanup git branches and worktrees after a PR is merged. Removes local branch, r
 
 ### Config Location
 
-```
-.claude/workflow-config.json  (shared with workflow-setup)
-```
+Skill config path depends on how the plugin was installed:
+
+| Plugin Scope | Config File | Git |
+|--------------|-------------|-----|
+| **project** | `.claude/skills/workflow-finish.yaml` | Committed (shared) |
+| **local** | `.claude/skills/workflow-finish.local.yaml` | Ignored (personal) |
+| **user** | `.claude/skills/workflow-finish.local.yaml` | Ignored (personal) |
+
+**Precedence when reading** (first found wins):
+1. `.claude/skills/workflow-finish.local.yaml`
+2. `.claude/skills/workflow-finish.yaml`
+3. Skill defaults
+
+**Note:** Runtime config is stored in `.claude/workflow-config.json` (shared with workflow-setup).
 
 ### Config Schema
 

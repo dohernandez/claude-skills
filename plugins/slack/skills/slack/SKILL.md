@@ -199,6 +199,23 @@ curl -s -H "Authorization: Bearer $SLACK_BOT_TOKEN" \
 | `not_in_channel` | Add bot to channel: `/invite @BotName` |
 | `missing_scope` | Add required OAuth scopes and reinstall app |
 
+## Configuration
+
+### Config Location
+
+Config path depends on how the plugin was installed:
+
+| Plugin Scope | Config File | Git |
+|--------------|-------------|-----|
+| **project** | `.claude/skills/slack.yaml` | Committed (shared) |
+| **local** | `.claude/skills/slack.local.yaml` | Ignored (personal) |
+| **user** | `.claude/skills/slack.local.yaml` | Ignored (personal) |
+
+**Precedence when reading** (first found wins):
+1. `.claude/skills/slack.local.yaml`
+2. `.claude/skills/slack.yaml`
+3. Skill defaults
+
 ## Reference
 
 - [Slack API Documentation](https://api.slack.com/methods)

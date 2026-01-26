@@ -27,7 +27,21 @@ Orchestrates the development workflow by understanding the domain context, mappi
 - **Setup**: `/developer configure` (run once during framework setup)
 - **Usage**: `/developer` or `/dev` (uses saved config)
 - **Update**: `/developer learn <path>` (analyze specific path)
-- **Config**: `.claude/skills/developer.yaml`
+
+### Config Location
+
+Config path depends on how the plugin was installed:
+
+| Plugin Scope | Config File | Git |
+|--------------|-------------|-----|
+| **project** | `.claude/skills/developer.yaml` | Committed (shared) |
+| **local** | `.claude/skills/developer.local.yaml` | Ignored (personal) |
+| **user** | `.claude/skills/developer.local.yaml` | Ignored (personal) |
+
+**Precedence when reading** (first found wins):
+1. `.claude/skills/developer.local.yaml`
+2. `.claude/skills/developer.yaml`
+3. Skill defaults
 
 ## Modes
 

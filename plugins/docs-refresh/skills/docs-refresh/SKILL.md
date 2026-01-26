@@ -164,7 +164,24 @@ Update documentation when changing related code:
 
 ## Configuration
 
-Set via `/docs-refresh configure`, stored in `.claude/skills/docs-refresh.yaml`:
+### Config Location
+
+Config path depends on how the plugin was installed:
+
+| Plugin Scope | Config File | Git |
+|--------------|-------------|-----|
+| **project** | `.claude/skills/docs-refresh.yaml` | Committed (shared) |
+| **local** | `.claude/skills/docs-refresh.local.yaml` | Ignored (personal) |
+| **user** | `.claude/skills/docs-refresh.local.yaml` | Ignored (personal) |
+
+**Precedence when reading** (first found wins):
+1. `.claude/skills/docs-refresh.local.yaml`
+2. `.claude/skills/docs-refresh.yaml`
+3. Skill defaults
+
+### Config Fields
+
+Set via `/docs-refresh configure`:
 
 | Field | Description | Example |
 |-------|-------------|---------|

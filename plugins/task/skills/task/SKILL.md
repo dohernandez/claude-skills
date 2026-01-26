@@ -33,7 +33,21 @@ Structured implementation methodology for non-bugfix work (features, chores, ref
 - **Setup**: `/task configure` (run once during framework setup)
 - **Usage**: Invoked by workflow skill for non-bugfix work
 - **Update**: `/task learn <path>` (analyze specific patterns)
-- **Config**: `.claude/skills/task.yaml`
+
+### Config Location
+
+Config path depends on how the plugin was installed:
+
+| Plugin Scope | Config File | Git |
+|--------------|-------------|-----|
+| **project** | `.claude/skills/task.yaml` | Committed (shared) |
+| **local** | `.claude/skills/task.local.yaml` | Ignored (personal) |
+| **user** | `.claude/skills/task.local.yaml` | Ignored (personal) |
+
+**Precedence when reading** (first found wins):
+1. `.claude/skills/task.local.yaml`
+2. `.claude/skills/task.yaml`
+3. Skill defaults
 
 ## Modes
 

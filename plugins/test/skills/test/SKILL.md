@@ -129,7 +129,18 @@ These enable the Taskfile tasks:
 
 ### Config Location
 
-`.claude/skills/test.yaml`
+Config path depends on how the plugin was installed:
+
+| Plugin Scope | Config File | Git |
+|--------------|-------------|-----|
+| **project** | `.claude/skills/test.yaml` | Committed (shared) |
+| **local** | `.claude/skills/test.local.yaml` | Ignored (personal) |
+| **user** | `.claude/skills/test.local.yaml` | Ignored (personal) |
+
+**Precedence when reading** (first found wins):
+1. `.claude/skills/test.local.yaml`
+2. `.claude/skills/test.yaml`
+3. Skill defaults
 
 ### Config Schema
 

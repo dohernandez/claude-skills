@@ -20,6 +20,21 @@ Manage the development environment lifecycle for ticket-based work. This skill h
 - **Delegates to**: `/bugfix` (fix tickets) or `/task` (feat, chore, refactor, docs)
 - **Stop hook**: `task -t .claude/Taskfile.yaml validate-skill -- --skill workflow`
 
+### Config Location
+
+Config path depends on how the plugin was installed:
+
+| Plugin Scope | Config File | Git |
+|--------------|-------------|-----|
+| **project** | `.claude/skills/workflow.yaml` | Committed (shared) |
+| **local** | `.claude/skills/workflow.local.yaml` | Ignored (personal) |
+| **user** | `.claude/skills/workflow.local.yaml` | Ignored (personal) |
+
+**Precedence when reading** (first found wins):
+1. `.claude/skills/workflow.local.yaml`
+2. `.claude/skills/workflow.yaml`
+3. Skill defaults
+
 ## When to Use
 
 - Starting work on a new ticket or feature

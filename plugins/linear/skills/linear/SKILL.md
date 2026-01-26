@@ -122,7 +122,26 @@ Manage issue templates with `/linear template <action>`:
 
 ## Configuration
 
-Optional configuration (set during framework installation):
+### Config Location
+
+Config path depends on how the plugin was installed:
+
+| Plugin Scope | Config File | Git |
+|--------------|-------------|-----|
+| **project** | `.claude/skills/linear.yaml` | Committed (shared) |
+| **local** | `.claude/skills/linear.local.yaml` | Ignored (personal) |
+| **user** | `.claude/skills/linear.local.yaml` | Ignored (personal) |
+
+**Precedence when reading** (first found wins):
+1. `.claude/skills/linear.local.yaml`
+2. `.claude/skills/linear.yaml`
+3. Skill defaults
+
+### Cache Location
+
+The cache is always stored at `.claude/linear-cache.yaml` (per-project).
+
+### Optional Settings
 
 | Variable | Description |
 |----------|-------------|

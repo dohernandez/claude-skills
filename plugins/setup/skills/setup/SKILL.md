@@ -169,7 +169,28 @@ Check setup is complete:
 
 ## Configuration
 
-Configured via wizard during framework installation:
+### Config Location
+
+Config path depends on how the plugin was installed:
+
+| Plugin Scope | Config File | Git |
+|--------------|-------------|-----|
+| **project** | `.claude/skills/setup.yaml` | Committed (shared) |
+| **local** | `.claude/skills/setup.local.yaml` | Ignored (personal) |
+| **user** | `.claude/skills/setup.local.yaml` | Ignored (personal) |
+
+**Precedence when reading** (first found wins):
+1. `.claude/skills/setup.local.yaml`
+2. `.claude/skills/setup.yaml`
+3. Skill defaults
+
+### Cache Location
+
+The discovery cache is always stored at `.claude/setup-cache.yaml` (per-project).
+
+### Config Fields
+
+Configured via wizard during `/setup configure`:
 
 | Variable | Description | Example |
 |----------|-------------|---------|

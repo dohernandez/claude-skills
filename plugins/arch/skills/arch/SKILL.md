@@ -328,7 +328,24 @@ The `developer` skill uses `/arch plan` before implementation:
 
 ## Configuration
 
-After discovery, saved to `skills-config.yaml`:
+### Config Location
+
+Config path depends on how the plugin was installed:
+
+| Plugin Scope | Config File | Git |
+|--------------|-------------|-----|
+| **project** | `.claude/skills/arch.yaml` | Committed (shared) |
+| **local** | `.claude/skills/arch.local.yaml` | Ignored (personal) |
+| **user** | `.claude/skills/arch.local.yaml` | Ignored (personal) |
+
+**Precedence when reading** (first found wins):
+1. `.claude/skills/arch.local.yaml`
+2. `.claude/skills/arch.yaml`
+3. Skill defaults
+
+### Config Schema
+
+After discovery, saved to the config file:
 
 ```yaml
 ARCHITECTURE_STYLE: hexagonal

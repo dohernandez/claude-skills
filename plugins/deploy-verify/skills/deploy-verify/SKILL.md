@@ -120,9 +120,18 @@ verification:
 
 ### Save Location
 
-```
-.claude/skills/deploy-verify.yaml
-```
+Config path depends on how the plugin was installed:
+
+| Plugin Scope | Config File | Git |
+|--------------|-------------|-----|
+| **project** | `.claude/skills/deploy-verify.yaml` | Committed (shared) |
+| **local** | `.claude/skills/deploy-verify.local.yaml` | Ignored (personal) |
+| **user** | `.claude/skills/deploy-verify.local.yaml` | Ignored (personal) |
+
+**Precedence when reading** (first found wins):
+1. `.claude/skills/deploy-verify.local.yaml`
+2. `.claude/skills/deploy-verify.yaml`
+3. Skill defaults
 
 ---
 

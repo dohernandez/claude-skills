@@ -103,7 +103,24 @@ gh run list --workflow=deploy.yaml --limit=1
 
 ## Configuration
 
-Configured via wizard during framework installation:
+### Config Location
+
+Config path depends on how the plugin was installed:
+
+| Plugin Scope | Config File | Git |
+|--------------|-------------|-----|
+| **project** | `.claude/skills/deploy.yaml` | Committed (shared) |
+| **local** | `.claude/skills/deploy.local.yaml` | Ignored (personal) |
+| **user** | `.claude/skills/deploy.local.yaml` | Ignored (personal) |
+
+**Precedence when reading** (first found wins):
+1. `.claude/skills/deploy.local.yaml`
+2. `.claude/skills/deploy.yaml`
+3. Skill defaults
+
+### Config Fields
+
+Configured via wizard during `/deploy configure`:
 
 | Variable | Description | Example |
 |----------|-------------|---------|

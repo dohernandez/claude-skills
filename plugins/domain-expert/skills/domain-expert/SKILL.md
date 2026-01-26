@@ -226,6 +226,23 @@ The skill categorizes discovered concepts using DDD patterns:
 
 ---
 
+## Configuration
+
+### Config Location
+
+Config path depends on how the plugin was installed:
+
+| Plugin Scope | Config File | Git |
+|--------------|-------------|-----|
+| **project** | `.claude/skills/domain-expert.yaml` | Committed (shared) |
+| **local** | `.claude/skills/domain-expert.local.yaml` | Ignored (personal) |
+| **user** | `.claude/skills/domain-expert.local.yaml` | Ignored (personal) |
+
+**Precedence when reading** (first found wins):
+1. `.claude/skills/domain-expert.local.yaml`
+2. `.claude/skills/domain-expert.yaml`
+3. Skill defaults
+
 ## Integration
 
 The `domain-expert` skill integrates with:

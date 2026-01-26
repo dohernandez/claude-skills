@@ -119,9 +119,18 @@ commands:
 
 ### Save Location
 
-```
-.claude/skills/tdd.yaml
-```
+Config path depends on how the plugin was installed:
+
+| Plugin Scope | Config File | Git |
+|--------------|-------------|-----|
+| **project** | `.claude/skills/tdd.yaml` | Committed (shared) |
+| **local** | `.claude/skills/tdd.local.yaml` | Ignored (personal) |
+| **user** | `.claude/skills/tdd.local.yaml` | Ignored (personal) |
+
+**Precedence when reading** (first found wins):
+1. `.claude/skills/tdd.local.yaml`
+2. `.claude/skills/tdd.yaml`
+3. Skill defaults
 
 ---
 

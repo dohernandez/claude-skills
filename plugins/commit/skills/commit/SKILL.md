@@ -21,16 +21,16 @@ Create standardized git commits following Conventional Commits specification. An
 
 ## Quick Reference
 
-- **Setup**: `/commit configure` (run once during framework setup)
+- **Setup**: `/commit configure` (run once per project)
 - **Usage**: `/commit` (uses saved scopes)
 - **Update**: `/commit learn` (re-analyze scopes from recent commits)
-- **Config**: `.claude/skills/commit.yaml`
+- **Config**: `.claude/skills/commit.yaml` or `.claude/skills/commit.local.yaml`
 
 ## Commands
 
 | Command | Purpose | When to Use |
 |---------|---------|-------------|
-| `/commit configure` | Analyze project for commit scopes | Framework setup / wizard |
+| `/commit configure` | Analyze project for commit scopes | First time in a project |
 | `/commit learn` | Update scopes from recent commits | After project changes |
 | `/commit` | Create commit using saved scopes | Normal usage |
 
@@ -38,13 +38,13 @@ Create standardized git commits following Conventional Commits specification. An
 
 ## /commit configure
 
-**When**: Framework setup wizard (one-time)
+**When**: First time using `/commit` in a project
 
 **What it does**:
 1. Scans project structure for scope candidates
 2. Analyzes recent commit history for patterns
 3. Proposes scope configuration to user
-4. Saves to `.claude/skills/commit.yaml`
+4. Saves config based on plugin installation scope
 
 ### Discovery Process
 
@@ -109,9 +109,18 @@ rules:
 
 ### Save Location
 
-```
-.claude/skills/commit.yaml
-```
+Config path depends on how the plugin was installed:
+
+| Plugin Scope | Config File | Git |
+|--------------|-------------|-----|
+| **project** | `.claude/skills/commit.yaml` | Committed (shared) |
+| **local** | `.claude/skills/commit.local.yaml` | Ignored (personal) |
+| **user** | `.claude/skills/commit.local.yaml` | Ignored (personal) |
+
+**Precedence when reading** (first found wins):
+1. `.claude/skills/commit.local.yaml`
+2. `.claude/skills/commit.yaml`
+3. Skill defaults
 
 ---
 
@@ -123,7 +132,7 @@ rules:
 1. Re-analyzes project structure
 2. Scans recent commits for new scopes
 3. Proposes updates to config
-4. Updates `.claude/skills/commit.yaml`
+4. Updates existing config file (respects scope)
 
 ---
 
@@ -131,7 +140,10 @@ rules:
 
 **When**: Creating a commit
 
-**Requires**: `.claude/skills/commit.yaml` exists (or uses defaults)
+**Reads config from** (first found):
+1. `.claude/skills/commit.local.yaml`
+2. `.claude/skills/commit.yaml`
+3. Uses defaults if no config found
 
 ### Workflow
 
@@ -236,7 +248,8 @@ refactor(db): extract query builder to separate module
 ## Config Schema
 
 ```yaml
-# .claude/skills/commit.yaml
+# .claude/skills/commit.yaml (project scope - shared)
+# .claude/skills/commit.local.yaml (local/user scope - personal)
 version: 1
 discovered_at: "ISO timestamp"
 

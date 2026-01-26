@@ -48,7 +48,24 @@ Guide systematic debugging of production service issues by analyzing alerts and 
 
 ## Configuration
 
-Configured via wizard during framework installation:
+### Config Location
+
+Config path depends on how the plugin was installed:
+
+| Plugin Scope | Config File | Git |
+|--------------|-------------|-----|
+| **project** | `.claude/skills/debugger.yaml` | Committed (shared) |
+| **local** | `.claude/skills/debugger.local.yaml` | Ignored (personal) |
+| **user** | `.claude/skills/debugger.local.yaml` | Ignored (personal) |
+
+**Precedence when reading** (first found wins):
+1. `.claude/skills/debugger.local.yaml`
+2. `.claude/skills/debugger.yaml`
+3. Skill defaults
+
+### Config Fields
+
+Configured via wizard during `/debugger configure`:
 
 | Variable | Description | Example |
 |----------|-------------|---------|

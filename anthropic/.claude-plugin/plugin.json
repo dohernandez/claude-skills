@@ -1,6 +1,6 @@
 {
   "name": "anthropic",
-  "description": "Claude Code Developer Framework - Complete developer workflow with 21 integrated skills",
+  "description": "Claude Code Developer Framework - Complete developer workflow with 22 integrated skills",
   "version": "1.0.0",
   "author": {
     "name": "GenLayer Labs",
@@ -21,7 +21,12 @@
     "type": "git",
     "url": "https://github.com/genlayerlabs/skills.git"
   },
+  "hooks": "./hooks/hooks.json",
   "skills": {
+    "meta": [
+      "framework",
+      "create-skill"
+    ],
     "core": [
       "commit",
       "pr-create",
@@ -32,7 +37,6 @@
       "workflow",
       "workflow-setup",
       "workflow-finish",
-      "create-skill",
       "linear",
       "slack"
     ],
@@ -47,6 +51,10 @@
       "deploy",
       "deploy-verify"
     ]
+  },
+  "postInstall": {
+    "message": "Run '/framework configure' to set up the framework for your project.",
+    "setupHook": "Run 'claude --init' to validate prerequisites."
   },
   "configuration": {
     "wizard": {

@@ -49,9 +49,12 @@ framework:
       default: ""
       required: false
 
-  # Skills included in framework bundle (21 total)
+  # Skills included in framework bundle (22 total)
   skills:
-    # Core skills (12) - Drop-in, no customization needed
+    # Meta skills (2) - Framework management
+    - framework
+    - create-skill
+    # Core skills (11) - Drop-in, no customization needed
     - commit
     - pr-create
     - pr-merge
@@ -61,7 +64,6 @@ framework:
     - workflow
     - workflow-setup
     - workflow-finish
-    - create-skill
     - linear
     - slack
     # Customizable skills (9) - Have /skill configure mode
@@ -88,7 +90,19 @@ framework:
 
 skills:
   # ----------------------------------------
-  # CORE SKILLS (12)
+  # META SKILLS (2)
+  # ----------------------------------------
+
+  framework:
+    description: "Configure the framework after installation - orchestrates all skill configurations"
+    tags: [framework, configuration, setup, meta]
+
+  create-skill:
+    description: "Create new skills following the skill architecture"
+    tags: [skills, meta]
+
+  # ----------------------------------------
+  # CORE SKILLS (11)
   # ----------------------------------------
 
   commit:
@@ -131,10 +145,6 @@ skills:
     description: "Complete workflow with cleanup (branches, worktrees)"
     tags: [workflow, git, cleanup]
     configure: true  # Has /workflow-finish configure (shared with workflow)
-
-  create-skill:
-    description: "Create new skills following the skill architecture"
-    tags: [skills, meta]
 
   linear:
     description: "Linear issue management and ticket workflows"

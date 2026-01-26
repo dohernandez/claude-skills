@@ -8,47 +8,82 @@ Skills are structured configuration files that guide AI assistants through compl
 
 ## Installation
 
-### Install Full Framework (21 skills)
+### Install Full Framework (22 skills)
 
 ```bash
-/marketplace add genlayerlabs/skills/anthropic/framework
+# Add the marketplace
+/plugin marketplace add https://github.com/genlayerlabs/skills.git
+
+# Install the framework plugin
+/plugin install anthropic@genlayerlabs-skills
 ```
 
 This installs:
-- All 21 framework skills
+- All 22 framework skills (2 meta + 11 core + 9 customizable)
 - Framework infrastructure (Taskfile, scripts, hooks)
-- Runs installation wizard for project configuration
+
+**After installation, run:**
+
+```bash
+# Validate prerequisites
+claude --init
+
+# Configure the framework
+/framework configure
+```
+
+The `/framework configure` wizard will:
+1. Ask for project settings (PROJECT_NAME, LINT_COMMAND, etc.)
+2. Run `/skill configure` for each skill that requires configuration
+3. Save all configs to `.claude/skills-config.env` and `.claude/skills/*.yaml`
 
 ### Install Individual Skill
 
 ```bash
-/marketplace add genlayerlabs/skills/anthropic/commit
+# Add the marketplace (if not already added)
+/plugin marketplace add https://github.com/genlayerlabs/skills.git
+
+# Install a specific skill
+/plugin install anthropic/commit@genlayerlabs-skills
 ```
 
 Installs:
 - The specified skill
 - Minimal framework dependencies (Taskfile, validation scripts)
-- Runs `/commit configure` if skill requires configuration
+
+**After installation:**
+```bash
+# If the skill requires configuration
+/commit configure
+```
 
 ### Install Standalone Skill
 
+Standalone skills are not part of the framework bundle:
+
 ```bash
-/marketplace add genlayerlabs/skills/anthropic/node-installer
+/plugin install anthropic/node-installer@genlayerlabs-skills
 ```
 
-Installs:
-- The standalone skill (not part of framework bundle)
-- Runs `/node-installer configure` if skill requires configuration
+**After installation, run configure if required:**
+```bash
+/node-installer configure
+```
 
 ## Installation Behavior
 
-| Command | What Gets Installed | Configure Runs |
-|---------|---------------------|----------------|
-| `.../anthropic/framework` | _framework/ + 21 skills | Framework wizard + all skills with `configure: true` |
-| `.../anthropic/commit` | commit/ + minimal deps | `/commit configure` (if skill has configure) |
-| `.../anthropic/node-installer` | node-installer/ only | `/node-installer configure` (if skill has configure) |
+| Step | Framework Install | Individual Skill Install |
+|------|-------------------|--------------------------|
+| 1. Plugin install | `/plugin install anthropic@...` | `/plugin install anthropic/commit@...` |
+| 2. Validate | `claude --init` | `claude --init` |
+| 3. Configure | `/framework configure` | `/commit configure` |
 
-**Key principle:** Any skill with `configure: true` in the manifest will run its configure step on install, ensuring consistent behavior whether installed as part of the framework or individually.
+**Key principle:** Configuration is a separate step after installation. Run `/framework configure` for the full framework, or `/skill configure` for individual skills.
+
+**Why separate steps?**
+- Claude Code plugins don't have automatic post-install wizards
+- Users have full control over what gets configured
+- Configuration can be re-run anytime to update settings
 
 ## Post-Installation: Configure/Re-Configure
 
@@ -64,9 +99,16 @@ You can run or re-run configuration at any time:
 /commit configure
 ```
 
-## Framework Skills (21)
+## Framework Skills (22)
 
-### Core Skills (12) - Drop-in, no customization needed
+### Meta Skills (2) - Framework management
+
+| Skill | Command | Description |
+|-------|---------|-------------|
+| `framework` | `/framework` | Configure framework after installation |
+| `create-skill` | `/create-skill` | Create new skills following the architecture |
+
+### Core Skills (11) - Drop-in, no customization needed
 
 | Skill | Command | Description |
 |-------|---------|-------------|
@@ -79,7 +121,6 @@ You can run or re-run configuration at any time:
 | `workflow` | `/workflow` | Main development workflow orchestrator |
 | `workflow-setup` | `/workflow-setup` | Initialize workflow with branch creation |
 | `workflow-finish` | `/workflow-finish` | Complete workflow with cleanup |
-| `create-skill` | `/create-skill` | Create new skills following the architecture |
 | `linear` | `/linear` | Linear issue management and ticket workflows |
 | `slack` | `/slack` | Slack integration for notifications |
 

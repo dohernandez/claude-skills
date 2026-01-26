@@ -174,34 +174,20 @@ scopes:
 
 commands:
   - name: install
-    description: "Install skills by tier or individually"
-    trigger: "/framework install <tier|skills>"
+    description: "Add specific skills after initial setup"
+    trigger: "/framework install <skills>"
     procedure:
-      - step: "Parse arguments"
+      - step: "Parse skill names"
         detail: |
-          Determine if argument is a tier name or comma-separated skill list:
-          - If "minimal", "standard", or "full": install that tier
-          - Otherwise: treat as comma-separated skill names
+          Parse comma-separated skill names from argument.
+          Validate each skill name exists in the marketplace.
 
-      - step: "Ask for scope"
+      - step: "Determine scope"
         detail: |
-          Use AskUserQuestion to ask which scope to use:
+          Check FRAMEWORK_TIER in .claude/skills-config.env to determine
+          which scope was used during initial setup.
 
-          Options:
-          1. project (Recommended) - Shared with team via .claude/settings.json
-          2. local - Project-only, gitignored via .claude/settings.local.json
-          3. user - Global installation via ~/.claude/settings.json
-
-      - step: "Resolve skills to install"
-        detail: |
-          If tier specified:
-          - minimal: 11 skills
-          - standard: 16 skills (minimal + 5)
-          - full: 22 skills (all)
-
-          If comma-separated skills:
-          - Split by comma
-          - Validate each skill name exists
+          If not found, ask user for scope.
 
       - step: "Install each skill"
         detail: |
@@ -222,7 +208,7 @@ commands:
           Display:
           - Number of skills installed successfully
           - Number of skills that failed (with names)
-          - Next steps: /framework configure, /framework list
+          - Suggest running /<skill> configure for new skills
 
   - name: uninstall
     description: "Uninstall a specific skill or all skills"
@@ -352,9 +338,45 @@ commands:
           Display number of skills updated successfully and any failures.
 
   - name: configure
-    description: "Configure installed skills"
+    description: "Main command - Install skills by tier and configure them"
     trigger: "/framework configure or /framework"
     procedure:
+      - step: "Phase 0: Tier Selection"
+        detail: |
+          Ask user which skill tier they want using AskUserQuestion:
+
+          Options:
+          1. Minimal (Recommended) - 11 skills
+             commit, create-skill, docs-refresh, linear, pr-create, pr-merge,
+             setup, task, bugfix, workflow-finish, workflow-setup
+          2. Standard - 16 skills
+             Minimal + deploy, deploy-verify, developer, code, test
+          3. Full - 22 skills
+             All available skills
+
+      - step: "Phase 0: Scope Selection"
+        detail: |
+          Ask user which scope to use for installation:
+
+          Options:
+          1. project (Recommended) - Shared with team via .claude/settings.json
+          2. local - Project-only, gitignored
+          3. user - Global installation
+
+      - step: "Phase 0: Install Skills"
+        detail: |
+          For each skill in the selected tier, run:
+          ```bash
+          claude plugin install <skill>@dohernandez-claude-skills --scope <scope>
+          ```
+
+          Show progress:
+          [1/N] Installing <skill>...
+            → claude plugin install <skill>@dohernandez-claude-skills --scope <scope>
+            ✓ Installed
+
+          Save selected tier to .claude/skills-config.env as FRAMEWORK_TIER
+
       - step: "Phase 1: Framework Configuration"
         detail: |
           Ask for project-level settings using AskUserQuestion:
@@ -382,6 +404,8 @@ commands:
       - step: "Phase 3: Summary"
         detail: |
           Show summary:
+          - Selected tier and number of skills installed
+          - Scope used for installation
           - List of configured skills with config file paths
           - List of skipped skills (usable with defaults)
           - Any skills that failed configuration

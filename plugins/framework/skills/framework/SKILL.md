@@ -37,11 +37,24 @@ Configure the Claude Code Developer Framework after installation. This skill orc
 
 ## Configuration Workflow
 
+### Phase 0: Tier Selection
+
+Ask which skill tier the user wants:
+
+| Tier | Skills | Description |
+|------|--------|-------------|
+| **Minimal** (Recommended) | 11 | commit, create-skill, docs-refresh, linear, pr-create, pr-merge, setup, task, bugfix, workflow-finish, workflow-setup |
+| **Standard** | 16 | Minimal + deploy, deploy-verify, developer, code, test |
+| **Full** | 23 | All available skills including arch, domain-expert, tdd, debugger, slack, workflow |
+
+Save selected tier to `.claude/skills-config.env` as `FRAMEWORK_TIER`.
+
 ### Phase 1: Framework-Level Configuration
 
 Ask for project-level settings and save to `.claude/skills-config.env`:
 
 ```
+FRAMEWORK_TIER=<minimal|standard|full>
 PROJECT_NAME=<project-name>
 LINT_COMMAND=<lint-command>
 TEST_COMMAND=<test-command>
@@ -61,37 +74,52 @@ PRECOMMIT_COMMAND=<precommit-command>
 
 ### Phase 2: Skill-Level Configuration
 
-For each skill that has `configure: true` in the manifest, run its configure command.
+For each skill in the selected tier, offer to configure or skip.
 
-**Skills requiring configuration (in order):**
+**IMPORTANT: All skills can be skipped**
+- For each skill, ask: "Configure <skill>?" with options [Configure, Skip]
+- **Skip**: Skill remains installed and usable with defaults, no config file created
+- **Configure**: Run the skill's configure procedure
 
-1. `/arch configure` - Architecture style and layers
-2. `/code configure` - Code style from linter configs
-3. `/tdd configure` - Test framework and patterns
-4. `/commit configure` - Commit scopes from project structure
-5. `/developer configure` - Development patterns
-6. `/domain configure` - Domain knowledge
-7. `/workflow configure` - Worktree and IDE preferences
+**Skills by tier:**
+
+**Minimal tier (11 skills):**
+1. `/commit configure` - Commit scopes
+2. `/linear configure` - Linear workspace
+3. `/docs-refresh configure` - Documentation paths
+4. `/setup configure` - Setup commands
+5. `/task configure` - Task management
+
+**Standard tier adds (+5 skills):**
+6. `/code configure` - Code style from linter configs
+7. `/test configure` - Test framework
 8. `/deploy configure` - Deployment commands
 9. `/deploy-verify configure` - Verification endpoints
-10. `/debugger configure` - Log commands
-11. `/docs-refresh configure` - Documentation paths
-12. `/setup configure` - Setup commands
-13. `/linear configure` - Linear workspace (if using Linear)
+10. `/developer configure` - Development patterns (simple version)
+
+**Full tier adds (+7 skills):**
+11. `/arch configure` - Architecture style and layers
+12. `/tdd configure` - Test framework and patterns
+13. `/domain-expert configure` - Domain knowledge
+14. `/debugger configure` - Log commands
+15. `/workflow configure` - Worktree and IDE preferences
+16. `/slack configure` - Slack integration
 
 **For each skill:**
-1. Announce: "Configuring <skill>..."
-2. Run the skill's configure procedure
-3. Wait for user confirmation
-4. Move to next skill
+1. Ask: "Configure <skill>?" [Configure / Skip]
+2. If Configure: Run the skill's configure procedure
+3. If Skip: Continue to next skill
+4. Show result (configured/skipped)
 
 ### Phase 3: Verification
 
 After all skills are configured:
 
-1. Show summary of configured skills
-2. Show location of config files
-3. Remind user they can re-configure individual skills anytime
+1. Show selected tier
+2. Show summary of configured skills
+3. Show skipped skills (usable with defaults)
+4. Show location of config files
+5. Remind user they can re-configure individual skills anytime
 
 ## Output Format
 
@@ -100,44 +128,64 @@ After all skills are configured:
 ║  Claude Code Developer Framework - Configuration Wizard      ║
 ╚══════════════════════════════════════════════════════════════╝
 
+Phase 0: Tier Selection
+───────────────────────
+Which skill tier do you want?
+1. Minimal (Recommended) - 11 skills
+   commit, create-skill, docs-refresh, linear, pr-create, pr-merge,
+   setup, task, bugfix, workflow-finish, workflow-setup
+2. Standard - 16 skills
+   Minimal + deploy, deploy-verify, developer, code, test
+3. Full - 23 skills
+   All available skills
+
+Selected: Minimal
+
 Phase 1: Framework Configuration
 ────────────────────────────────
 PROJECT_NAME: my-project
-LINT_COMMAND: npm run lint
-TEST_COMMAND: npm test
-TEST_WATCH_COMMAND: npm test -- --watch
-TEST_COVERAGE_COMMAND: npm test -- --coverage
-PRECOMMIT_COMMAND: (using lint + test)
+LINT_COMMAND: (none)
+TEST_COMMAND: (none)
+PRECOMMIT_COMMAND: (none)
 
 ✓ Saved to .claude/skills-config.env
 
 Phase 2: Skill Configuration
 ────────────────────────────
-[1/13] Configuring arch...
-  → Architecture style: hexagonal
-  → Layers: domain, application, infrastructure
-  ✓ Saved to .claude/skills/arch.yaml
+[1/5] commit - Configure? [Configure / Skip]
+  → Configured: conventional commits, scopes: api, core, infra
+  ✓ Saved to .claude/skills/commit.yaml
 
-[2/13] Configuring code...
-  → Detected: biome.json, .editorconfig
-  ✓ Saved to .claude/skills/code.yaml
+[2/5] linear - Configure? [Configure / Skip]
+  → Skipped (usable with defaults)
 
-... (continue for each skill)
+[3/5] docs-refresh - Configure? [Configure / Skip]
+  → Configured: docs/ directory
+  ✓ Saved to .claude/skills/docs-refresh.yaml
+
+... (continue for each skill in tier)
 
 Phase 3: Summary
 ────────────────
 ✓ Framework configured successfully!
 
-Config files created:
-  • .claude/skills-config.env (framework settings)
-  • .claude/skills/arch.yaml
-  • .claude/skills/code.yaml
-  • .claude/skills/tdd.yaml
-  ... (list all)
+Tier: Minimal (11 skills)
+
+Configured skills:
+  • commit        .claude/skills/commit.yaml
+  • docs-refresh  .claude/skills/docs-refresh.yaml
+  • setup         .claude/skills/setup.yaml
+
+Skipped skills (usable with defaults):
+  • linear
+  • task
+
+Skills without configuration:
+  • create-skill, pr-create, pr-merge, bugfix, workflow-finish, workflow-setup
 
 To re-configure a specific skill:
-  /arch configure
-  /tdd configure
+  /commit configure
+  /linear configure
   etc.
 ```
 

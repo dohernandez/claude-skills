@@ -11,9 +11,10 @@ tags:
 
 purpose: |
   Orchestrates configuration of the entire framework:
-  1. Framework-level settings (PROJECT_NAME, LINT_COMMAND, etc.)
-  2. Skill-level configuration (/skill configure for each skill)
-  3. Verification and summary
+  1. Tier selection (Minimal, Standard, Full)
+  2. Framework-level settings (PROJECT_NAME, LINT_COMMAND, etc.)
+  3. Skill-level configuration (/skill configure for each skill)
+  4. Verification and summary
 
   Run after:
   - Installing the framework plugin
@@ -25,11 +26,79 @@ owns:
   - "Orchestrating skill configuration"
   - ".claude/skills-config.env management"
 
+# Skill Tiers - defines which skills are included in each tier
+tiers:
+  minimal:
+    description: "Core workflow skills for any project"
+    skills:
+      - commit
+      - create-skill
+      - docs-refresh
+      - linear
+      - pr-create
+      - pr-merge
+      - setup
+      - task
+      - bugfix
+      - workflow-finish
+      - workflow-setup
+
+  standard:
+    description: "Minimal + deployment and development skills"
+    includes: minimal
+    additional_skills:
+      - deploy
+      - deploy-verify
+      - developer  # simple version
+      - code
+      - test
+
+  full:
+    description: "All available skills"
+    skills:
+      - arch
+      - bugfix
+      - code
+      - commit
+      - create-skill
+      - debugger
+      - deploy
+      - deploy-verify
+      - developer
+      - docs-refresh
+      - domain-expert
+      - linear
+      - pr-create
+      - pr-merge
+      - setup
+      - slack
+      - task
+      - tdd
+      - test
+      - workflow
+      - workflow-finish
+      - workflow-setup
+
 commands:
   - name: configure
     description: "Run full configuration wizard"
     trigger: "/framework configure or /framework"
     procedure:
+      - step: "Phase 0: Tier Selection"
+        detail: |
+          Ask user which skill tier they want using AskUserQuestion:
+
+          Options:
+          1. Minimal (Recommended) - 11 skills
+             commit, create-skill, docs-refresh, linear, pr-create, pr-merge,
+             setup, task, bugfix, workflow-finish, workflow-setup
+          2. Standard - 16 skills
+             Minimal + deploy, deploy-verify, developer, code, test
+          3. Full - 23 skills
+             All available skills including arch, domain-expert, tdd, etc.
+
+          Save selected tier to .claude/skills-config.env as FRAMEWORK_TIER
+
       - step: "Phase 1: Framework Configuration"
         detail: |
           Ask for project-level settings using AskUserQuestion:
@@ -45,33 +114,49 @@ commands:
 
       - step: "Phase 2: Skill Configuration"
         detail: |
-          For each skill with configure: true in manifest, run /skill configure:
+          For each skill in the selected tier that has configuration options:
 
-          Order (dependencies first):
-          1. arch - Architecture style (others may depend on layers)
-          2. code - Code style (from linter configs)
-          3. tdd - Test patterns
-          4. commit - Commit scopes
-          5. developer - Development patterns
-          6. domain - Domain knowledge
-          7. workflow - Worktree preferences
+          **IMPORTANT: Allow skipping any skill**
+          For each skill, ask:
+          - "Configure <skill>?" with options: [Configure, Skip]
+          - If Skip: skill remains usable with defaults, no config file created
+          - If Configure: run the skill's configure procedure
+
+          Skills to configure based on tier:
+
+          Minimal tier skills (in order):
+          1. commit - Commit scopes
+          2. linear - Linear workspace (optional)
+          3. docs-refresh - Doc paths
+          4. setup - Setup commands
+          5. task - Task management
+
+          Standard tier adds:
+          6. code - Code style (from linter configs)
+          7. test - Test framework
           8. deploy - Deployment commands
           9. deploy-verify - Verification
-          10. debugger - Log commands
-          11. docs-refresh - Doc paths
-          12. setup - Setup commands
-          13. linear - Linear workspace (optional)
+          10. developer - Development patterns (simple version)
+
+          Full tier adds:
+          11. arch - Architecture style
+          12. tdd - Test patterns
+          13. domain-expert - Domain knowledge
+          14. debugger - Log commands
+          15. workflow - Worktree preferences
 
           For each skill:
-          - Announce which skill is being configured
-          - Run the skill's configure procedure
-          - Show result (success/failure)
-          - Continue to next skill
+          - Ask "Configure <skill>?" [Configure / Skip]
+          - If Configure: run skill's configure procedure
+          - If Skip: continue to next skill
+          - Show result (configured/skipped)
 
       - step: "Phase 3: Verification"
         detail: |
           Show summary:
+          - Selected tier
           - List of configured skills with config file paths
+          - List of skipped skills (usable with defaults)
           - Any skills that failed configuration
           - Instructions for re-configuring individual skills
 

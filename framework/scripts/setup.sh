@@ -32,7 +32,7 @@ PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && p
 # Project root is current working directory (where claude --init was run)
 PROJECT_ROOT="${PWD}"
 
-# Skills that have configure mode (16 total)
+# Skills that have configure mode (17 total)
 CONFIGURABLE_SKILLS=(
     "arch"
     "code"
@@ -46,6 +46,7 @@ CONFIGURABLE_SKILLS=(
     "linear"
     "setup"
     "task"
+    "test"
     "tdd"
     "workflow-finish"
     "workflow-setup"

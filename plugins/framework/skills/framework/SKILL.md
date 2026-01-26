@@ -41,6 +41,8 @@ Ask for project-level settings and save to `.claude/skills-config.env`:
 PROJECT_NAME=<project-name>
 LINT_COMMAND=<lint-command>
 TEST_COMMAND=<test-command>
+TEST_WATCH_COMMAND=<test-watch-command>
+TEST_COVERAGE_COMMAND=<test-coverage-command>
 PRECOMMIT_COMMAND=<precommit-command>
 ```
 
@@ -49,7 +51,9 @@ PRECOMMIT_COMMAND=<precommit-command>
 1. **PROJECT_NAME** (required): "What is your project name?"
 2. **LINT_COMMAND** (optional): "What command runs your linter? (e.g., npm run lint, task lint)"
 3. **TEST_COMMAND** (optional): "What command runs your tests? (e.g., npm test, task test)"
-4. **PRECOMMIT_COMMAND** (optional): "What command runs pre-commit checks? (leave blank for lint + test)"
+4. **TEST_WATCH_COMMAND** (optional): "What command runs tests in watch mode? (e.g., npm test -- --watch)"
+5. **TEST_COVERAGE_COMMAND** (optional): "What command runs tests with coverage? (e.g., npm test -- --coverage)"
+6. **PRECOMMIT_COMMAND** (optional): "What command runs pre-commit checks? (leave blank for lint + test)"
 
 ### Phase 2: Skill-Level Configuration
 
@@ -97,6 +101,8 @@ Phase 1: Framework Configuration
 PROJECT_NAME: my-project
 LINT_COMMAND: npm run lint
 TEST_COMMAND: npm test
+TEST_WATCH_COMMAND: npm test -- --watch
+TEST_COVERAGE_COMMAND: npm test -- --coverage
 PRECOMMIT_COMMAND: (using lint + test)
 
 ✓ Saved to .claude/skills-config.env
@@ -144,6 +150,8 @@ Framework Config: .claude/skills-config.env
   PROJECT_NAME: my-project ✓
   LINT_COMMAND: npm run lint ✓
   TEST_COMMAND: npm test ✓
+  TEST_WATCH_COMMAND: npm test -- --watch ✓
+  TEST_COVERAGE_COMMAND: npm test -- --coverage ✓
   PRECOMMIT_COMMAND: (default) ✓
 
 Skill Configurations:

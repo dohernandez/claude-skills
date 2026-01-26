@@ -37,7 +37,9 @@ commands:
           1. PROJECT_NAME (required): Project name for generated code/docs
           2. LINT_COMMAND (optional): Command to run linter
           3. TEST_COMMAND (optional): Command to run tests
-          4. PRECOMMIT_COMMAND (optional): Pre-commit validation command
+          4. TEST_WATCH_COMMAND (optional): Command for test watch mode
+          5. TEST_COVERAGE_COMMAND (optional): Command for test coverage
+          6. PRECOMMIT_COMMAND (optional): Pre-commit validation command
 
           Save to .claude/skills-config.env
 
@@ -83,6 +85,8 @@ commands:
           - PROJECT_NAME
           - LINT_COMMAND
           - TEST_COMMAND
+          - TEST_WATCH_COMMAND
+          - TEST_COVERAGE_COMMAND
           - PRECOMMIT_COMMAND
 
           Mark each as ✓ if set, ✗ if missing
@@ -160,6 +164,8 @@ outputs:
       PROJECT_NAME=my-project
       LINT_COMMAND=npm run lint
       TEST_COMMAND=npm test
+      TEST_WATCH_COMMAND=npm test -- --watch
+      TEST_COVERAGE_COMMAND=npm test -- --coverage
       PRECOMMIT_COMMAND=
 
   - name: skill-configs

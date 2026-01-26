@@ -12,7 +12,7 @@ Skills are structured configuration files that guide AI assistants through compl
 # 1. Add the marketplace (once)
 /plugin marketplace add https://github.com/dohernandez/claude-skills.git
 
-# 2. Install full framework (22 skills)
+# 2. Install full framework (23 skills)
 /plugin install framework@dohernandez-claude-skills
 
 # 3. Initialize - REQUIRED (copies skills to your project)
@@ -43,13 +43,13 @@ After these steps, skills are available as `/commit`, `/tdd`, `/linear`, etc.
 └─────────────────────────────────────────────────────────────┘
 ```
 
-## Available Plugins (23)
+## Available Plugins (24)
 
 Install the full framework or any individual skill:
 
 | Plugin | Description |
 |--------|-------------|
-| `framework` | **All 22 skills** - Complete developer workflow |
+| `framework` | **All 23 skills** - Complete developer workflow |
 | `arch` | Architecture patterns, layer boundaries, and structural validation |
 | `bugfix` | Systematic bug investigation with root cause analysis |
 | `code` | Code style enforcement and project conventions |
@@ -67,16 +67,17 @@ Install the full framework or any individual skill:
 | `setup` | Project setup and environment configuration |
 | `slack` | Slack notifications and team integrations |
 | `task` | Task execution with validation checkpoints |
+| `test` | Smart test runner with watch mode and coverage |
 | `tdd` | Test-driven development: tests first, then code |
 | `workflow` | Development workflow orchestration |
 | `workflow-finish` | Cleanup branches and worktrees after PR merge |
 | `workflow-setup` | Setup git worktree for ticket-based development |
 
-**Same result:** Installing `framework` = Installing all 22 individual plugins
+**Same result:** Installing `framework` = Installing all 23 individual plugins
 
 ## Installation Options
 
-### Option A: Install Full Framework (22 skills)
+### Option A: Install Full Framework (23 skills)
 
 ```bash
 # 1. Add the marketplace (once)
@@ -96,7 +97,7 @@ claude --init
 ```
 your-project/
 ├── .claude/
-│   ├── skills/           # All 22 skills
+│   ├── skills/           # All 23 skills
 │   │   ├── commit/
 │   │   ├── linear/
 │   │   ├── tdd/
@@ -149,7 +150,7 @@ your-project/
 - `claude --init` is required for ALL skills - it copies them from the plugin cache to your project
 - Skills marked with ✓ in the Configure column below won't work properly without running `/skill configure`
 
-## Framework Skills (22)
+## Framework Skills (23)
 
 ### Meta Skills (2)
 
@@ -158,7 +159,7 @@ your-project/
 | `framework` | ✓ | Configure all skills at once |
 | `create-skill` | | Scaffold new skills |
 
-### Core Skills (11)
+### Core Skills (12)
 
 | Skill | Configure | Description |
 |-------|:---------:|-------------|
@@ -167,6 +168,7 @@ your-project/
 | `pr-merge` | | Merge pull requests with validation |
 | `bugfix` | | Structured bug investigation |
 | `task` | ✓ | Task execution and management |
+| `test` | ✓ | Smart test runner with watch and coverage |
 | `tdd` | ✓ | Test-driven development workflow |
 | `workflow` | | Development workflow orchestrator |
 | `workflow-setup` | ✓ | Initialize workflow with branch creation |

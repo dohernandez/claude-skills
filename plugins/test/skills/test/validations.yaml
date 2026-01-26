@@ -1,0 +1,25 @@
+version: 1
+
+validations:
+  on_stop:
+    - id: tests-executed
+      name: "Tests were executed"
+      type: command
+      command: "echo 'Test execution completed'"
+      expected: "Test execution completed"
+      on_fail: "Test skill completed"
+
+  on_warn:
+    - id: config-exists
+      name: "Test configuration exists"
+      type: command
+      command: "test -f .claude/skills/test.yaml && echo 'configured' || echo 'not configured'"
+      expected: "configured"
+      message: "Consider running /test configure for smart features like --affected"
+
+    - id: test-command-configured
+      name: "TEST_COMMAND is configured"
+      type: command
+      command: "grep -q 'TEST_COMMAND=' .claude/skills-config.env 2>/dev/null && echo 'found' || echo 'missing'"
+      expected: "found"
+      message: "TEST_COMMAND not in skills-config.env - /test will use framework defaults"

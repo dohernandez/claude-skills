@@ -50,6 +50,8 @@ During installation, the wizard asks for these settings (saved to `.claude/skill
 | `PROJECT_NAME` | Project name (required) | `my-app` |
 | `LINT_COMMAND` | Run linter (optional) | `npm run lint`, `task lint` |
 | `TEST_COMMAND` | Run tests (optional) | `npm test`, `task test` |
+| `TEST_WATCH_COMMAND` | Run tests in watch mode (optional) | `npm test -- --watch` |
+| `TEST_COVERAGE_COMMAND` | Run tests with coverage (optional) | `npm test -- --coverage` |
 | `PRECOMMIT_COMMAND` | Pre-commit validation (optional) | `task precommit` |
 
 If `LINT_COMMAND` or `TEST_COMMAND` are not configured, those tasks will be skipped.
@@ -79,6 +81,12 @@ task -t .claude/Taskfile.yaml lint
 
 # Run project tests (uses TEST_COMMAND from config)
 task -t .claude/Taskfile.yaml test
+
+# Run tests in watch mode (uses TEST_WATCH_COMMAND from config)
+task -t .claude/Taskfile.yaml test:watch
+
+# Run tests with coverage (uses TEST_COVERAGE_COMMAND from config)
+task -t .claude/Taskfile.yaml test:coverage
 
 # Run pre-commit checks (lint + test, or PRECOMMIT_COMMAND if set)
 task -t .claude/Taskfile.yaml precommit

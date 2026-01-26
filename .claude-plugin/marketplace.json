@@ -9,7 +9,7 @@
     {
       "name": "framework",
       "source": "framework",
-      "description": "Complete developer workflow framework with 22 integrated skills"
+      "description": "Complete developer workflow framework with 23 integrated skills"
     },
     {
       "name": "arch",
@@ -95,6 +95,11 @@
       "name": "task",
       "source": "plugins/task",
       "description": "Task execution with validation checkpoints"
+    },
+    {
+      "name": "test",
+      "source": "plugins/test",
+      "description": "Smart test runner with watch mode, coverage, and path-specific testing"
     },
     {
       "name": "tdd",

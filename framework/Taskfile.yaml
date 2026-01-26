@@ -17,6 +17,8 @@ vars:
   # Saved to .claude/skills-config.env
   LINT_COMMAND: '{{.LINT_COMMAND | default ""}}'
   TEST_COMMAND: '{{.TEST_COMMAND | default ""}}'
+  TEST_WATCH_COMMAND: '{{.TEST_WATCH_COMMAND | default ""}}'
+  TEST_COVERAGE_COMMAND: '{{.TEST_COVERAGE_COMMAND | default ""}}'
   PRECOMMIT_COMMAND: '{{.PRECOMMIT_COMMAND | default ""}}'
 
 # NOTE: dotenv is intentionally NOT set here to allow including this file.
@@ -37,6 +39,16 @@ tasks:
     desc: "Run project tests"
     cmds:
       - cmd: '{{if .TEST_COMMAND}}{{.TEST_COMMAND}}{{else}}echo "TEST_COMMAND not configured - skipping"{{end}}'
+
+  test:watch:
+    desc: "Run tests in watch mode"
+    cmds:
+      - cmd: '{{if .TEST_WATCH_COMMAND}}{{.TEST_WATCH_COMMAND}}{{else}}echo "TEST_WATCH_COMMAND not configured - skipping"{{end}}'
+
+  test:coverage:
+    desc: "Run tests with coverage report"
+    cmds:
+      - cmd: '{{if .TEST_COVERAGE_COMMAND}}{{.TEST_COVERAGE_COMMAND}}{{else}}echo "TEST_COVERAGE_COMMAND not configured - skipping"{{end}}'
 
   precommit:
     desc: "Run pre-commit checks"

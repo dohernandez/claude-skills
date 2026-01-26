@@ -1,0 +1,46 @@
+version: 1
+
+# Skills that may invoke /test
+invoked_by:
+  - skill: tdd
+    when: "Running tests in TDD cycle"
+    mode: "default, watch"
+
+  - skill: developer
+    when: "Before completing work"
+    mode: "affected, default"
+
+  - skill: bugfix
+    when: "Verifying bug fix"
+    mode: "default, path"
+
+  - skill: workflow
+    when: "Before PR creation"
+    mode: "default"
+
+  - skill: task
+    when: "Validating task completion"
+    mode: "affected, default"
+
+# External dependencies
+dependencies:
+  - name: "task"
+    description: "Taskfile CLI for running test commands"
+    check: "command -v task"
+    install: "brew install go-task/tap/go-task"
+
+  - name: "git"
+    description: "Git for detecting changed files (--affected mode)"
+    check: "command -v git"
+
+# Framework-specific dependencies (optional)
+optional_dependencies:
+  - name: "pytest-watch"
+    when: "Python projects using --watch mode"
+    check: "pip show pytest-watch"
+    install: "pip install pytest-watch"
+
+  - name: "watchexec"
+    when: "Go projects using --watch mode"
+    check: "command -v watchexec"
+    install: "brew install watchexec"

@@ -99,6 +99,10 @@ Installing skills...
 ... (continues for all skills in tier)
 
 ✓ Installed 11 skills
+
+Saved to .claude/skills-config.env:
+  FRAMEWORK_TIER=minimal
+  FRAMEWORK_SCOPE=project
 ```
 
 ### Phase 1: Framework Configuration
@@ -290,10 +294,11 @@ Commands:
 
 ### `/framework uninstall <skill>`
 
-Remove a specific skill.
+Remove a specific skill. Reads `FRAMEWORK_SCOPE` from `.claude/skills-config.env` to determine which scope to use.
 
 ```
 Uninstalling: commit
+  Scope: project (from .claude/skills-config.env)
   → claude plugin uninstall commit@dohernandez-claude-skills --scope project
   ✓ Uninstalled
 

@@ -184,7 +184,7 @@ commands:
 
       - step: "Determine scope"
         detail: |
-          Check FRAMEWORK_TIER in .claude/skills-config.env to determine
+          Read FRAMEWORK_SCOPE from .claude/skills-config.env to determine
           which scope was used during initial setup.
 
           If not found, ask user for scope.
@@ -225,7 +225,8 @@ commands:
 
       - step: "For specific skill: Determine scope"
         detail: |
-          Check which scope the skill is installed in by reading:
+          Read FRAMEWORK_SCOPE from .claude/skills-config.env.
+          If not found, check which scope the skill is installed in by reading:
           - .claude/settings.json (project)
           - .claude/settings.local.json (local)
           - ~/.claude/settings.json (user)
@@ -375,7 +376,9 @@ commands:
             → claude plugin install <skill>@dohernandez-claude-skills --scope <scope>
             ✓ Installed
 
-          Save selected tier to .claude/skills-config.env as FRAMEWORK_TIER
+          Save to .claude/skills-config.env:
+          - FRAMEWORK_TIER=<selected tier>
+          - FRAMEWORK_SCOPE=<selected scope>
 
       - step: "Phase 1: Framework Configuration"
         detail: |

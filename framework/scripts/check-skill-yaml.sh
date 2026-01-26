@@ -31,7 +31,7 @@ set -euo pipefail
 # CONSTANTS
 # ============================================================================
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-readonly PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+readonly PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 readonly SCRIPT_NAME="$(basename "$0")"
 
 # Exit codes
@@ -477,7 +477,7 @@ check_validations_integrity() {
     done
 
     # Check on_stop IDs exist (bash 3.2 compatible: check length before iterating)
-    if [[ ${#ON_STOP_IDS[@]} -gt 0 ]]; then
+    if [[ ${#ON_STOP_IDS[@]} -gt 0 ]] && [[ ${#VALIDATIONS_IDS[@]} -gt 0 ]]; then
         for oid in "${ON_STOP_IDS[@]}"; do
             local found=false
             for vid in "${VALIDATIONS_IDS[@]}"; do
@@ -579,12 +579,20 @@ parse_arguments() {
 main() {
     parse_arguments "$@"
 
+    # Determine skills directory based on context
     local skills_dir="$PROJECT_ROOT/.claude/skills"
 
+    # Development mode: if framework/skills/ exists with plugin structure
+    if [[ -d "$PROJECT_ROOT/framework/skills" ]] && [[ -d "$PROJECT_ROOT/framework/.claude-plugin" ]]; then
+        skills_dir="$PROJECT_ROOT/framework/skills"
+    fi
+
     if [[ ! -d "$skills_dir" ]]; then
-        echo "No .claude/skills directory found"
+        echo "No skills directory found (checked .claude/skills and framework/skills)"
         exit $ERR_GENERAL
     fi
+
+    log_info "Using skills directory: $skills_dir"
 
     # First pass: collect all skill names
     local skill_dirs=()

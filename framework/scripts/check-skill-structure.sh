@@ -49,11 +49,11 @@ find_project_root() {
 PROJECT_ROOT="$(find_project_root)"
 
 # Determine skills directory based on context
-# In development (skills repo): anthropic/ contains skills
+# In development (skills repo): framework/skills/ contains skills
 # In installed mode: .claude/skills/ contains skills
 find_skills_dir() {
-    # Development mode: if framework/skills/ exists, use it (plugin structure)
-    if [[ -d "$PROJECT_ROOT/framework/skills" ]] && [[ -f "$PROJECT_ROOT/anthropic/manifest.yaml" ]]; then
+    # Development mode: if framework/skills/ exists with plugin structure
+    if [[ -d "$PROJECT_ROOT/framework/skills" ]] && [[ -d "$PROJECT_ROOT/framework/.claude-plugin" ]]; then
         echo "$PROJECT_ROOT/framework/skills"
     elif [[ -d "$PROJECT_ROOT/.claude/skills" ]]; then
         echo "$PROJECT_ROOT/.claude/skills"

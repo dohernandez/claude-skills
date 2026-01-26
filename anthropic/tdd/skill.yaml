@@ -8,207 +8,256 @@ tags:
   - testing
   - methodology
 
+config_location: ".claude/skills/tdd.yaml"
+
 purpose: |
   Implement changes using Test-Driven Development. The core principle:
   write tests that define expected behavior BEFORE writing implementation.
 
-  The TDD cycle:
-  1. RED - Write a failing test
-  2. GREEN - Write minimal code to pass
-  3. REFACTOR - Clean up with tests green
+  Discovery model:
+  - /tdd discover: One-time project analysis, saves config
+  - /tdd learn <path>: Contextual update from specific path
+  - /tdd: Normal usage, reads saved config
+
+commands:
+  - name: discover
+    description: "Analyze entire project for test patterns (framework setup)"
+    arguments: []
+    output: ".claude/skills/tdd.yaml"
+    user_approval: required
+
+  - name: learn
+    description: "Analyze specific path, update config with new patterns"
+    arguments:
+      - name: path
+        description: "Path to analyze"
+        required: true
+    output: "Updates .claude/skills/tdd.yaml"
+    user_approval: required
+
+  - name: default
+    description: "Write tests using saved patterns (normal usage)"
+    requires: ".claude/skills/tdd.yaml exists"
 
 owns:
   - "TDD workflow and discipline"
   - "Test-first development"
-  - "Flow Spec requirements"
+  - "Test pattern configuration"
 
 non_negotiables:
   - id: tests-first
-    rule: |
-      Tests must be written before implementation code.
-      The test must fail first (RED phase) to prove it's testing something meaningful.
+    rule: "Tests must be written before implementation code."
 
   - id: fix-code-not-tests
-    rule: |
-      If a test fails due to implementation mismatch, the fix must be in the code.
-      Do not weaken or modify the test to make it pass.
-      The test defines correctness, not the current implementation.
+    rule: "If a test fails, fix the implementation, not the test."
 
   - id: no-behavior-without-tests
     rule: "Every new function with behavior needs a test."
 
-  - id: test-isolation
-    rule: |
-      Tests must be independent. No test should depend on another test
-      or share mutable state. Each test should be runnable in isolation.
+  - id: match-project-patterns
+    rule: "Use patterns from saved config, don't invent new styles."
 
-flow_spec_template: |
-  ## Flow Spec: {feature_name}
+  - id: config-required
+    rule: "Normal /tdd requires .claude/skills/tdd.yaml (run discover first)."
 
-  - **Name**: {descriptive name}
-  - **Entry point(s)**: (Function, method, endpoint)
-  - **Inputs**: (Parameters, dependencies)
-  - **Expected outputs**: (Return values, side effects)
-  - **Invariants**: (What must always be true)
-  - **Edge cases**: (Boundaries, error conditions)
+# ============================================================================
+# DISCOVER PROCEDURE
+# ============================================================================
+discover:
+  description: "One-time project analysis during framework setup"
 
+  steps:
+    - phase: "Detect test framework"
+      actions:
+        - check: "package.json"
+          patterns: ["jest", "vitest", "mocha", "ava", "@testing-library"]
+          language: typescript
+        - check: "pyproject.toml, requirements.txt, setup.py"
+          patterns: ["pytest", "unittest", "nose"]
+          language: python
+        - check: "go.mod, *_test.go"
+          patterns: ["testing"]
+          language: go
+        - check: "Cargo.toml"
+          patterns: ["#[test]", "#[cfg(test)]"]
+          language: rust
+
+    - phase: "Find test locations"
+      actions:
+        - find: "*.test.ts, *.test.js, *.spec.ts, *.spec.js"
+          indicates: co-located
+        - find: "*_test.py, test_*.py"
+          indicates: python-style
+        - find: "*_test.go"
+          indicates: go-style
+        - find: "tests/, __tests__/, test/"
+          indicates: separate-directory
+
+    - phase: "Analyze test structure"
+      actions:
+        - read: "5-10 test files"
+        - extract:
+            - organization: "describe/it, class-based, function-based"
+            - assertions: "expect, assert, require patterns"
+            - mocks: "vi.fn, jest.mock, @patch, gomock patterns"
+            - fixtures: "beforeEach, setUp, conftest.py patterns"
+
+    - phase: "Detect test commands"
+      actions:
+        - check: "Taskfile.yaml"
+          look_for: "test, test:unit, test:integration"
+        - check: "package.json scripts"
+          look_for: "test, test:*"
+        - check: "Makefile"
+          look_for: "test target"
+
+    - phase: "Propose to user"
+      actions:
+        - format: "YAML proposal with all discovered patterns"
+        - include: "Actual examples from project"
+        - wait: "User approval or modifications"
+
+    - phase: "Save config"
+      actions:
+        - location: ".claude/skills/tdd.yaml"
+        - include: "version, discovered_at timestamp"
+
+  output_schema:
+    version: 1
+    discovered_at: "ISO timestamp"
+    framework: "vitest | jest | pytest | go | cargo"
+    language: "typescript | python | go | rust"
+    test_locations:
+      pattern: "glob pattern"
+      style: "co-located | separate"
+      directories: []
+    structure:
+      organization: "describe-it | class-based | function-based"
+      naming: "pattern"
+      example: "actual example"
+    assertions:
+      library: "name"
+      style: "expect | assert"
+      example: "actual example"
+    mocks:
+      library: "name"
+      pattern: "pattern"
+      example: "actual example"
+    fixtures:
+      setup: "beforeEach | setUp | etc"
+      teardown: "afterEach | tearDown | etc"
+      data_location: "path or null"
+    commands:
+      all: "task test"
+      unit: "command"
+      watch: "command"
+      single: "command with {file} placeholder"
+
+# ============================================================================
+# LEARN PROCEDURE
+# ============================================================================
+learn:
+  description: "Contextual analysis of specific path to update config"
+
+  steps:
+    - phase: "Validate prerequisites"
+      actions:
+        - check: ".claude/skills/tdd.yaml exists"
+        - if_missing: "Run /tdd discover first"
+
+    - phase: "Analyze path"
+      actions:
+        - find: "Test files in specified path"
+        - read: "All test files found"
+        - extract: "Patterns (same as discover)"
+
+    - phase: "Compare to existing config"
+      actions:
+        - diff: "New patterns vs saved config"
+        - identify: "New patterns not in config"
+
+    - phase: "Propose updates"
+      actions:
+        - show: "New patterns found"
+        - ask: "Add to config? [Approve / Modify / Skip]"
+
+    - phase: "Update config"
+      actions:
+        - merge: "New patterns into .claude/skills/tdd.yaml"
+        - update: "discovered_at timestamp"
+
+# ============================================================================
+# NORMAL USAGE PROCEDURE
+# ============================================================================
 procedure:
-  - step: "Discover project testing patterns"
+  - step: "Check config exists"
     detail: |
-      Before writing tests, learn the project's testing conventions:
-      1. Find test framework (jest, vitest, pytest, go test)
-      2. Find existing test files and read 2-3 examples
-      3. Note: file naming, test structure, mock patterns, assertion style
-      4. Check test commands (Taskfile, package.json, Makefile)
-      Match existing patterns - don't introduce new testing styles.
+      Read .claude/skills/tdd.yaml
+      If missing: prompt user to run /tdd discover first
 
   - step: "Define expected behavior"
     detail: "Write Flow Spec describing what the code should do."
 
   - step: "Write failing test (RED)"
     detail: |
-      Write a test that defines the expected behavior.
-      Run the test - it must FAIL. This proves the test is meaningful.
+      Write test using patterns from saved config:
+      - Use project's test structure (describe/it, class, function)
+      - Use project's assertion style
+      - Use project's mock patterns
+      Run test - it must FAIL.
 
   - step: "Write minimal code (GREEN)"
-    detail: |
-      Write just enough code to make the test pass.
-      Don't over-engineer. Don't add features not covered by tests.
+    detail: "Write just enough code to make the test pass."
 
   - step: "Refactor"
-    detail: |
-      Clean up the code while keeping tests green.
-      Improve naming, extract functions, remove duplication.
+    detail: "Clean up while keeping tests green."
 
-  - step: "Repeat"
-    detail: "Add next test for next behavior. Continue the cycle."
-
-  - step: "Verify all tests pass"
+  - step: "Verify"
     detail: "Run task test and ensure all tests pass."
 
 definition_of_done:
-  - "Flow Spec written for the feature"
+  - ".claude/skills/tdd.yaml exists"
   - "Tests fail before code and pass after"
-  - "task test passes (all tests green)"
+  - "Tests match project patterns from config"
+  - "task test passes"
   - "task precommit passes"
-  - "No skipped tests unless documented"
-
-patterns:
-  - id: test-file-naming
-    description: "Test files are co-located with source files"
-    examples:
-      typescript: |
-        src/services/user-service.ts
-        src/services/user-service.test.ts
-      python: |
-        src/services/user_service.py
-        src/services/test_user_service.py
-      go: |
-        services/user_service.go
-        services/user_service_test.go
-
-  - id: describe-it-structure
-    description: "Use describe/it blocks for test organization"
-    examples:
-      typescript: |
-        describe('UserService', () => {
-          describe('createUser', () => {
-            it('creates user with valid data', () => {
-              const user = userService.createUser({ email: 'test@example.com' });
-              expect(user.email).toBe('test@example.com');
-            });
-
-            it('throws error for invalid email', () => {
-              expect(() => userService.createUser({ email: 'invalid' }))
-                .toThrow('Invalid email');
-            });
-          });
-        });
-      python: |
-        class TestUserService:
-            def test_create_user_with_valid_data(self):
-                user = user_service.create_user(email='test@example.com')
-                assert user.email == 'test@example.com'
-
-            def test_create_user_throws_for_invalid_email(self):
-                with pytest.raises(ValueError, match='Invalid email'):
-                    user_service.create_user(email='invalid')
-      go: |
-        func TestUserService_CreateUser(t *testing.T) {
-            user, err := userService.CreateUser("test@example.com")
-            if err != nil {
-                t.Fatalf("unexpected error: %v", err)
-            }
-            if user.Email != "test@example.com" {
-                t.Errorf("expected test@example.com, got %s", user.Email)
-            }
-        }
-
-  - id: mock-dependencies
-    description: "Mock external dependencies in unit tests"
-    examples:
-      typescript: |
-        const mockDb = { findUser: vi.fn() };
-        const service = new UserService({ db: mockDb });
-
-        mockDb.findUser.mockResolvedValue({ id: 1, name: 'Test' });
-        const user = await service.getUser(1);
-
-        expect(mockDb.findUser).toHaveBeenCalledWith(1);
-      python: |
-        @patch('services.user_service.db')
-        def test_get_user(mock_db):
-            mock_db.find_user.return_value = {'id': 1, 'name': 'Test'}
-            user = user_service.get_user(1)
-            mock_db.find_user.assert_called_once_with(1)
-
-  - id: arrange-act-assert
-    description: "Structure tests with Arrange-Act-Assert pattern"
-    example: |
-      it('calculates total with discount', () => {
-        // Arrange
-        const cart = new Cart();
-        cart.addItem({ price: 100 });
-        cart.applyDiscount(0.1);
-
-        // Act
-        const total = cart.getTotal();
-
-        // Assert
-        expect(total).toBe(90);
-      });
 
 anti_patterns:
   - id: test-after-code
     description: "Writing code first, then backfilling tests"
-    why_bad: "Tests become documentation of implementation, not specification of behavior."
+    why_bad: "Tests become documentation, not specification."
 
   - id: weakening-tests
-    description: "Modifying tests to pass instead of fixing the code"
-    why_bad: "Hides bugs and defeats the purpose of TDD."
+    description: "Modifying tests to pass instead of fixing code"
+    why_bad: "Hides bugs, defeats TDD purpose."
 
-  - id: testing-implementation-details
-    description: "Tests that verify internal implementation rather than behavior"
-    why_bad: "Tests break on refactoring even when behavior is unchanged."
+  - id: inventing-patterns
+    description: "Using different test patterns than project standard"
+    why_bad: "Inconsistent codebase, harder to maintain."
 
-  - id: no-test-isolation
-    description: "Tests that depend on each other or shared mutable state"
-    why_bad: "Flaky tests, hard to debug, order-dependent failures."
+  - id: rediscovering
+    description: "Running discovery every time instead of reading config"
+    why_bad: "Slow, inconsistent, unnecessary."
 
-  - id: skipping-red-phase
-    description: "Writing test and code together without seeing test fail"
-    why_bad: "Can't verify the test actually tests something meaningful."
-
-  - id: over-mocking
-    description: "Mocking everything including the code under test"
-    why_bad: "Test doesn't verify real behavior, just mock interactions."
+  - id: skipping-discovery
+    description: "Using /tdd without running /tdd discover first"
+    why_bad: "No saved patterns, will invent inconsistent tests."
 
 context: |
-  TDD is a discipline that produces:
-  1. Testable code (by design)
-  2. Documentation (tests describe expected behavior)
-  3. Confidence to refactor (tests catch regressions)
-  4. Minimal code (only write what's needed to pass tests)
+  TDD with discovery model:
 
-  The key insight: tests are specifications, not afterthoughts.
-  Write the specification (test) first, then implement to match.
+  1. SETUP (once): /tdd discover
+     - Analyzes entire project
+     - User approves findings
+     - Saves to .claude/skills/tdd.yaml
+
+  2. USAGE (every time): /tdd
+     - Reads saved config
+     - Writes tests matching project patterns
+     - No re-discovery needed
+
+  3. UPDATE (as needed): /tdd learn <path>
+     - Analyzes specific path
+     - Updates config with new patterns
+
+  This ensures consistent test patterns across the project.

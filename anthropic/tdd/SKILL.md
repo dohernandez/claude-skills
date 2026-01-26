@@ -6,7 +6,7 @@ allowed-tools: [Read, Write, Edit, Bash, Grep, Glob]
 hooks:
   Stop:
     - type: command
-      command: "task claude:validate-skill -- --skill tdd"
+      command: "task -t .claude/Taskfile.yaml claude:validate-skill -- --skill tdd"
 ---
 
 # TDD
@@ -17,86 +17,180 @@ Enforce Test-Driven Development discipline. All changes must have tests written 
 
 ## Quick Reference
 
-- **Core rule**: Tests first, code second
-- **When tests fail**: Fix the implementation, not the test
-- **Gate**: Tests must pass before work is considered done
-- **First step**: Discover project's testing patterns before writing tests
+- **Setup**: `/tdd discover` (run once during framework setup)
+- **Usage**: `/tdd` (uses saved config)
+- **Update**: `/tdd learn <path>` (analyze specific path)
+- **Config**: `.claude/skills/tdd.yaml`
 
-## TDD Cycle
+## Commands
+
+| Command | Purpose | When to Use |
+|---------|---------|-------------|
+| `/tdd discover` | Analyze entire project for test patterns | Framework setup / wizard |
+| `/tdd learn <path>` | Analyze specific path, update config | New module added |
+| `/tdd` | Write tests using saved patterns | Normal development |
+
+---
+
+## /tdd discover
+
+**When**: Framework setup wizard (one-time)
+
+**What it does**:
+1. Scans entire project for testing patterns
+2. Proposes findings to user
+3. User approves/modifies
+4. Saves to `.claude/skills/tdd.yaml`
+
+### Discovery Process
+
+```
+1. DETECT TEST FRAMEWORK
+   ├─ JavaScript/TypeScript: package.json → jest, vitest, mocha, ava
+   ├─ Python: pyproject.toml, requirements.txt → pytest, unittest
+   ├─ Go: *_test.go files → go test
+   └─ Rust: Cargo.toml → cargo test
+
+2. FIND TEST LOCATIONS
+   ├─ Co-located: src/**/*.test.ts
+   ├─ Separate: tests/, __tests__/, test/
+   └─ Pattern: *.test.*, *_test.*, test_*
+
+3. ANALYZE TEST STRUCTURE (read 5-10 test files)
+   ├─ Organization: describe/it, class-based, function-based
+   ├─ Assertion style: expect, assert, require
+   ├─ Mock patterns: vi.fn(), jest.mock(), @patch, etc.
+   └─ Fixture patterns: beforeEach, fixtures/, conftest.py
+
+4. DETECT TEST COMMANDS
+   ├─ Taskfile.yaml: task test, task test:unit
+   ├─ package.json: npm test, npm run test:*
+   ├─ Makefile: make test
+   └─ Direct: pytest, go test, cargo test
+```
+
+### Proposal Format
+
+```yaml
+# Proposed TDD Configuration
+# Review and approve to save to .claude/skills/tdd.yaml
+
+framework: vitest
+language: typescript
+
+test_locations:
+  pattern: "**/*.test.ts"
+  style: co-located  # or: separate
+
+structure:
+  organization: describe-it
+  example: |
+    describe('ModuleName', () => {
+      describe('methodName', () => {
+        it('should behavior when condition', () => {
+          // arrange, act, assert
+        });
+      });
+    });
+
+assertions:
+  library: vitest
+  style: expect
+  example: "expect(result).toBe(expected)"
+
+mocks:
+  library: vitest
+  pattern: vi.fn()
+  example: |
+    const mockDep = { method: vi.fn() };
+    mockDep.method.mockResolvedValue(data);
+
+fixtures:
+  setup: beforeEach
+  teardown: afterEach
+  data_location: null  # or: __fixtures__/, tests/fixtures/
+
+commands:
+  all: "task test"
+  unit: "task test"
+  watch: "task test -- --watch"
+  single: "task test -- {file}"
+```
+
+### Save Location
+
+```
+.claude/skills/tdd.yaml
+```
+
+---
+
+## /tdd learn <path>
+
+**When**: New module added, want to capture its patterns
+
+**What it does**:
+1. Analyzes test files in specified path
+2. Compares to existing config
+3. Proposes updates if new patterns found
+4. Updates `.claude/skills/tdd.yaml`
+
+### Example
+
+```bash
+/tdd learn src/new-service/
+```
+
+```
+Analyzing tests in src/new-service/...
+
+Found 3 test files:
+  - src/new-service/handler.test.ts
+  - src/new-service/service.test.ts
+  - src/new-service/utils.test.ts
+
+New patterns detected:
+  - Mock pattern: vi.spyOn() (not in current config)
+  - Fixture: uses beforeAll for expensive setup
+
+Propose adding to config:
+  mocks.additional_patterns:
+    - vi.spyOn(object, 'method')
+  fixtures.expensive_setup: beforeAll
+
+[Approve / Modify / Skip]
+```
+
+---
+
+## /tdd (Normal Usage)
+
+**When**: Writing tests during development
+
+**Requires**: `.claude/skills/tdd.yaml` exists (run `/tdd discover` first)
+
+### TDD Cycle
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                      TDD CYCLE                               │
 ├─────────────────────────────────────────────────────────────┤
-│  1. RED     →  Write failing test                           │
+│  1. RED     →  Write failing test (using saved patterns)    │
 │  2. GREEN   →  Write minimal code to pass                   │
 │  3. REFACTOR → Clean up with tests green                    │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-## Procedure
+### Procedure
 
-1. **Discover project testing patterns** (first time only)
+1. **Read saved config** from `.claude/skills/tdd.yaml`
 2. **Define expected behavior** (Flow Spec)
-3. **Write test first** (must fail - RED)
+3. **Write test first** using project's patterns (must fail - RED)
 4. **Write minimal code** to pass (GREEN)
 5. **Refactor** with tests green
-6. **Repeat** for next behavior
+6. **Verify**: `task test`
 
-## Discover Project Testing Patterns
-
-Before writing tests, learn how this project does testing:
-
-### 1. Find Test Framework
-
-```bash
-# Check package.json for JS/TS projects
-grep -E "jest|vitest|mocha|ava" package.json
-
-# Check for pytest/unittest in Python
-grep -E "pytest|unittest" requirements.txt setup.py pyproject.toml 2>/dev/null
-
-# Check for Go test files
-find . -name "*_test.go" -type f | head -5
-```
-
-### 2. Find Existing Test Examples
-
-```bash
-# Find test files
-find . -name "*.test.*" -o -name "*_test.*" -o -name "test_*" | head -10
-
-# Look at test organization
-ls -la tests/ test/ __tests__/ 2>/dev/null
-```
-
-### 3. Learn Project Patterns
-
-Read 2-3 existing test files to understand:
-- **File naming**: `*.test.ts`, `*_test.go`, `test_*.py`
-- **Test structure**: describe/it, class-based, function-based
-- **Mock patterns**: How dependencies are mocked
-- **Fixture patterns**: How test data is organized
-- **Assertion style**: expect, assert, require
-
-### 4. Check Test Commands
-
-```bash
-# Check Taskfile for test commands
-grep -A2 "test:" Taskfile.yaml 2>/dev/null
-
-# Check package.json scripts
-grep -A5 '"scripts"' package.json 2>/dev/null | grep test
-
-# Check Makefile
-grep "test:" Makefile 2>/dev/null
-```
-
-**Key rule**: Match the project's existing test patterns. Don't introduce new testing styles.
-
-## Flow Spec Template
-
-Before writing code, document what you're building:
+### Flow Spec Template
 
 ```markdown
 ## Flow Spec: {feature_name}
@@ -109,105 +203,21 @@ Before writing code, document what you're building:
 - **Edge cases**: (Boundaries, error conditions)
 ```
 
-## Test Requirements
-
-### Unit Tests
-- Test pure functions and business logic
-- Use mocks for external dependencies
-- One assertion per test (when practical)
-- Descriptive test names
-
-### Integration Tests
-- Test component interactions
-- Verify end-to-end flows
-- Use realistic test data
+---
 
 ## Non-Negotiables
 
 1. **Tests first**: Tests must fail before code exists
 2. **Fix code, not tests**: If a test fails, fix the implementation
 3. **No behavior without tests**: Every new function needs a test
-4. **Tests define correctness**: The test is the specification
-
-## Commands
-
-```bash
-# Run all tests
-task test
-
-# Run tests in watch mode (if supported)
-task test -- --watch
-
-# Run specific test file
-task test -- path/to/file.test.ts
-
-# Run precommit (lint + tests)
-task precommit
-```
-
-## Test File Organization
-
-Tests should be co-located with source files:
-
-```
-src/
-  services/
-    user-service.ts
-    user-service.test.ts
-  utils/
-    validate.ts
-    validate.test.ts
-```
-
-Or in a parallel test directory:
-
-```
-src/
-  services/
-    user-service.ts
-tests/
-  services/
-    user-service.test.ts
-```
-
-## Writing Good Tests
-
-### Describe/It Structure
-
-```
-# TypeScript/JavaScript (Jest/Vitest)
-describe('UserService', () => {
-  describe('createUser', () => {
-    it('creates user with valid data', () => { ... });
-    it('throws error for invalid email', () => { ... });
-  });
-});
-
-# Python (pytest)
-class TestUserService:
-    def test_create_user_with_valid_data(self): ...
-    def test_create_user_throws_for_invalid_email(self): ...
-
-# Go
-func TestUserService_CreateUser(t *testing.T) { ... }
-func TestUserService_CreateUser_InvalidEmail(t *testing.T) { ... }
-```
-
-### Test Naming
-
-- Describe **what** is being tested
-- Describe **expected behavior**
-- Include **conditions** if relevant
-
-Good: `it('returns empty array when no users exist')`
-Bad: `it('test1')`
+4. **Match project patterns**: Use patterns from saved config
 
 ## Definition of Done
 
-- [ ] Flow Spec written for the feature
+- [ ] `.claude/skills/tdd.yaml` exists (discovery completed)
 - [ ] Tests written first (failed before implementation)
+- [ ] Tests match project patterns from config
 - [ ] `task test` passes (all tests green)
-- [ ] No skipped tests unless documented
 - [ ] `task precommit` passes
 
 ## Anti-Patterns
@@ -216,12 +226,50 @@ Bad: `it('test1')`
 |-------|------------|
 | Write code first, tests later | Write failing test first |
 | Modify test to pass | Fix the implementation |
-| Skip tests "temporarily" | Write the test or don't commit |
-| Test implementation details | Test public behavior |
-| Share mutable state between tests | Isolate each test |
+| Invent new test patterns | Use patterns from saved config |
+| Re-discover every time | Read saved `.claude/skills/tdd.yaml` |
+| Skip discovery | Run `/tdd discover` during setup |
 
-## Automation
+## Config Schema
 
-- `skill.yaml` - patterns and procedures
-- `sharp-edges.yaml` - common TDD failure modes
-- `validations.yaml` - test validation on stop
+```yaml
+# .claude/skills/tdd.yaml
+version: 1
+discovered_at: "2024-01-26T12:00:00Z"
+
+framework: vitest | jest | pytest | go | cargo
+language: typescript | python | go | rust
+
+test_locations:
+  pattern: "**/*.test.ts"
+  style: co-located | separate
+  directories: []  # if separate style
+
+structure:
+  organization: describe-it | class-based | function-based
+  naming: "should {behavior} when {condition}"
+  example: |
+    # actual example from project
+
+assertions:
+  library: vitest | jest | pytest | testify
+  style: expect | assert
+  example: "expect(x).toBe(y)"
+
+mocks:
+  library: vitest | jest | unittest.mock | gomock
+  pattern: "vi.fn()"
+  example: |
+    # actual example from project
+
+fixtures:
+  setup: beforeEach | setUp | func setup
+  teardown: afterEach | tearDown | func teardown
+  data_location: null | path
+
+commands:
+  all: "task test"
+  unit: "task test"
+  watch: "task test -- --watch"
+  single: "task test -- {file}"
+```

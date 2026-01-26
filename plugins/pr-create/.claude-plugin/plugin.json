@@ -1,0 +1,13 @@
+{
+  "name": "pr-create",
+  "description": "Create GitHub pull requests with standardized format",
+  "version": "1.0.0",
+  "author": {
+    "name": "dohernandez",
+    "url": "https://github.com/dohernandez"
+  },
+  "keywords": ["git", "github", "pull-request", "pr"],
+  "repository": "https://github.com/dohernandez/claude-skills",
+  "skills": "./skills/",
+  "hooks": "./hooks/hooks.json"
+}

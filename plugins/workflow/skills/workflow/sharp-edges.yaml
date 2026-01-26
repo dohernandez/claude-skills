@@ -1,0 +1,208 @@
+# Sharp edges for workflow
+#
+# NOTE: The `detect` field is informational only - it shows how to manually
+# check for the edge case. These are NOT automatically enforced by the
+# validation runner. Automated enforcement happens via validations.yaml.
+
+edges:
+  - id: uncommitted-changes-lost
+    description: "Starting new workflow with uncommitted changes in working directory"
+    detect: "git status --porcelain (non-empty output)"
+    impact: "User may lose work or accidentally include unrelated changes in new branch"
+    fix: |
+      Before starting workflow, always run git status.
+      If changes exist:
+      - Ask user to commit or stash changes
+      - Or confirm they want to carry changes to new branch
+    severity: high
+
+  - id: branch-already-exists
+    description: "Trying to create a branch that already exists locally or remotely"
+    detect: "git branch --list <branch-name> or git ls-remote --heads origin <branch-name>"
+    impact: "Branch creation fails, workflow cannot proceed"
+    fix: |
+      Check if branch exists before creating.
+      If exists locally: ask user if they want to switch to it
+      If exists remotely: ask user if they want to checkout and track it
+    severity: medium
+
+  - id: context-file-committed
+    description: "workflow-context.json accidentally committed to repository"
+    detect: "git ls-files .claude/workflow-context.json"
+    impact: "Personal workflow state pollutes repository history"
+    fix: |
+      Ensure .gitignore includes .claude/workflow-context.json
+      If already committed: git rm --cached .claude/workflow-context.json
+    severity: medium
+
+  - id: pr-not-merged-force-finish
+    description: "User requests finish but PR is not merged"
+    detect: "gh pr view <branch> --json state | jq '.state != \"MERGED\"'"
+    impact: "Branch deleted with potentially unmerged work"
+    fix: |
+      Always verify PR state before cleanup.
+      If not merged:
+      - Clearly warn user about unmerged PR
+      - Require explicit confirmation for force-finish
+      - Consider using git branch -D vs -d to require force
+    severity: critical
+
+  - id: orphaned-remote-branch
+    description: "Local branch deleted but remote branch remains"
+    detect: "git ls-remote --heads origin <branch-name>"
+    impact: "Clutter in remote repository, confusion about active branches"
+    fix: |
+      After deleting local branch, always attempt to delete remote:
+      git push origin --delete <branch-name>
+      Handle gracefully if remote doesn't exist (branch was never pushed)
+    severity: low
+
+  - id: linear-ticket-not-found
+    description: "Linear ticket ID provided but ticket doesn't exist or user lacks access"
+    detect: "MCP call returns error or empty result"
+    impact: "Cannot fetch ticket details, workflow start fails"
+    fix: |
+      Handle MCP errors gracefully:
+      - Check if ticket ID format is valid
+      - Catch not-found errors and suggest checking ticket ID
+      - Offer to continue with manual description input
+    severity: medium
+
+  - id: main-branch-drift
+    description: "Main branch has diverged significantly while working on feature"
+    detect: "git rev-list --count main..origin/main (after fetch)"
+    impact: "Finish cleanup may have conflicts or surprises"
+    fix: |
+      During finish:
+      - Always fetch before switching to main
+      - git checkout main && git fetch && git pull
+      - Warn if there were many new commits
+    severity: low
+
+  - id: concurrent-workflow-context
+    description: "Multiple terminal sessions with different workflow contexts"
+    detect: "Multiple Claude Code sessions in same repo"
+    impact: "Context file may be overwritten, causing confusion"
+    fix: |
+      Context file is per-repo, not per-session.
+      Document that only one active workflow per repo is supported.
+      Status command should always re-read context file.
+    severity: low
+
+  - id: detached-head-state
+    description: "Starting workflow while in detached HEAD state"
+    detect: "git symbolic-ref HEAD fails"
+    impact: "Unclear starting point for new branch"
+    fix: |
+      Check for detached HEAD before starting.
+      If detached: warn user and ask to checkout a branch first.
+    severity: medium
+
+  # Bug Fix Flow Sharp Edges
+  - id: fix-without-reproduction
+    description: "Attempting to fix bug without first reproducing it locally"
+    detect: "bugfix.reproductionConfirmed is false or missing"
+    impact: "May fix wrong thing, cannot verify fix works, wastes time"
+    fix: |
+      NEVER skip reproduction step.
+      If cannot reproduce:
+      - Ask user for more context
+      - Check environment differences
+      - Review logs/screenshots
+      - Do NOT proceed without reproduction
+    severity: critical
+
+  - id: fix-without-failing-test
+    description: "Changing code to fix bug without first writing a failing test"
+    detect: "bugfix.failingTestFile is missing when bugfix.phase >= 'fix'"
+    impact: "No proof bug existed, no regression prevention, no documentation"
+    fix: |
+      Always write failing test in B2 phase before any fix.
+      Test must fail for the right reason (the bug).
+      This ensures:
+      - Bug is captured and documented
+      - Fix can be verified
+      - Regression is prevented
+    severity: critical
+
+  - id: guess-and-fix-debugging
+    description: "Making code changes to 'try' debugging instead of adding logs"
+    detect: "Implementation code changed during root-cause phase"
+    impact: "May introduce new bugs, obscures original issue, wastes time"
+    fix: |
+      During B3 (root cause identification):
+      - ONLY add debug logging (logger.debug)
+      - Do NOT change implementation code
+      - Analyze logs to understand the issue
+      - Only after root cause is clear, proceed to B4
+    severity: high
+
+  - id: console-log-committed
+    description: "Using console.log for debugging instead of logger.debug"
+    detect: "grep -r 'console.log' in changed files"
+    impact: "console.log may be committed, pollutes production logs"
+    fix: |
+      Always use logger.debug for temporary debugging:
+      - Respects LOG_LEVEL configuration
+      - Won't appear in production
+      - Easier to find and remove
+    severity: medium
+
+  - id: debug-logs-not-removed
+    description: "Temporary debug logging left in code after fix"
+    detect: "New logger.debug calls in non-test files after B4 phase"
+    impact: "Pollutes logs, may expose sensitive data, looks unprofessional"
+    fix: |
+      At end of B4 (Fix phase):
+      - Review all changes
+      - Remove ALL temporary debug logging added in B3
+      - Only permanent, meaningful logs should remain
+    severity: medium
+
+  - id: over-fixing
+    description: "Refactoring or improving code while fixing a bug"
+    detect: "Changes to files/lines not related to root cause location"
+    impact: "Mixes concerns, makes review harder, may introduce new bugs"
+    fix: |
+      Bug fix should be MINIMAL:
+      - Only change what's necessary to fix the bug
+      - No refactoring
+      - No "improvements"
+      - No cleanup of unrelated code
+      Create separate ticket for improvements if needed.
+    severity: medium
+
+  - id: skip-regression-testing
+    description: "Not running full test suite after bug fix"
+    detect: "Test suite not run after fix"
+    impact: "Fix may have unintended side effects breaking other functionality"
+    fix: |
+      Always run full test suite in B5:
+      task -t .claude/Taskfile.yaml test
+      task -t .claude/Taskfile.yaml precommit
+      All tests must pass before PR.
+    severity: high
+
+  - id: wrong-test-failure-reason
+    description: "Test fails but for wrong reason (typo, setup error, not the bug)"
+    detect: "Test failure message doesn't match expected bug behavior"
+    impact: "False confidence that bug is captured, fix may not address real issue"
+    fix: |
+      When writing failing test in B2:
+      - Verify test fails for the RIGHT reason
+      - Failure should match the bug behavior (e.g., "expected 5 got 4")
+      - Not setup errors, typos, or unrelated failures
+    severity: medium
+
+  - id: environment-mismatch-reproduction
+    description: "Bug only reproduces in certain environment but testing in different one"
+    detect: "Bug reported in production/staging but testing locally"
+    impact: "May not reproduce, may fix wrong thing, may not verify fix"
+    fix: |
+      Document environment in reproduction:
+      - Node version
+      - Environment variables
+      - Database state
+      - Network conditions
+      If env-specific, try to match conditions or use appropriate env file.
+    severity: medium

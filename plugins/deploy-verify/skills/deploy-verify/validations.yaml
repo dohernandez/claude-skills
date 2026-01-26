@@ -1,0 +1,19 @@
+# Validations for deploy-verify skill
+#
+# v1 validations runner supports command validations only.
+# on_stop defines which validations run automatically on Stop hook.
+
+validations:
+  - id: skill-yaml-valid
+    type: command
+    description: Validate skill YAML structure
+    command: "task -t .claude/Taskfile.yaml validate-skill-yaml"
+
+  - id: config-exists
+    type: command
+    description: Check if deploy-verify config exists
+    command: "test -f .claude/skills/deploy-verify.yaml"
+    on_failure: "Run /deploy-verify discover to create configuration"
+
+on_stop:
+  - skill-yaml-valid

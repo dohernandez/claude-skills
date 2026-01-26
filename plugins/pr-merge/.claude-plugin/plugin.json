@@ -1,0 +1,13 @@
+{
+  "name": "pr-merge",
+  "description": "Merge pull requests with CI validation",
+  "version": "1.0.0",
+  "author": {
+    "name": "dohernandez",
+    "url": "https://github.com/dohernandez"
+  },
+  "keywords": ["git", "github", "pull-request", "pr", "merge"],
+  "repository": "https://github.com/dohernandez/claude-skills",
+  "skills": "./skills/",
+  "hooks": "./hooks/hooks.json"
+}

@@ -1,0 +1,20 @@
+version: 1
+description: "Validations for linear skill"
+
+# Linear skill validations:
+# - MCP connection available
+# - Skill structure valid
+
+validations:
+  - id: skill-structure-valid
+    name: "Skill has required files and valid YAML"
+    type: command
+    command: "task -t .claude/Taskfile.yaml claude:check-structure -- --skill linear"
+    expect: "exit 0"
+    message: "Skill structure validation failed."
+
+# Note: Cannot validate MCP connection at build time.
+# The skill checks for Linear MCP tools at runtime.
+
+on_stop:
+  - skill-structure-valid

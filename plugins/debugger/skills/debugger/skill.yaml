@@ -1,0 +1,306 @@
+name: debugger
+kind: diagnostic
+version: "1.0.0"
+description: "Guide debugging of production issues through alert triage, log analysis, and root cause hypothesis formation."
+severity: medium
+tags:
+  - debugging
+  - troubleshooting
+  - logs
+  - diagnostics
+
+config_location: ".claude/skills/debugger.yaml"
+
+# Configuration from skills-config.yaml
+# These values are set during framework installation via wizard
+config_refs:
+  - LOG_COMMAND       # Command to show application logs (optional)
+  - DEBUG_ENV         # How to enable debug mode (optional)
+
+commands:
+  - name: configure
+    description: "Analyze project for log access patterns, alert sources, services (framework setup)"
+    output: ".claude/skills/debugger.yaml"
+    user_approval: required
+    steps:
+      - Scan for log-related commands (docker logs, kubectl logs, gcloud logging, etc.)
+      - Identify environment variables for log access
+      - Detect service names and deployment targets
+      - Check for alerting integrations (Slack, PagerDuty, etc.)
+      - Propose configuration to user for approval
+      - Save approved config to .claude/skills/debugger.yaml
+
+  - name: learn
+    description: "Learn debugging patterns from specific service or log output"
+    arguments:
+      - name: path
+        required: true
+        description: "Service directory or log file to analyze"
+    output: "Updates .claude/skills/debugger.yaml"
+    steps:
+      - Read existing config from .claude/skills/debugger.yaml
+      - Analyze specified path for service-specific patterns
+      - Extract error patterns and log formats
+      - Propose updates to user
+      - Merge approved updates into config
+
+  - name: default
+    description: "Debug an alert or error using saved configuration"
+    requires: ".claude/skills/debugger.yaml exists"
+    steps:
+      - Load config from .claude/skills/debugger.yaml
+      - Follow debug_production_alert procedure
+      - Use configured LOG_COMMAND for log queries
+      - Apply learned error patterns for categorization
+
+purpose: |
+  Guide systematic debugging of production issues:
+  1. Alert triage - parse and categorize alerts
+  2. Service identification - determine affected components
+  3. Log analysis - find relevant log entries
+  4. Root cause hypothesis - form and test theories
+  5. Next steps - recommend actions to fix or investigate further
+
+  Project-specific log commands are configured via skills-config.yaml.
+
+owns:
+  - "Production debugging workflow"
+  - "Alert triage procedures"
+  - "Log analysis patterns"
+  - "Root cause hypothesis formation"
+
+inputs:
+  - name: alert_source
+    description: Where the alert originated from
+    examples:
+      - "Slack alert channel"
+      - "Monitoring dashboard"
+      - "Manual report from team member"
+
+  - name: error_message
+    description: The error text from the alert
+    examples:
+      - "Connection refused"
+      - "Timeout after 30s"
+      - "Invalid response format"
+
+  - name: service_name
+    description: The service affected (optional, can be inferred)
+    examples:
+      - "api-server"
+      - "worker"
+      - "scheduler"
+
+  - name: time_range
+    description: When the error occurred
+    examples:
+      - "last 30 minutes"
+      - "2026-01-23T14:00:00Z to 2026-01-23T15:00:00Z"
+      - "around 2pm UTC"
+
+outputs:
+  - name: identified_service
+    description: Which service is affected
+
+  - name: relevant_logs
+    description: Log entries related to the error
+
+  - name: root_cause_hypothesis
+    description: Best guess at what caused the issue based on logs
+
+  - name: next_steps
+    description: Recommended actions to verify hypothesis or implement fix
+
+patterns:
+  error_categories:
+    connection_failures:
+      indicators:
+        - "connection refused"
+        - "ECONNREFUSED"
+        - "network error"
+        - "fetch failed"
+      common_causes:
+        - Service endpoint down
+        - Network connectivity issues
+        - Rate limiting
+        - Invalid URL configuration
+
+    timeout_errors:
+      indicators:
+        - "timeout"
+        - "ETIMEDOUT"
+        - "deadline exceeded"
+        - "timed out"
+      common_causes:
+        - Slow external service responses
+        - Network latency
+        - Resource constraints
+        - Deadlock or infinite loop
+
+    data_errors:
+      indicators:
+        - "unexpected"
+        - "invalid"
+        - "null"
+        - "undefined"
+        - "parse error"
+      common_causes:
+        - Schema mismatch
+        - Corrupted data
+        - Race condition
+        - Missing data validation
+
+    authentication_errors:
+      indicators:
+        - "unauthorized"
+        - "403"
+        - "401"
+        - "forbidden"
+        - "invalid token"
+      common_causes:
+        - Expired credentials
+        - Invalid API key
+        - Permission denied
+        - Token refresh failure
+
+anti_patterns:
+  - name: assuming_service_without_verification
+    why_bad: Alert keywords may be ambiguous or misleading
+    what_to_do: Always verify service by checking multiple indicators
+
+  - name: checking_only_error_logs
+    why_bad: Root cause may appear in warnings before the error
+    what_to_do: Query broader severity range (WARNING and above) initially
+
+  - name: ignoring_timestamp_precision
+    why_bad: Logs may use UTC, alerts may use local time
+    what_to_do: Convert all times to UTC and add buffer (+/- 15 minutes)
+
+  - name: single_log_line_conclusion
+    why_bad: One error may be symptom, not root cause
+    what_to_do: Look for patterns across multiple log entries and time periods
+
+  - name: skipping_context_before_error
+    why_bad: Critical clues often appear in logs preceding the error
+    what_to_do: Query logs 5-10 minutes before the error timestamp
+
+procedures:
+  - name: debug_production_alert
+    steps:
+      - phase: Phase 1 - Alert Triage
+        actions:
+          - Parse the alert message to extract key information
+          - Identify alert type (error, warning, threshold breach)
+          - Extract error message or key symptoms
+          - Note the timestamp or time range
+          - Identify any mentioned service or component names
+
+      - phase: Phase 2 - Service Identification
+        actions:
+          - Match alert keywords against known services
+          - Determine which service or component is affected
+          - Identify the environment (production, staging, etc.)
+          - Prepare log filter patterns based on error message
+
+      - phase: Phase 3 - Log Analysis
+        actions:
+          - Convert alert time to UTC if needed, add buffer
+          - Query logs using ${LOG_COMMAND} or appropriate log viewer
+          - If no results, expand severity to WARNING and INFO
+          - Look for stack traces showing error origin
+          - Check for repeated error patterns
+          - Query context logs before/after error
+
+      - phase: Phase 4 - Root Cause Hypothesis
+        actions:
+          - Categorize error using error_categories patterns
+          - Identify common causes for that category
+          - Look for supporting evidence in logs
+          - Check if error correlates with external events
+          - Form primary hypothesis
+          - List alternative explanations
+          - Suggest verification steps
+
+      - phase: Phase 5 - Next Steps
+        actions:
+          - If root cause is clear, suggest fix
+          - If hypothesis needs verification, outline steps
+          - If issue requires code change, suggest using workflow
+          - Document findings for team visibility
+
+  - name: analyze_recurring_alert
+    description: When the same alert fires multiple times
+    steps:
+      - phase: Pattern Analysis
+        actions:
+          - Query logs over longer time range (hours or days)
+          - Look for frequency pattern (periodic, random, increasing)
+          - Check if errors correlate with specific times or events
+          - Identify if error rate is increasing over time
+
+      - phase: Commonality Check
+        actions:
+          - Check if errors always occur in same environment
+          - Check if errors correlate with specific inputs
+          - Check if errors happen during specific operations
+          - Look for environmental factors (time of day, load patterns)
+
+      - phase: Root Cause Deep Dive
+        actions:
+          - Focus on earliest occurrence of pattern
+          - Check for code changes around when pattern started
+          - Check for infrastructure changes
+          - Analyze differences between successful and failed cases
+
+examples:
+  - name: Timeout alert
+    alert_message: |
+      [ERROR] api-server - Request timeout after 30s
+      Endpoint: /api/users
+      Time: 2026-01-23 14:32:15 UTC
+
+    procedure: debug_production_alert
+
+    expected_flow:
+      - Triage: Error type, request timeout, api-server, 14:32 UTC
+      - Identify: api-server service, /api/users endpoint
+      - Query logs: 14:17 to 14:47 UTC range, severity>=ERROR
+      - Categorize: timeout_errors -> check for slow dependencies
+      - Hypothesis: Database or external API slow or unresponsive
+      - Next steps: Check database performance, verify external API health
+
+  - name: Connection failure
+    alert_message: |
+      [ERROR] worker - Connection refused
+      Host: database.internal
+      Time: 2026-01-23 15:00:00 UTC
+
+    procedure: debug_production_alert
+
+    expected_flow:
+      - Triage: Error type, connection refused, worker
+      - Identify: worker service, database connection
+      - Query logs for connection patterns
+      - Categorize: connection_failures -> check database availability
+      - Hypothesis: Database service down or network issue
+      - Next steps: Verify database status, check network connectivity
+
+customization_guide: |
+  To customize this skill for your project:
+
+  1. Set LOG_COMMAND in skills-config.yaml if you have a specific log viewer
+  2. Set DEBUG_ENV in skills-config.yaml for debug mode instructions
+  3. Add project-specific error categories to the patterns section
+  4. Add your service names and their keywords
+  5. Update examples with project-relevant scenarios
+
+  Example LOG_COMMAND values:
+  - "docker logs app" (Docker)
+  - "kubectl logs -f deployment/app" (Kubernetes)
+  - "tail -f /var/log/app.log" (Traditional)
+  - "gcloud logging read ..." (GCP)
+
+  Example DEBUG_ENV values:
+  - "DEBUG=true npm start" (Node.js)
+  - "LOG_LEVEL=debug python app.py" (Python)
+  - "RUST_LOG=debug cargo run" (Rust)

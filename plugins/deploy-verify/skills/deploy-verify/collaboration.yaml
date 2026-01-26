@@ -1,0 +1,47 @@
+# Collaboration configuration for deploy-verify skill
+#
+# Defines how this skill works with other skills in the system.
+
+skill: deploy-verify
+
+dependencies:
+  - skill: debugger
+    relationship: hands-off-to
+    description: When verification finds issues, hand off to debugger for investigation
+
+triggers:
+  # When to suggest using this skill
+  - condition: "User asks about deployment status"
+    action: "Use deploy-verify skill"
+
+  - condition: "User mentions 'check deployment' or 'verify deployment'"
+    action: "Use deploy-verify skill"
+
+  - condition: "After running deployment workflow"
+    action: "Suggest running deploy-verify"
+
+  - condition: "User reports service issues after deployment"
+    action: "Start with deploy-verify before debugging"
+
+handoffs:
+  # When to hand off to another skill
+  - to: debugger
+    when: "Deployment verification finds errors that need investigation"
+    context: "Pass error messages, service names, and timestamps to debugger"
+
+  - to: deploy
+    when: "Verification fails and rollback is needed"
+    context: "Provide failed service and error details"
+
+composition:
+  # How this skill composes with others
+  part_of:
+    - workflow: "Post-deployment verification"
+      sequence:
+        - "deploy runs"
+        - "deploy-verify checks health"
+        - "debugger if issues found"
+
+  invoked_by:
+    - developer  # When investigating deployment issues
+    - debugger   # To verify service health during debugging

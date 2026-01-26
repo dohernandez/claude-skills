@@ -1,0 +1,56 @@
+# Code skill collaboration
+# Defines how code skill works with other skills
+
+triggers:
+  - pattern: "code style|naming convention|linter|formatter|defensive|code guide"
+    suggest: code
+
+  - pattern: "before committing|style check|code check"
+    suggest: "code check"
+
+provides_to:
+  - skill: developer
+    provides:
+      - "style_rules: Applicable style for current language"
+      - "mindset: Defensive programming guidance"
+    mode: guide
+    usage: |
+      Developer skill invokes /code guide when starting implementation
+      to ensure code follows project style and defensive patterns.
+
+  - skill: commit
+    provides:
+      - "validation: Style check results"
+    mode: check
+    usage: |
+      Commit skill can invoke /code check before committing
+      to catch style violations early.
+
+  - skill: arch
+    provides:
+      - "layer_context: Style rules may vary by architecture layer"
+    usage: |
+      Some projects have different style rules for different layers
+      (e.g., stricter rules for domain code).
+
+receives_from:
+  - skill: arch
+    receives:
+      - "layer_info: Which architecture layer code is in"
+    usage: |
+      Code skill can adjust guidance based on layer
+      (domain vs infrastructure vs application).
+
+  - skill: developer
+    receives:
+      - "implementation_context: What is being implemented"
+    usage: |
+      Code skill provides context-specific guidance
+      based on what's being written.
+
+usage_hints:
+  - "Run /code discover first to detect existing configs"
+  - "Use /code learn if no configs exist"
+  - "Run /code check before commits"
+  - "Invoke /code guide when starting new code"
+  - "Re-invoke when you notice yourself rushing"

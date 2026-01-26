@@ -1,0 +1,13 @@
+version: 1
+description: "Validations for docs-refresh skill"
+
+validations:
+  - id: skill-yaml-valid
+    name: "All skill YAML files are valid"
+    type: command
+    command: "task -t .claude/Taskfile.yaml validate-skill-yaml"
+    expect: "exit 0"
+    message: "Skill YAML validation failed. Fix skill structure issues."
+
+on_stop:
+  - skill-yaml-valid

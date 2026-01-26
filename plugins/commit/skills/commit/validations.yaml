@@ -1,0 +1,33 @@
+version: 1
+description: "Validations for commit skill"
+
+# Commit skill validations:
+# - Branch check (not on main/master)
+# - No secrets staged
+# - Message format valid
+
+validations:
+  - id: not-on-protected-branch
+    name: "Not committing to protected branch"
+    type: command
+    command: |
+      BRANCH=$(git branch --show-current 2>/dev/null)
+      if [ "$BRANCH" = "main" ] || [ "$BRANCH" = "master" ]; then
+        echo "ERROR: Cannot commit to $BRANCH"
+        exit 1
+      fi
+    expect: "exit 0"
+    message: "Cannot commit directly to main/master branch."
+
+  - id: no-secrets-staged
+    name: "No secrets in staged files"
+    type: command
+    command: |
+      if git diff --staged --name-only | grep -qE '\.env$|credentials|secret|\.pem$|\.key$'; then
+        echo "ERROR: Potential secrets staged"
+        exit 1
+      fi
+    expect: "exit 0"
+    message: "Staged files may contain secrets. Review and unstage if needed."
+
+on_stop: []

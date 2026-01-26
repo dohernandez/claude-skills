@@ -1,0 +1,35 @@
+# Sharp edges: known failure modes and edge cases
+
+name: framework
+version: "1.0.0"
+
+sharp_edges:
+  - id: skills-not-installed
+    description: "Skills directory doesn't exist"
+    severity: critical
+    detect:
+      command: "test -d .claude/skills"
+      expect_failure: true
+    impact: "Cannot configure skills that don't exist"
+    fix: "Run claude --init to install skills first"
+    phase: before_configure
+
+  - id: partial-configuration
+    description: "Some skills configured, others not"
+    severity: medium
+    detect:
+      command: "ls .claude/skills/*.yaml 2>/dev/null | wc -l"
+      expect: ">0 but <15"
+    impact: "Inconsistent skill behavior"
+    fix: "Run /framework configure to configure all skills"
+    phase: during_configure
+
+  - id: config-env-missing
+    description: "Framework config file doesn't exist"
+    severity: high
+    detect:
+      command: "test -f .claude/skills-config.env"
+      expect_failure: true
+    impact: "Skills that depend on PROJECT_NAME, TEST_COMMAND etc will fail"
+    fix: "Run /framework configure"
+    phase: before_skill_use

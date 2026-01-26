@@ -1,0 +1,100 @@
+# Architecture sharp edges - common violations to proactively check
+# Customize detection commands for your project's paths
+
+edges:
+  - id: inner-imports-outer
+    description: "Inner layer imports from outer layer (e.g., domain imports infrastructure)"
+    detect: |
+      # Customize paths based on your ARCHITECTURE_STYLE
+      # For hexagonal: grep -r 'from.*infrastructure' src/domain/
+      # For layered: grep -r 'from.*presentation' src/business/
+    impact: "Violates dependency inversion. Inner layer becomes coupled to outer."
+    fix: |
+      Options:
+      1. Move the logic to outer layer
+      2. Define an interface in inner layer, implement in outer
+      3. Use dependency injection from outer layer
+    severity: critical
+
+  - id: outer-imports-inner-impl
+    description: "Outer layer imports implementation details from inner layer"
+    detect: |
+      # Check for imports of private/internal modules
+    impact: "Creates tight coupling to internal implementation"
+    fix: |
+      Import only from index.ts or public interfaces.
+    severity: medium
+
+  - id: circular-dependency
+    description: "Module A imports B, B imports A (directly or transitively)"
+    detect: |
+      # Use a tool like madge for JS/TS:
+      # npx madge --circular src/
+      # Or dependency-cruiser for more control
+    impact: "Runtime errors, difficult to reason about, testing issues"
+    fix: |
+      1. Identify the cycle
+      2. Extract shared code to lower layer
+      3. Use interfaces to break the cycle
+    severity: high
+
+  - id: layer-bypass
+    description: "Outer layer imports from non-adjacent inner layer"
+    detect: |
+      # Check if application imports directly from config, bypassing domain
+    impact: "Skips intermediate layers, creates hidden dependencies"
+    fix: |
+      Route through intermediate layers or reconsider architecture.
+    severity: medium
+
+  - id: god-module
+    description: "Single module exceeds reasonable size (500+ lines)"
+    detect: |
+      # wc -l on source files
+      # find src/ -name "*.ts" -exec wc -l {} + | sort -n | tail -20
+    impact: "Hard to test, violates single responsibility"
+    fix: |
+      1. Extract related logic into separate modules
+      2. Use composition patterns
+      3. Split by responsibility
+    severity: medium
+
+  - id: cross-cutting-in-inner
+    description: "Inner layer has direct dependency on cross-cutting concern"
+    detect: |
+      # Check if domain directly imports logger, metrics, etc.
+      # Should use abstraction or be injected
+    impact: "Makes inner layer dependent on infrastructure decisions"
+    fix: |
+      1. Define exception in cross_cutting_exceptions if intentional
+      2. Or inject the dependency from outer layer
+    severity: low
+
+  - id: hardcoded-config
+    description: "Configuration values hardcoded instead of from config layer"
+    detect: |
+      # Look for hardcoded URLs, ports, credentials
+      # grep -r 'localhost' src/
+      # grep -rE 'https?://' src/
+    impact: "Environment-specific, hard to test, deployment issues"
+    fix: |
+      Move to configuration layer with environment variable support.
+    severity: medium
+
+customization_guide: |
+  To customize for your project:
+
+  1. Update 'detect' commands with your actual paths
+  2. Add project-specific edges (e.g., framework-specific violations)
+  3. Adjust severity levels based on your team's priorities
+  4. Remove edges that don't apply to your architecture style
+
+  Example for React project:
+  ```yaml
+  - id: component-imports-service
+    description: "React component imports service directly"
+    detect: "grep -r 'import.*from.*services' src/components/"
+    impact: "Components should use hooks for data fetching"
+    fix: "Use custom hooks to abstract service calls"
+    severity: medium
+  ```

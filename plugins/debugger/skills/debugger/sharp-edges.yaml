@@ -1,0 +1,188 @@
+sharp_edges:
+  - name: missing_gcp_authentication
+    symptom: gcloud commands fail with "ERROR (gcloud.auth) You do not currently have an active account selected"
+    why_it_happens: |
+      User has not authenticated with gcloud or the authentication has expired.
+      Cannot query GCP Cloud Logging without valid authentication.
+    how_to_avoid: |
+      ALWAYS check authentication status before attempting log queries.
+      Run verify_prerequisites procedure first to catch this early.
+      Guide user through gcloud auth login if needed.
+    example:
+      bad: Immediately run "gcloud logging read..." without checking auth
+      good: First run "gcloud auth list", then "gcloud auth login" if needed, then query logs
+
+  - name: insufficient_gcp_permissions
+    symptom: gcloud commands fail with "PERMISSION_DENIED" or "403 Forbidden"
+    why_it_happens: |
+      User is authenticated but their account lacks required IAM roles
+      (Logs Viewer, Cloud Run Viewer) for the project.
+    how_to_avoid: |
+      After authentication, test access with a simple log query.
+      If permission denied, inform user they need to request access from GCP admin.
+      Cannot proceed with debugging without proper roles.
+    example:
+      bad: Assume authenticated user has all permissions
+      good: Test with "gcloud logging read ... --limit=1", check for errors, inform user if roles needed
+
+  - name: no_alert_access
+    symptom: User cannot provide alert text because they don't have access to alert source
+    why_it_happens: |
+      User is not a member of the alerts channel or doesn't have access to monitoring system.
+      Cannot debug without the alert information.
+    how_to_avoid: |
+      In verify_prerequisites, confirm user has access to alert source and alert text.
+      If they don't have access, they need to request it from team admin.
+      Alternatively, someone with access can provide the alert text.
+    example:
+      bad: Proceed with debugging assuming user will somehow get alert text
+      good: Check upfront if user has alert, guide to alert source if not, or ask team member to share
+
+  - name: missing_slack_env_vars
+    symptom: Want to use programmatic Slack access but SLACK_BOT_TOKEN or SLACK_ALERT_CHANNEL_ID not set in .env
+    why_it_happens: |
+      User hasn't configured Slack environment variables in their .env file.
+      Programmatic alert retrieval via Slack API requires both env vars.
+    how_to_avoid: |
+      Check for env vars with "grep -E '^SLACK_(BOT_TOKEN|ALERT_CHANNEL_ID)=' .env"
+      If missing, offer two paths:
+      1. Quick: Manual copy-paste from Slack (no setup needed)
+      2. Better long-term: Setup env vars following .env.example template
+      Guide through getting bot token and channel ID if user chooses Option 2.
+    example:
+      bad: Assume env vars are always configured, fail when trying to use Slack API
+      good: Check env vars first, offer manual alternative if not configured, guide setup if desired
+
+  - name: timezone_confusion
+    symptom: Querying logs around alert time but finding no relevant entries
+    why_it_happens: |
+      Alerts may display times in local timezone (PST, EST) but GCP logs use UTC.
+      Without conversion, queries miss the actual error window.
+    how_to_avoid: |
+      ALWAYS convert alert timestamps to UTC before querying.
+      Add ±15 minute buffer to account for clock skew and imprecise alert times.
+      Example: "3pm PST" → "23:00 UTC" → query range "22:45 to 23:15 UTC"
+    example:
+      bad: Alert says "3pm PST", query logs at 15:00 UTC
+      good: Alert says "3pm PST", convert to 23:00 UTC, query 22:45-23:15 UTC
+
+  - name: service_name_mismatch
+    symptom: Alert mentions domain concept but can't find corresponding service
+    why_it_happens: |
+      Alerts use domain language ("user signup failed", "payment timeout") while
+      infrastructure uses service names ("auth-service", "payment-processor").
+      Direct string matching fails.
+    how_to_avoid: |
+      Map alert keywords to actual service names.
+      Don't rely on exact name matching - use keyword patterns.
+      When uncertain, check multiple services that could match.
+    example:
+      bad: Alert says "user signup failed" → search for service "user-signup"
+      good: Alert says "user signup failed" → keywords match "auth-service"
+
+  - name: log_lag_blind_spot
+    symptom: Error just happened but no logs found in GCP
+    why_it_happens: |
+      There can be 1-5 minute delay between when an error occurs and when it
+      appears in GCP Cloud Logging, especially during high traffic.
+    how_to_avoid: |
+      For very recent alerts (<5 min ago), wait 2-3 minutes before querying.
+      If no results, retry query after brief wait.
+      Don't immediately conclude "no error in logs" for fresh alerts.
+    example:
+      bad: Alert fires at 14:32, immediately query logs, find nothing, conclude false alarm
+      good: Alert fires at 14:32, wait until 14:35, then query with buffer
+
+  - name: cascading_failure_confusion
+    symptom: Multiple services showing errors, unclear which is root cause
+    why_it_happens: |
+      One service failure (e.g., database down) causes dependent services to fail.
+      Logs show errors in multiple services, making root cause unclear.
+    how_to_avoid: |
+      Look at error timestamps - earliest error is likely root cause.
+      Check for dependency relationships (api depends on database, worker depends on api).
+      Focus debugging on the earliest/lowest-level failure first.
+    example:
+      bad: See errors in api, worker, scheduler → debug all three
+      good: Database error at 14:30, api error at 14:32 → debug database first
+
+  - name: sampled_logs_gaps
+    symptom: Logs seem to skip time periods or have incomplete information
+    why_it_happens: |
+      During very high log volume, GCP may sample/throttle logs.
+      Not every log line makes it to Cloud Logging, creating gaps.
+    how_to_avoid: |
+      If logs seem sparse, check GCP logging quota/throttling.
+      Focus on ERROR severity (less likely to be sampled) for critical issues.
+      If sampling suspected, correlate with application metrics or traces.
+    example:
+      bad: See error at 14:30 and 14:35, assume nothing happened 14:30-14:35
+      good: Note log gap, check if sampling occurred, query for ERROR only
+
+  - name: single_log_conclusion
+    symptom: Make diagnosis based on one error message without broader context
+    why_it_happens: |
+      First error found seems to explain the issue, stop investigating.
+      But that error may be a symptom, not the root cause.
+    how_to_avoid: |
+      Always query at least 5-10 minutes before the error.
+      Look for patterns across multiple log entries.
+      Check for warnings or unusual activity preceding the error.
+      Don't stop at first error - verify it's truly the root.
+    example:
+      bad: See "Transaction timeout" error → conclude RPC is slow
+      good: Check logs before timeout, find "RPC connection refused" warnings → RPC is down, not slow
+
+  - name: wrong_environment_project
+    symptom: Querying correct service but finding no logs
+    why_it_happens: |
+      Alert mentions environment (staging, production) but query wrong project.
+      Each environment may have its own log destination with separate logs.
+    how_to_avoid: |
+      Always identify environment from alert first.
+      Map environment to correct project or log destination.
+      staging → project-staging
+      production → project-production
+    example:
+      bad: Alert says "staging environment" → query production project
+      good: Alert says "staging environment" → query staging project
+
+  - name: ignoring_context_logs
+    symptom: Error message unclear, can't determine what operation failed
+    why_it_happens: |
+      Only querying ERROR severity misses INFO/WARNING logs that provide context
+      about what the service was doing when it failed.
+    how_to_avoid: |
+      After finding error, expand query to severity>=INFO for same time window.
+      Look for request IDs, operation names, or transaction IDs in context.
+      Trace backward through INFO logs to see operation flow.
+    example:
+      bad: Error says "Operation failed" → no idea what operation
+      good: Query INFO logs before error → see "Processing order #12345..." → know which operation
+
+  - name: assuming_recent_deployment
+    symptom: Blame recent code changes for an error without evidence
+    why_it_happens: |
+      Cognitive bias to assume latest deployment caused the issue.
+      But error may be due to external factors unrelated to code.
+    how_to_avoid: |
+      Check deployment timestamps vs error start time.
+      Look for environmental changes (RPC endpoint updates, network upgrades).
+      Consider data-driven issues (bad input, changed external API).
+      Only blame deployment if timing and evidence align.
+    example:
+      bad: Error starts 2 hours after deployment → must be the deployment
+      good: Error starts 2 hours after deployment, but logs show RPC endpoint changed → external cause
+
+  - name: overlooking_quota_limits
+    symptom: Intermittent failures with no clear pattern
+    why_it_happens: |
+      GCP quotas (requests/minute, concurrent executions) can cause throttling.
+      Errors appear random but actually correlate with quota breaches.
+    how_to_avoid: |
+      Check GCP quota metrics if errors seem intermittent.
+      Look for "429 Too Many Requests" or "quota exceeded" in logs.
+      Check Cloud Run concurrency settings and request limits.
+    example:
+      bad: Random failures every few minutes → assume bug in code
+      good: Check metrics → hitting 1000 requests/min quota → rate limiting

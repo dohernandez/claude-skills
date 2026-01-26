@@ -1,0 +1,86 @@
+# Collaboration: skill dependencies and composition
+
+collaborates_with:
+  - skill: workflow
+    relationship: "downstream"
+    handoff: |
+      commit is typically used during active workflow:
+      1. User makes changes in working branch
+      2. commit creates proper commits
+      3. workflow manages the overall flow
+
+  - skill: pr-create
+    relationship: "downstream"
+    handoff: |
+      After committing changes:
+      1. commit creates the commit(s)
+      2. User pushes to remote
+      3. pr-create creates the pull request
+
+  - skill: code
+    relationship: "complementary"
+    handoff: |
+      code provides coding patterns and style.
+      commit ensures changes are properly committed.
+      Both are part of a complete development workflow.
+
+boundaries:
+  this_skill_handles:
+    - "Git commit message generation"
+    - "Conventional commit format"
+    - "Intelligent staging guidance"
+    - "Commit safety checks"
+
+  this_skill_does_not_handle:
+    - "Branch management (use workflow)"
+    - "Pull request creation (use pr-create)"
+    - "Test execution (run tests before commit)"
+    - "Code style enforcement (use code)"
+    - "Pushing to remote (manual git push)"
+
+triggers:
+  - pattern: "commit|/commit"
+    suggest: commit
+
+  - pattern: "git commit|stage changes|create commit"
+    suggest: commit
+
+  - pattern: "commit message|conventional commit"
+    suggest: commit
+
+composition:
+  - when: "User finishes a piece of work and wants to commit"
+    sequence:
+      - "Run pre-commit checks (lint, test)"
+      - commit
+
+  - when: "User wants to create a PR after committing"
+    sequence:
+      - commit
+      - "git push (manual)"
+      - pr-create
+
+common_questions:
+  - question: "Should I stage all files with git add -A?"
+    answer: |
+      No. Use git add <specific-files> to avoid accidentally staging secrets
+      or unrelated files. Review git status first.
+
+  - question: "What if pre-commit hooks fail?"
+    answer: |
+      Fix the issue (usually lint or test failure).
+      Re-stage files if needed.
+      Create a NEW commit - never use --amend after hook failure.
+
+  - question: "Should I use past or present tense?"
+    answer: |
+      Present tense, imperative mood.
+      Good: "add feature", "fix bug", "update config"
+      Bad: "added feature", "fixed bug", "updated config"
+
+  - question: "How do I write a good commit message?"
+    answer: |
+      1. Keep title under 50 characters
+      2. Be specific (avoid "improve", "update", "fix")
+      3. Use imperative mood ("add" not "added")
+      4. Optional body: 1-2 sentences explaining why

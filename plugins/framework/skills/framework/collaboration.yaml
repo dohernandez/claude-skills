@@ -1,0 +1,52 @@
+# Collaboration: skill dependencies and composition
+
+name: framework
+version: "1.0.0"
+
+orchestrates:
+  - skill: arch
+    reason: "Configure architecture patterns"
+  - skill: code
+    reason: "Configure code style"
+  - skill: tdd
+    reason: "Configure test patterns"
+  - skill: test
+    reason: "Configure test commands"
+  - skill: commit
+    reason: "Configure commit scopes"
+  - skill: developer
+    reason: "Configure development patterns"
+  - skill: domain-expert
+    reason: "Configure domain knowledge"
+  - skill: workflow-setup
+    reason: "Configure workflow preferences"
+  - skill: workflow-finish
+    reason: "Configure cleanup preferences"
+  - skill: deploy
+    reason: "Configure deployment commands"
+  - skill: deploy-verify
+    reason: "Configure verification endpoints"
+  - skill: debugger
+    reason: "Configure log commands"
+  - skill: docs-refresh
+    reason: "Configure documentation paths"
+  - skill: setup
+    reason: "Configure setup commands"
+  - skill: linear
+    reason: "Configure Linear workspace"
+  - skill: task
+    reason: "Configure task patterns"
+
+triggers:
+  - pattern: "/framework|/framework configure"
+    suggest: framework
+
+boundaries:
+  this_skill_handles:
+    - "Framework-level configuration orchestration"
+    - "Running /skill configure for all configurable skills"
+    - "Managing .claude/skills-config.env"
+
+  this_skill_does_not_handle:
+    - "Individual skill procedures"
+    - "Skill installation (handled by setup.sh)"

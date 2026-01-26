@@ -1,0 +1,123 @@
+# Sharp edges for developer
+
+edges:
+  - id: no-config-exists
+    description: "Running /developer without having run /developer discover first"
+    detect: "Check if .claude/skills/developer.yaml exists"
+    impact: "No architecture context, implementation may violate project patterns"
+    fix: |
+      Run /developer discover first to analyze project architecture.
+      This creates .claude/skills/developer.yaml with:
+      - Architecture style and layers
+      - Import rules
+      - Domain concepts
+      - Naming patterns
+    severity: critical
+
+  - id: wrong-layer-placement
+    description: "Placing code in wrong architecture layer"
+    detect: "Code violates import_rules from config (inner layers importing outer)"
+    impact: "Breaks architecture, makes code untestable, creates coupling"
+    fix: |
+      Check import_rules in .claude/skills/developer.yaml.
+      For layered architecture:
+      - Domain: no external dependencies
+      - Infrastructure: can import domain only
+      - Application: can import domain and infrastructure
+
+      Move code to correct layer and fix imports.
+    severity: critical
+
+  - id: top-down-implementation
+    description: "Implementing outer layers before inner layers are ready"
+    detect: "Application code has TODOs, placeholder data, or commented-out imports"
+    impact: "Forces architectural compromises, creates debt, violates dependency rules"
+    fix: |
+      For multi-layer changes, implement bottom-up:
+      1. Domain/core (business logic)
+      2. Infrastructure (external integrations)
+      3. Application (services, orchestration)
+
+      Validate after each layer.
+    severity: high
+
+  - id: ignoring-domain-concepts
+    description: "Using generic terms instead of project domain vocabulary"
+    detect: "Code uses terms not in domain_concepts config, or mismatches existing terminology"
+    impact: "Code becomes unclear, documentation confusing, harder to maintain"
+    fix: |
+      Check domain_concepts in .claude/skills/developer.yaml.
+      Use project-specific terminology consistently.
+      If new concept needed, run /developer learn to update config.
+    severity: medium
+
+  - id: pattern-mismatch
+    description: "Not following discovered naming and structure patterns"
+    detect: "File names, function names, or structure don't match patterns in config"
+    impact: "Inconsistent codebase, harder to navigate, breaks conventions"
+    fix: |
+      Check patterns in .claude/skills/developer.yaml:
+      - naming.files: file naming convention
+      - naming.functions: function naming convention
+      - test_location: where tests live
+      - test_suffix: test file naming
+
+      Match existing patterns in the codebase.
+    severity: medium
+
+  - id: skipping-validation
+    description: "Not running pre-commit checks before considering complete"
+    detect: "Changes committed without running validation"
+    impact: "May introduce regressions, style violations, broken builds"
+    fix: |
+      Before marking complete, run:
+        task -t .claude/Taskfile.yaml precommit
+
+      Fix all errors before proceeding.
+    severity: high
+
+  - id: multi-layer-no-validation
+    description: "Making changes across multiple layers without validating after each"
+    detect: "Large change touching multiple layers without intermediate checks"
+    impact: "Architectural violations compound, harder to debug, larger rollback"
+    fix: |
+      For multi-layer changes:
+      1. Implement domain first → validate
+      2. Implement infrastructure → validate
+      3. Implement application → validate
+
+      Run validation after EACH layer.
+    severity: medium
+
+  - id: stale-config
+    description: "Architecture config is out of date with actual codebase"
+    detect: "Config references paths or patterns that no longer exist"
+    impact: "Wrong guidance, may create code in wrong locations"
+    fix: |
+      Run /developer discover to refresh config.
+      Or use /developer learn <path> to update specific areas.
+    severity: medium
+
+  - id: fixing-without-diagnosis
+    description: "Making code changes to fix bugs before understanding root cause"
+    detect: "Bug fix changes code based on assumptions without evidence"
+    impact: "Wrong fix, wasted effort, may introduce new bugs"
+    fix: |
+      When a bug is not immediately clear:
+      1. Add logging to understand actual data flow
+      2. Run failing test/scenario to collect diagnostics
+      3. Analyze to identify root cause with evidence
+      4. Only then make targeted code changes
+
+      Never guess at fixes - always diagnose first.
+    severity: high
+
+  - id: missing-tests
+    description: "Implementing code changes without corresponding tests"
+    detect: "Source file modified but no test file updated or created"
+    impact: "Regressions go undetected, code quality degrades"
+    fix: |
+      Check patterns.test_location and patterns.test_suffix in config.
+      Create or update tests for all code changes.
+      Run tests before considering complete.
+    severity: high

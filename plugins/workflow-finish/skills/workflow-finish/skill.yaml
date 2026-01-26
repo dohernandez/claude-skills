@@ -1,0 +1,273 @@
+name: workflow-finish
+kind: utility
+version: "2.0.0"
+description: "Cleanup git branches and worktrees after a PR is merged."
+severity: low
+tags:
+  - workflow
+  - git
+  - worktree
+  - cleanup
+
+purpose: |
+  Cleanup after a PR is merged:
+  - Remove git worktree at configured location
+  - Delete local and remote branches
+  - Remove workflow context files
+
+  Configuration model:
+  - /workflow-finish configure: Configure cleanup preferences (shares config with workflow-setup)
+  - /workflow-finish: Normal cleanup using saved config
+
+config_location: ".claude/workflow-config.json"
+
+commands:
+  - name: configure
+    description: "Configure workflow preferences (shared with workflow-setup)"
+    output: ".claude/workflow-config.json"
+    user_approval: required
+    procedure:
+      - step: "Check existing config"
+        detail: |
+          Check if .claude/workflow-config.json exists.
+          If exists: load and validate, show to user for confirmation.
+          If not: run full discovery.
+
+      - step: "Detect project name"
+        detail: |
+          Check for project name in order:
+            1. package.json → name field
+            2. pyproject.toml → [project].name or [tool.poetry].name
+            3. go.mod → module name (last segment)
+            4. Cargo.toml → [package].name
+            5. Current directory name as fallback
+
+      - step: "Suggest worktree base path"
+        detail: |
+          Default suggestion: ../worktrees/<project-name>
+          This is where workflow-setup creates worktrees.
+          workflow-finish needs this to find worktrees to remove.
+
+      - step: "Detect installed IDEs"
+        detail: |
+          Check which IDEs are available:
+            - which cursor → Cursor
+            - which code → VSCode
+            - which webstorm → WebStorm
+          (Used by workflow-setup, stored for consistency)
+
+      - step: "Propose configuration"
+        detail: |
+          Show proposed config to user:
+            - worktreeBasePath: <suggested>
+            - ide: <detected>
+            - copyEnvFiles: true
+          Use AskUserQuestion for approval/modification.
+
+      - step: "Save configuration"
+        detail: |
+          Write approved config to .claude/workflow-config.json
+          Verify file is in .gitignore (warn if not)
+
+  - name: default
+    description: "Cleanup workflow resources (normal usage)"
+    requires: ".claude/workflow-config.json exists"
+
+owns:
+  - "Git worktree cleanup"
+  - "Branch deletion (local and remote)"
+  - "Workflow context file removal"
+
+inputs:
+  - name: target
+    description: Branch name, ticket ID, or omit for current branch
+    required: false
+    examples:
+      - feat/proj-123-add-feature
+      - PROJ-123
+      - ""
+
+outputs:
+  - name: cleanup_status
+    description: What was cleaned up (branch, worktree, context)
+
+patterns:
+  - id: config-file-location
+    description: |
+      Configuration stored in .claude/workflow-config.json (shared with workflow-setup).
+      Contains worktree base path needed for cleanup.
+    example: |
+      {
+        "worktreeBasePath": "../worktrees/my-project",
+        "ide": "Cursor",
+        "copyEnvFiles": true
+      }
+
+  - id: worktree-path-convention
+    description: |
+      Worktrees located at: <basePath>/<branch-without-type-prefix>
+      Must match the convention used by workflow-setup.
+    example: |
+      basePath = ../worktrees/my-project
+      branch = feat/proj-123-add-feature
+      worktreePath = ../worktrees/my-project/proj-123-add-feature
+
+  - id: ticket-id-pattern
+    regex: "^[A-Z]+-[0-9]+$"
+    description: "Ticket IDs like PROJ-123, ENG-456"
+
+  - id: branch-name-pattern
+    regex: "^(feat|fix|chore|docs|refactor|test)/"
+    description: "Branch names with type prefix"
+
+anti_patterns:
+  - id: delete-without-verifying-merge
+    description: "Deleting branch without checking if PR was merged"
+    why_bad: "May lose work if PR was not merged"
+    solution: "Always check PR state via gh pr list before deleting"
+
+  - id: force-finish-without-confirmation
+    description: "Force finishing without user confirmation"
+    why_bad: "User may not realize PR is not merged"
+    solution: "Warn and ask for confirmation if PR is not merged"
+
+  - id: delete-branch-while-on-it
+    description: "Attempting to delete the current branch"
+    why_bad: "Git will fail to delete current branch"
+    solution: "Switch to main first before deleting"
+
+  - id: failing-on-already-deleted
+    description: "Failing when resource already deleted"
+    why_bad: "Makes cleanup non-idempotent"
+    solution: "Ignore errors for already-deleted resources"
+
+  - id: hardcoded-worktree-path
+    description: "Hardcoding worktree path instead of reading config"
+    why_bad: "Won't find worktrees if user configured different path"
+    solution: "Read worktreeBasePath from .claude/workflow-config.json"
+
+procedure:
+  - step: "Load configuration"
+    detail: |
+      Read .claude/workflow-config.json to get worktreeBasePath.
+      If config doesn't exist: error - run `/workflow-finish configure` first.
+
+  - step: "Resolve target branch"
+    detail: |
+      Determine which branch to clean up:
+      - No argument: use current branch (git branch --show-current)
+      - Ticket ID pattern: search for matching branch (git branch --list "*<ticket-id>*")
+      - Branch name: use directly
+    commands:
+      - "git branch --show-current"
+      - "git branch --list '*<ticket-id>*'"
+
+  - step: "Verify PR merged"
+    detail: |
+      Check PR state for target branch.
+      If MERGED: proceed with cleanup.
+      If not merged: warn and ask for confirmation.
+    commands:
+      - "gh pr list --head <branch> --state all --json number,state,mergedAt"
+
+  - step: "Switch to main"
+    detail: |
+      If currently on target branch:
+      - Checkout main
+      - Pull latest
+    commands:
+      - "git checkout main"
+      - "git pull origin main"
+
+  - step: "Calculate worktree path"
+    detail: |
+      Using config.worktreeBasePath and branch name:
+      - Strip type prefix from branch (feat/, fix/, etc.)
+      - Combine: <basePath>/<branch-without-prefix>
+    example: |
+      worktreeBasePath = ../worktrees/my-project
+      branch = feat/proj-123-add-feature
+      worktreePath = ../worktrees/my-project/proj-123-add-feature
+
+  - step: "Remove worktree"
+    detail: |
+      If worktree exists at calculated path:
+      - git worktree remove <path> --force
+      - git worktree prune
+      Ignore errors if already removed.
+    commands:
+      - "git worktree remove <path> --force"
+      - "git worktree prune"
+
+  - step: "Delete remote branch"
+    detail: |
+      Delete branch from origin.
+      Ignore errors if already deleted.
+    commands:
+      - "git push origin --delete <branch>"
+
+  - step: "Delete local branch"
+    detail: |
+      Delete local branch.
+      Ignore errors if already deleted.
+    commands:
+      - "git branch -D <branch>"
+
+  - step: "Remove workflow context"
+    detail: |
+      Remove workflow context directory.
+      Path: .claude/workflow/<branch>/
+    commands:
+      - "rm -rf .claude/workflow/<branch>/"
+
+  - step: "Report completion"
+    detail: |
+      Show cleanup summary table:
+      | Item | Status |
+      |------|--------|
+      | PR #<num> | ✓ Merged |
+      | Worktree | ✓ Removed |
+      | Remote branch | ✓ Deleted |
+      | Local branch | ✓ Deleted |
+      | Context files | ✓ Removed |
+
+handoffs:
+  - skill: workflow
+    when: "User wants to start a new workflow"
+  - skill: workflow-setup
+    when: "Config needs to be created or updated"
+
+examples:
+  - name: Finish current branch
+    request: "/workflow-finish"
+    expected_output: |
+      Workflow finished for `feat/proj-123-feature`
+
+      | Item | Status |
+      |------|--------|
+      | PR #144 | ✓ Merged |
+      | Worktree | ✓ Removed |
+      | Remote branch | ✓ Deleted |
+      | Local branch | ✓ Deleted |
+
+  - name: Finish by ticket ID
+    request: "/workflow-finish PROJ-123"
+    expected_output: |
+      Found branch: feat/proj-123-add-monitoring
+
+      Workflow finished for `feat/proj-123-add-monitoring`
+      ...
+
+context: |
+  This skill handles cleanup after a PR is merged. It's the final step
+  in the workflow lifecycle: start → work → commit → PR → merge → finish.
+
+  The skill is designed to be safe and idempotent:
+  - Reads worktree location from shared config (.claude/workflow-config.json)
+  - Verifies PR is merged before deleting
+  - Asks for confirmation if PR is not merged
+  - Ignores already-deleted resources
+  - Reports what was cleaned up
+
+  Configuration is shared with workflow-setup. Run `/workflow-finish configure`
+  or `/workflow configure` to configure.

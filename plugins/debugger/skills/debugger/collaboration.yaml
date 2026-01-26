@@ -1,0 +1,128 @@
+dependencies:
+  reads_from:
+    - skill: slack
+      why: |
+        Provides reusable Slack access mechanics for retrieving production alerts
+        from alert channels.
+      when: |
+        - Need to retrieve alert text from Slack
+        - Checking for recent alerts during debugging
+        - Verifying Slack configuration and access
+
+    - skill: code
+      why: |
+        Understanding code patterns and architecture helps locate where errors
+        originate in the codebase and what components are involved.
+      when: |
+        - Stack traces point to specific code modules
+        - Need to understand how services interact
+        - Translating error messages to code locations
+
+  writes_to:
+    - skill: workflow
+      why: |
+        After identifying root cause, may need to create bug fix workflow to
+        implement the fix following structured debugging process.
+      when: |
+        - Root cause requires code changes
+        - Issue is reproducible and needs a fix
+        - Ready to transition from diagnosis to implementation
+      handoff: |
+        Provide: service name, root cause description, reproduction steps, affected code area
+        Receive: Bug fix workflow initiated
+
+    - skill: linear
+      why: |
+        May need to create Linear issue to track the bug or incident for team visibility.
+      when: |
+        - Issue affects production and needs tracking
+        - Root cause identified but fix requires planning
+        - Need to escalate to team for discussion
+      handoff: |
+        Provide: service name, error description, impact, root cause, logs excerpt
+        Receive: Linear issue created with debugging context
+
+works_with:
+  - name: Log aggregation system
+    type: external_tool
+    description: Source of truth for service logs and errors (e.g., GCP Cloud Logging, CloudWatch, Datadog)
+
+  - name: Alerting system
+    type: external_tool
+    description: Primary source of production alerts (e.g., Slack, PagerDuty, OpsGenie)
+
+flow_examples:
+  - scenario: Production error alert
+    flow:
+      - step: 1
+        action: Retrieve alert from alerting system
+        skill: slack or manual
+
+      - step: 2
+        action: Triage alert, identify service and time
+        skill: debugger (triage)
+
+      - step: 3
+        action: Query logs for affected service
+        skill: debugger (log analysis)
+
+      - step: 4
+        action: Analyze logs and form root cause hypothesis
+        skill: debugger (analysis)
+
+      - step: 5
+        action: If code fix needed, initiate bug fix workflow
+        skill: workflow (handoff)
+
+  - scenario: Recurring alert pattern analysis
+    flow:
+      - step: 1
+        action: Notice recurring alerts over time
+        skill: debugger (start)
+
+      - step: 2
+        action: Query logs over extended time range
+        skill: debugger (log analysis)
+
+      - step: 3
+        action: Identify pattern and possible cause
+        skill: debugger
+
+      - step: 4
+        action: Create Linear issue to track investigation
+        skill: linear (handoff)
+
+  - scenario: Post-deployment error spike
+    flow:
+      - step: 1
+        action: Alert after recent deployment
+        skill: debugger (start)
+
+      - step: 2
+        action: Query logs around deployment time
+        skill: debugger (log analysis)
+
+      - step: 3
+        action: Identify code location from stack trace
+        skill: code (reference)
+
+      - step: 4
+        action: Confirm root cause in new code
+        skill: debugger
+
+      - step: 5
+        action: Start bug fix workflow to revert or fix
+        skill: workflow (handoff)
+
+coordination_notes: |
+  debugger is a diagnostic skill that sits at the beginning of the incident
+  response flow. It focuses on:
+  - Identifying WHAT is broken
+  - WHERE the error is coming from
+  - WHY it might be happening
+
+  Once diagnosis is complete, it hands off to implementation skills:
+  - workflow for code fixes
+  - linear for tracking and visibility
+
+  debugger does NOT implement fixes directly - it only diagnoses and recommends.

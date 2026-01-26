@@ -1,0 +1,319 @@
+name: test
+kind: tool
+version: "1.0.0"
+description: "Smart test runner with watch mode, coverage, and path-specific testing."
+severity: medium
+tags:
+  - testing
+  - runner
+  - ci
+  - quality
+
+config_location: ".claude/skills/test.yaml"
+
+purpose: |
+  Smart test execution wrapper. Enhances the project's test command with:
+  - Watch mode for continuous testing
+  - Coverage reporting
+  - Path-specific testing
+
+  Configuration model:
+  - /test configure: One-time discovery of test framework and patterns
+  - /test: Run tests using saved config
+  - /test --affected: Smart mode - only test changed files
+
+commands:
+  - name: configure
+    description: "Discover test framework, patterns, and commands"
+    arguments: []
+    output: ".claude/skills/test.yaml"
+    user_approval: required
+
+  - name: default
+    description: "Run all tests"
+    requires: "TEST_COMMAND configured or .claude/skills/test.yaml exists"
+
+  - name: watch
+    description: "Run tests in watch mode"
+    flag: "--watch"
+
+  - name: coverage
+    description: "Run tests with coverage report"
+    flag: "--coverage"
+
+  - name: path
+    description: "Run tests for specific path"
+    arguments:
+      - name: path
+        description: "File or directory to test"
+        required: true
+
+owns:
+  - "Test execution and running"
+  - "Affected file detection"
+  - "Test framework configuration"
+
+# =============================================================================
+# CONFIGURE PROCEDURE
+# =============================================================================
+
+configure:
+  description: "Discover test framework, patterns, and commands"
+
+  steps:
+    - phase: "Detect test framework"
+      actions:
+        - check: "package.json"
+          look_for: ["vitest", "jest", "mocha", "ava", "@testing-library"]
+          sets: { framework: "detected", language: "typescript/javascript" }
+        - check: "pyproject.toml, requirements.txt, setup.py"
+          look_for: ["pytest", "unittest", "nose"]
+          sets: { framework: "detected", language: "python" }
+        - check: "go.mod"
+          look_for: ["*_test.go files exist"]
+          sets: { framework: "go test", language: "go" }
+        - check: "Cargo.toml"
+          look_for: ["#[test]", "#[cfg(test)]"]
+          sets: { framework: "cargo test", language: "rust" }
+
+    - phase: "Find test file patterns"
+      actions:
+        - find: "*.test.ts, *.test.js, *.spec.ts, *.spec.js"
+          indicates: { pattern: "**/*.test.{ts,js}", style: "co-located" }
+        - find: "*_test.py, test_*.py"
+          indicates: { pattern: "**/test_*.py or **/*_test.py", style: "python" }
+        - find: "*_test.go"
+          indicates: { pattern: "**/*_test.go", style: "go" }
+        - find: "__tests__/, tests/, test/"
+          indicates: { style: "separate-directory" }
+
+    - phase: "Detect test commands"
+      actions:
+        - check: "Taskfile.yaml"
+          look_for: ["test", "test:unit", "test:integration", "test:watch"]
+          prefer: "task test"
+        - check: "package.json scripts"
+          look_for: ["test", "test:watch", "test:coverage"]
+          prefer: "npm test"
+        - check: "Makefile"
+          look_for: ["test target"]
+          prefer: "make test"
+        - fallback:
+            vitest: "npx vitest"
+            jest: "npx jest"
+            pytest: "pytest"
+            go: "go test ./..."
+            cargo: "cargo test"
+
+    - phase: "Build source-to-test mapping"
+      actions:
+        - analyze: "Test file locations relative to source"
+        - common_mappings:
+            co_located:
+              - source: "src/**/*.ts"
+                test: "src/**/*.test.ts"
+            separate:
+              - source: "src/**/*.ts"
+                test: "__tests__/**/*.test.ts"
+            python:
+              - source: "src/**/*.py"
+                test: "tests/**/test_*.py"
+            go:
+              - source: "**/*.go"
+                test: "**/*_test.go"
+
+    - phase: "Detect coverage tools"
+      actions:
+        - check: "vitest.config.ts, jest.config.js"
+          look_for: ["coverage", "collectCoverage"]
+        - check: "pyproject.toml"
+          look_for: ["coverage", "pytest-cov"]
+        - check: "go tool cover"
+          available: "go test -cover"
+
+    - phase: "Propose configuration"
+      actions:
+        - format: "YAML proposal with discovered settings"
+        - include:
+            - framework
+            - test_file_patterns
+            - commands (all, watch, coverage, single)
+            - source_to_test_mapping
+        - ask: "Approve this configuration? [Confirm / Modify]"
+
+    - phase: "Save configuration"
+      actions:
+        - location: ".claude/skills/test.yaml"
+        - include: "version, discovered_at timestamp"
+
+  output_schema:
+    version: 1
+    discovered_at: "ISO timestamp"
+    framework: "vitest | jest | pytest | go | cargo"
+    language: "typescript | python | go | rust"
+    patterns:
+      test_files: "glob pattern"
+      test_directories: []
+      source_to_test_mapping:
+        - source: "pattern"
+          test: "pattern"
+    commands:
+      all: "task test"
+      watch: "task test -- --watch"
+      single: "task test -- {file}"
+      coverage: "task test -- --coverage"
+    coverage:
+      tool: "v8 | istanbul | coverage.py | go cover"
+      report_path: "coverage/"
+
+# =============================================================================
+# RUN PROCEDURES
+# =============================================================================
+
+procedures:
+  default:
+    description: "Run all tests"
+    steps:
+      - step: "Load configuration"
+        detail: |
+          1. Check .claude/skills/test.yaml exists
+          2. If not, fall back to TEST_COMMAND from skills-config.env
+          3. If neither, prompt to run /test configure
+
+      - step: "Execute test command"
+        detail: |
+          Run configured command:
+          - From config: commands.all
+          - Fallback: task -t .claude/Taskfile.yaml test
+
+      - step: "Report results"
+        detail: |
+          Display test summary:
+          - Total tests
+          - Passed/failed/skipped
+          - Duration
+
+  watch:
+    description: "Run tests in watch mode"
+    steps:
+      - step: "Check watch support"
+        detail: |
+          Most frameworks support watch:
+          - vitest: --watch (default)
+          - jest: --watch
+          - pytest: requires pytest-watch
+          - go: requires watchexec
+
+      - step: "Start watch"
+        detail: |
+          Run commands.watch from config.
+          Inform user how to exit (Ctrl+C).
+
+  path:
+    description: "Run tests for specific path"
+    steps:
+      - step: "Resolve path"
+        detail: |
+          1. If path is a test file: use directly
+          2. If path is a source file: map to test file
+          3. If path is a directory: use glob
+
+      - step: "Execute"
+        detail: |
+          Run commands.single with resolved path(s).
+
+# =============================================================================
+# ANTI-PATTERNS
+# =============================================================================
+
+anti_patterns:
+  - id: ignoring-failures
+    description: "Proceeding without fixing failed tests"
+    why_bad: "Broken tests accumulate, become noise"
+    do_instead: "Fix tests immediately before continuing"
+
+  - id: no-configuration
+    description: "Running tests without configuring the skill"
+    why_bad: "Can't use smart modes like --watch or --coverage"
+    do_instead: "Run /test configure first"
+
+  - id: skipping-coverage
+    description: "Never checking test coverage"
+    why_bad: "Gaps in test coverage lead to bugs in untested code"
+    do_instead: "Periodically run /test --coverage"
+
+# =============================================================================
+# INTEGRATION
+# =============================================================================
+
+integration:
+  framework_config:
+    description: "Uses test commands from skills-config.env"
+    variables:
+      - TEST_COMMAND
+      - TEST_WATCH_COMMAND
+      - TEST_COVERAGE_COMMAND
+
+  other_skills:
+    - skill: tdd
+      integration: "TDD uses /test for running tests in red-green-refactor"
+    - skill: developer
+      integration: "Developer calls /test before completing"
+    - skill: bugfix
+      integration: "Bugfix uses /test to verify fix"
+    - skill: workflow
+      integration: "Workflow runs /test before PR creation"
+
+# =============================================================================
+# EXAMPLES
+# =============================================================================
+
+examples:
+  - name: "Configure test skill"
+    command: "/test configure"
+    output: |
+      Discovering test configuration...
+
+      Framework: vitest (from package.json)
+      Language: TypeScript
+
+      Test patterns found:
+        - src/**/*.test.ts (47 files)
+
+      Commands detected:
+        - all: task test
+        - watch: task test -- --watch
+        - coverage: task test -- --coverage
+
+      Source-to-test mapping:
+        - src/**/*.ts -> src/**/*.test.ts
+
+      Save this configuration? [Confirm]
+
+  - name: "Run tests with coverage"
+    command: "/test --coverage"
+    output: |
+      Running tests with coverage...
+
+       PASS  src/auth/login.test.ts (3 tests)
+       PASS  src/api/handler.test.ts (5 tests)
+       PASS  src/utils/helpers.test.ts (8 tests)
+
+      Coverage Summary:
+        Statements: 87.5% (140/160)
+        Branches:   82.3% (45/55)
+        Functions:  91.2% (52/57)
+        Lines:      88.1% (138/157)
+
+      Full report: coverage/index.html
+
+  - name: "Run tests for directory"
+    command: "/test src/auth/"
+    output: |
+      Running tests in src/auth/...
+
+       PASS  src/auth/login.test.ts
+       PASS  src/auth/session.test.ts
+       PASS  src/auth/oauth.test.ts
+
+      12 tests passed (3 files)

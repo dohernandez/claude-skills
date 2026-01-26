@@ -1,0 +1,75 @@
+# Architecture validations
+# Customize commands based on your project structure and architecture style
+
+version: 1
+description: "Architecture validation checks for layer boundaries"
+
+# Template validations - customize based on ARCHITECTURE_STYLE
+# These are examples for hexagonal architecture with src/ structure
+
+validations:
+  # Generic layer boundary checks
+  # Uncomment and customize based on your architecture
+
+  # - id: domain-no-outer-imports
+  #   name: "Domain layer does not import outer layers"
+  #   type: command
+  #   command: "! grep -rq 'from.*/infrastructure/\\|from.*/application/' ${SOURCE_ROOT}domain/ 2>/dev/null"
+  #   expect: "exit 0"
+  #   message: "Domain layer must not import infrastructure or application modules"
+
+  # - id: infra-no-app-imports
+  #   name: "Infrastructure layer does not import application"
+  #   type: command
+  #   command: "! grep -rq 'from.*/application/' ${SOURCE_ROOT}infrastructure/ 2>/dev/null"
+  #   expect: "exit 0"
+  #   message: "Infrastructure layer must not import application modules"
+
+  # - id: config-no-internal-imports
+  #   name: "Config layer does not import internal modules"
+  #   type: command
+  #   command: "! grep -rqE 'from.*(domain|infrastructure|application)' ${SOURCE_ROOT}config/ 2>/dev/null"
+  #   expect: "exit 0"
+  #   message: "Config layer must not import domain, infrastructure, or application"
+
+  # Placeholder - add your validations
+  - id: placeholder
+    name: "Architecture validations placeholder"
+    type: command
+    command: "echo 'Configure validations for your project'"
+    expect: "exit 0"
+    message: "Add project-specific architecture validations"
+
+# Validations to run when skill completes (on_stop hook)
+# on_stop:
+#   - domain-no-outer-imports
+#   - infra-no-app-imports
+#   - config-no-internal-imports
+
+customization_guide: |
+  To set up validations for your project:
+
+  1. Determine your layer names and paths from skills-config.yaml
+  2. Create validation commands that check import violations
+  3. Add to on_stop list for automatic checking
+
+  Example for hexagonal with src/ structure:
+
+  ```yaml
+  validations:
+    - id: domain-no-outer-imports
+      name: "Domain layer isolation"
+      type: command
+      command: |
+        ! grep -rE 'from.*(infrastructure|application)' src/domain/ 2>/dev/null || \
+        grep -rE 'from.*(infrastructure|application)' src/domain/ | \
+        grep -vE '(context|logger|benchmark)' | \
+        grep -q .
+      expect: "exit 0"
+      message: "Domain imports outer layer (except allowed cross-cutting concerns)"
+
+  on_stop:
+    - domain-no-outer-imports
+  ```
+
+  For custom architecture styles, adapt the grep patterns to match your layer paths.

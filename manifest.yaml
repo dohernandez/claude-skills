@@ -1,0 +1,11 @@
+# Root manifest for genlayerlabs/skills repository
+# Lists all available packages that can be installed
+
+name: genlayerlabs/skills
+version: "1.0.0"
+description: "Reusable skills for AI coding assistants"
+
+packages:
+  - name: anthropic
+    path: anthropic/
+    description: "Skills for Anthropic Claude Code"

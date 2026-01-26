@@ -1,0 +1,279 @@
+# Anthropic Claude Code Skills Package
+# Install entire framework: /plugin marketplace add genlayerlabs/skills/anthropic
+# Install individual skill: /plugin marketplace add genlayerlabs/skills/anthropic/commit
+
+name: anthropic
+version: "1.0.0"
+description: "Skills for Anthropic Claude Code - a complete developer workflow framework"
+
+# Framework: 21 skills installed together as a cohesive bundle
+# Provides end-to-end developer workflow from planning to deployment
+framework:
+  description: "Complete developer workflow skills for Claude Code"
+
+  # Framework-level wizard questions (asked during installation)
+  # Saved to .claude/skills-config.env for Taskfile consumption
+  wizard:
+    PROJECT_NAME:
+      prompt: "What is your project name?"
+      description: "Used in generated code and documentation"
+      required: true
+    LINT_COMMAND:
+      prompt: "What command runs your linter?"
+      description: "e.g., npm run lint, npx biome check ., task common:lint"
+      default: ""
+      required: false
+    TEST_COMMAND:
+      prompt: "What command runs your tests?"
+      description: "e.g., npm test, pytest, task common:test"
+      default: ""
+      required: false
+    PRECOMMIT_COMMAND:
+      prompt: "What command runs pre-commit validation?"
+      description: "e.g., npm run lint && npm test, task common:precommit (leave blank for lint + test)"
+      default: ""
+      required: false
+
+  skills:
+    # Core skills - drop-in, no customization needed (12)
+    - commit
+    - pr-create
+    - pr-merge
+    - bugfix
+    - task
+    - tdd
+    - workflow
+    - workflow-setup
+    - workflow-finish
+    - create-skill
+    - linear
+    - slack
+    # Customizable skills - have configure mode for project-specific config (9)
+    - arch
+    - code
+    - developer
+    - docs-refresh
+    - setup
+    - domain-expert
+    - debugger
+    - deploy
+    - deploy-verify
+
+# Skill definitions with descriptions and wizard configs
+skills:
+  # ============================================
+  # CORE SKILLS (12) - Drop-in, no customization
+  # ============================================
+
+  commit:
+    description: "Git commit with conventional commit format and intelligent message generation"
+    tags: [git, commit, workflow]
+
+  pr-create:
+    description: "Create pull requests with standardized format and automatic branch management"
+    tags: [git, pr, workflow]
+
+  pr-merge:
+    description: "Merge pull requests with proper validation and cleanup"
+    tags: [git, pr, workflow]
+
+  bugfix:
+    description: "Structured bug investigation and fix workflow"
+    tags: [debugging, workflow]
+
+  task:
+    description: "Task execution and management workflow"
+    tags: [workflow, task-management]
+
+  tdd:
+    description: "Test-driven development workflow with red-green-refactor cycle"
+    tags: [testing, tdd, workflow]
+
+  workflow:
+    description: "Main development workflow orchestrator"
+    tags: [workflow, orchestrator]
+
+  workflow-setup:
+    description: "Initialize workflow with branch creation and Linear integration"
+    tags: [workflow, git, linear]
+
+  workflow-finish:
+    description: "Complete workflow with commit, PR, and cleanup"
+    tags: [workflow, git, pr]
+
+  create-skill:
+    description: "Create new skills following the skill architecture"
+    tags: [skills, meta]
+
+  linear:
+    description: "Linear issue management and ticket workflows"
+    tags: [linear, issue-tracking]
+    wizard:
+      LINEAR_DEFAULT_TEAM:
+        prompt: "What is your default Linear team name? (optional)"
+        description: "Default team for issue creation. Leave blank to select team each time."
+        required: false
+    # Note: Team can also be specified per-invocation. Skill will prompt if not configured.
+
+  slack:
+    description: "Slack integration for notifications"
+    tags: [slack, notifications]
+
+  # ============================================
+  # CUSTOMIZABLE SKILLS (9) - Need wizard config
+  # ============================================
+
+  arch:
+    description: "Architecture guidance and validation - check compliance or plan where code belongs"
+    tags: [architecture, validation, planning]
+    wizard:
+      ARCHITECTURE_STYLE:
+        prompt: "What architecture style does your project follow?"
+        description: "hexagonal (Ports & Adapters), layered, clean, mvc, or custom"
+        options: [hexagonal, layered, clean, mvc, custom]
+        default: "layered"
+        required: true
+    # After ARCHITECTURE_STYLE selection, run /arch configure which:
+    # - Detects project language from indicator files
+    # - SOURCE_ROOT from directory structure
+    # - LAYERS from directory names matching the style template
+    # - Import rules from language-specific config files
+    # User confirms or adjusts the configuration
+    auto_configure:
+      enabled: true
+      sources:
+        # Documentation (all languages)
+        - "CLAUDE.md"
+        - "README.md"
+        - "docs/architecture.md"
+        - "docs/ADR/"
+        # Language-specific configs (detected automatically)
+        # TypeScript: tsconfig.json, .eslintrc, .dependency-cruiser.js
+        # Python: pyproject.toml, .importlinter, setup.cfg
+        # Go: go.mod, go.work, .golangci.yml
+        # Rust: Cargo.toml
+        # Java: build.gradle, pom.xml, archunit.properties
+        # Generic: Makefile, docker-compose.yml
+      fallback_scan:
+        - "src/*/"
+        - "lib/*/"
+        - "app/*/"
+        - "pkg/*/"              # Go convention
+        - "internal/*/"         # Go convention
+        - "cmd/*/"              # Go convention
+
+  code:
+    description: "Code style configuration, validation, and guidance for defensive programming"
+    tags: [code-style, linting, quality]
+    # /code configure detects style from linter/formatter configs
+    # No wizard questions - detects language and tools automatically
+    auto_configure:
+      enabled: true
+      sources:
+        # TypeScript: .eslintrc, .prettierrc, biome.json
+        # Python: pyproject.toml (ruff, black, isort), .flake8
+        # Go: .golangci.yml (builtin gofmt)
+        # Rust: rustfmt.toml, clippy.toml
+        # Java: checkstyle.xml
+        # Generic: .editorconfig
+
+  developer:
+    description: "Development orchestration with domain understanding and layer routing"
+    tags: [orchestrator, development]
+    # Uses framework-level config: PROJECT_NAME, TEST_COMMAND, PRECOMMIT_COMMAND
+    wizard:
+      TEAM_NAME:
+        prompt: "What is your Linear team name? (leave blank if not using Linear)"
+        description: "Used for automatic ticket creation"
+        required: false
+
+  docs-refresh:
+    description: "Documentation generation and maintenance"
+    tags: [documentation, maintenance]
+    wizard:
+      DOCS_PATH:
+        prompt: "Where is your documentation located?"
+        description: "e.g., docs/, README.md"
+        default: "docs/"
+        required: true
+      DOCS_FORMAT:
+        prompt: "What documentation format do you use?"
+        description: "markdown, rst, mdx"
+        default: "markdown"
+        required: true
+
+  setup:
+    description: "Project setup and onboarding workflow"
+    tags: [setup, onboarding]
+    wizard:
+      SETUP_COMMAND:
+        prompt: "What command sets up the project for development?"
+        description: "e.g., npm install, make setup"
+        default: "npm install"
+        required: true
+      PREREQUISITES:
+        prompt: "What prerequisites are needed? (comma-separated)"
+        description: "e.g., node>=18, docker, python>=3.11"
+        default: "node>=18"
+        required: false
+
+  domain-expert:
+    description: "Domain knowledge configuration, learning, and guidance"
+    tags: [domain, knowledge, ddd]
+    # /domain configure detects domain from docs and code
+    # No wizard questions - detects automatically
+    auto_configure:
+      enabled: true
+      sources:
+        # Documentation: CLAUDE.md, README.md, docs/domain.md, docs/glossary.md
+        # Code analysis: src/domain/, domain/, models/ (language-specific)
+        # Extracts: glossary, entities, relationships, business rules
+
+  debugger:
+    description: "Debugging workflow with systematic investigation"
+    tags: [debugging, troubleshooting]
+    wizard:
+      LOG_COMMAND:
+        prompt: "What command shows application logs?"
+        description: "e.g., docker logs app, tail -f logs/app.log"
+        required: false
+      DEBUG_ENV:
+        prompt: "How do you enable debug mode?"
+        description: "e.g., DEBUG=true, LOG_LEVEL=debug"
+        required: false
+
+  deploy:
+    description: "Deployment workflow"
+    tags: [deployment, ci-cd]
+    wizard:
+      DEPLOY_COMMAND:
+        prompt: "What command deploys your application?"
+        description: "e.g., npm run deploy, task deploy:prod"
+        required: true
+      ENVIRONMENTS:
+        prompt: "What environments do you have? (comma-separated)"
+        description: "e.g., staging, production"
+        default: "staging,production"
+        required: true
+      DEPLOY_BRANCH:
+        prompt: "What branch triggers production deployment?"
+        default: "main"
+        required: true
+
+  deploy-verify:
+    description: "Post-deployment verification"
+    tags: [deployment, verification]
+    wizard:
+      HEALTH_CHECK_URL:
+        prompt: "What URL should be checked after deployment?"
+        description: "e.g., https://api.example.com/health"
+        required: false
+      VERIFY_COMMAND:
+        prompt: "What command verifies a successful deployment?"
+        description: "e.g., curl -f https://api.example.com/health"
+        required: false
+
+  # ============================================
+  # STANDALONE SKILLS - Not part of framework
+  # ============================================
+  # (None currently - add standalone skills here as needed)

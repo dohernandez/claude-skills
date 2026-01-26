@@ -1,0 +1,690 @@
+name: workflow
+kind: workflow
+version: "1.0.0"
+description: "Manage development environment lifecycle for ticket-based work (start, status, merge, finish)."
+severity: medium
+tags:
+  - workflow
+  - git
+  - linear
+  - automation
+  - developer-experience
+
+purpose: |
+  Automate the development environment lifecycle for ticket-based work:
+  - Start: Create branch from ticket, store context, invoke planning
+  - Status: Show current workflow state and progress
+  - Merge: Check PR status and merge if ready
+  - Finish: Verify PR merged, cleanup branch, clear context
+
+  Supports Linear tickets and plain text descriptions as input sources.
+
+owns:
+  - "Development workflow automation"
+  - "Branch creation and naming conventions"
+  - "Workflow context management (.claude/workflow-context.json)"
+  - "Post-merge cleanup operations"
+
+inputs_required:
+  - id: source
+    description: "Ticket source - either a Linear ticket ID (e.g., PROJ-123) or plain text description"
+    examples:
+      - "PROJ-123"
+      - "PROJ-456"
+      - "Add user notifications feature"
+      - "Fix date parsing calculation error"
+
+required_outputs:
+  - "Feature branch created and checked out"
+  - ".claude/workflow-context.json with ticket metadata"
+  - "Implementation plan (via developer)"
+
+patterns:
+  - id: linear-ticket-detection
+    description: |
+      Detect Linear ticket IDs using pattern: uppercase letters followed by dash and numbers.
+      Pattern: /^[A-Z]+-\d+$/
+    example: |
+      "PROJ-123" -> Linear ticket
+      "Add feature" -> Plain text
+
+  - id: branch-naming-convention
+    description: |
+      Branch names include type prefix: <type>/<ticket-id-lowercase>-<kebab-description> or <type>/<kebab-description>
+      Type prefix enables quick identification of branch purpose (feat, fix, chore, docs, refactor, test).
+    example: |
+      Linear: feat/proj-123-add-user-notifications
+      Linear: fix/proj-456-fix-date-parsing-error
+      Linear: chore/eng-789-add-skill-for-claude-code-to-set-up-dev-environment
+      Plain:  feat/add-user-notifications
+
+  - id: type-inference
+    description: |
+      Infer branch type from ticket content or labels:
+      - "bug", "fix", "error" -> fix
+      - "feature", "add", "new" -> feat
+      - "refactor", "restructure" -> refactor
+      - "docs", "documentation" -> docs
+      - "test", "testing" -> test
+      - Default: feat
+    example: |
+      Title: "Fix date parsing error" -> fix
+      Title: "Add metrics dashboard" -> feat
+      Label: "bug" -> fix
+
+  - id: context-file-location
+    description: |
+      Workflow context stored in .claude/workflow-context.json (must be gitignored).
+      Contains: source, ticketId, title, branch, type, createdAt, prUrl
+    example: |
+      {
+        "source": "linear",
+        "ticketId": "PROJ-123",
+        "title": "Add user notifications",
+        "branch": "feat/proj-123-add-user-notifications",
+        "type": "feat",
+        "createdAt": "2026-01-21T10:30:00Z",
+        "prUrl": null
+      }
+
+  - id: safety-checks-before-start
+    description: |
+      Before creating branch, check for:
+      - Uncommitted changes (git status)
+      - Existing workflow context (already working on ticket)
+      - Current branch not main (might be mid-workflow)
+    example: |
+      if uncommitted_changes:
+        warn user, ask to stash or commit
+      if context_exists:
+        ask to finish current or abort
+
+  - id: pr-verification-before-finish
+    description: |
+      Before cleanup, verify PR status:
+      - Check if PR exists for branch (gh pr list)
+      - If exists, verify merged status
+      - If not merged, require user confirmation for force-finish
+    example: |
+      pr_status = gh pr view --json state
+      if pr_status != "MERGED":
+        ask user to confirm force-finish
+
+  - id: pr-merge-check-flow
+    description: |
+      Flow for checking if PR is ready to merge:
+      1. Check PR state (OPEN, MERGED, CLOSED)
+      2. Check CI status checks (all must pass)
+      3. Check mergeStateStatus (CLEAN, BEHIND, BLOCKED, DIRTY)
+      4. Make merge decision based on conditions
+    example: |
+      All checks pass + CLEAN    → Auto-merge
+      All checks pass + BEHIND   → Update branch, re-check
+      All checks pass + BLOCKED  → Ask: "Bypass review?"
+      Any check FAILED           → STOP. Investigate failure.
+      Conflicts (DIRTY)          → Cannot auto-merge
+
+  - id: never-bypass-failed-checks
+    description: |
+      CRITICAL: Never offer to bypass failed CI checks.
+      Failed checks mean broken code - investigate first.
+      Only offer to bypass when:
+      - All checks pass
+      - Only blocker is missing review
+    example: |
+      # WRONG - don't do this
+      if check_failed:
+        ask "Bypass and merge anyway?"  # NO!
+
+      # RIGHT
+      if check_failed:
+        "CI check failed. Please investigate before merging."
+
+  - id: learning-quality-rules
+    description: |
+      Every learning must pass quality checklist before storing:
+      1. Complete sentence (not truncated/fragment)
+      2. Actionable (contains DO/DON'T/USE/AVOID/PREFER)
+      3. Specific (names tools, patterns, files, concepts)
+      4. Understandable standalone (no context needed)
+      5. NOT a question
+      6. NOT a raw complaint (must be transformed)
+      7. Includes WHY, not just WHAT
+    example: |
+      Good: "Use vi.fn() for mocks in Vitest, never jest.fn()"
+      Bad:  "use vi.fn()" (no context)
+      Bad:  "Where should I deploy?" (question)
+      Bad:  "command not recognized" (raw symptom)
+
+  - id: skill-auto-detection
+    description: |
+      Route learnings to skills by keyword matching:
+      tdd: test, spec, mock, coverage, tdd
+      domain-expert: domain, business logic, entities
+      arch: architecture, layer, import, boundary
+      developer: code, implementation, feature, bug (default)
+      code: style, naming, convention, format
+    example: |
+      "Use mock functions in tests" → tdd
+      "Domain entities must be immutable" → domain-expert
+      "Domain cannot import application" → arch
+
+  - id: bugfix-phase-tracking
+    description: |
+      For type: fix workflows, track current bug fix phase in context.
+      Phases: reproduce, failing-test, root-cause, fix, regression
+      Each phase must complete before moving to next.
+    example: |
+      {
+        "type": "fix",
+        "bugfix": {
+          "phase": "root-cause",
+          "reproductionConfirmed": true,
+          "failingTestFile": "src/domain/user/__tests__/validate-user.test.ts"
+        }
+      }
+
+  - id: bugfix-reproduce-first
+    description: |
+      CRITICAL: Always confirm bug reproduction before any other work.
+      If cannot reproduce:
+      - Ask user for more context
+      - Check environment differences
+      - Review logs/screenshots from ticket
+      Do NOT proceed without reproduction confirmation.
+    example: |
+      ## Bug Reproduction
+      - Steps: 1. Call API with edge case input 2. Check result
+      - Expected: Valid response
+      - Actual: Error or incorrect data
+      - Confirmed: Yes, reproduced locally
+
+  - id: bugfix-failing-test-required
+    description: |
+      CRITICAL: Must have a failing test before attempting fix.
+      The failing test:
+      - Captures the exact bug scenario
+      - Fails for the RIGHT reason (the bug, not typos)
+      - Serves as regression prevention
+      - Documents the bug for future reference
+    example: |
+      it('should handle date parsing correctly (bug PROJ-456)', () => {
+        const result = processInput(edgeCaseValue);
+        expect(result).toBe(expectedValue); // Fails: got wrongValue
+      });
+
+  - id: bugfix-debug-before-fix
+    description: |
+      If root cause is unclear, add debug logging BEFORE changing code.
+      Use logger.debug (not console.log).
+      Run with debug output, analyze, then identify cause.
+      Remove debug logs after root cause identified.
+    example: |
+      // Temporary debug logging
+      logger.debug('processInput', { input, intermediate, result });
+      // After analysis: boundary comparison uses < instead of <=
+
+  - id: bugfix-minimal-fix
+    description: |
+      Fix should be minimal - only change what's necessary.
+      Do NOT:
+      - Refactor surrounding code
+      - Add "improvements"
+      - Clean up unrelated issues
+      Those are separate tasks/tickets.
+    example: |
+      // Minimal fix: change < to <=
+      - if (value < boundary)
+      + if (value <= boundary)
+
+  - id: bugfix-context-extension
+    description: |
+      For bug fixes, extend workflow context with bugfix object.
+      Track: phase, reproductionConfirmed, failingTestFile, rootCause, rootCauseLocation
+    example: |
+      {
+        "type": "fix",
+        "bugfix": {
+          "phase": "fix",
+          "reproductionConfirmed": true,
+          "failingTestFile": "src/domain/user/__tests__/validate-user.test.ts",
+          "rootCause": "Off-by-one in boundary comparison",
+          "rootCauseLocation": "src/domain/user/validate-user.ts:42"
+        }
+      }
+
+anti_patterns:
+  - id: skip-uncommitted-check
+    description: "Starting new workflow without checking for uncommitted changes"
+    why_bad: "User may lose work or create messy commit history"
+
+  - id: force-finish-without-confirmation
+    description: "Deleting branch without verifying PR is merged"
+    why_bad: "May delete branch with unmerged work, causing data loss"
+
+  - id: hardcoded-ticket-prefix
+    description: "Assuming all tickets use a specific prefix"
+    why_bad: "Breaks for other Linear team prefixes"
+
+  - id: context-not-gitignored
+    description: "workflow-context.json committed to repo"
+    why_bad: "Personal workflow state should not be in version control"
+
+  - id: skip-planning-step
+    description: "Starting work without creating implementation plan"
+    why_bad: "Misses opportunity for structured approach and user alignment"
+
+  - id: bypass-failed-checks
+    description: "Offering to bypass/merge when CI checks have failed"
+    why_bad: "Merging broken code into main. Failed checks require investigation, not bypass."
+
+  - id: auto-merge-without-checks
+    description: "Merging PR without verifying all CI checks have passed"
+    why_bad: "May merge broken code. Always verify checks before merge."
+
+  - id: verbatim-learning-storage
+    description: "Storing user corrections word-for-word without synthesis"
+    why_bad: "Raw input lacks context and actionability. Always transform into actionable rules."
+
+  - id: storing-questions-as-learnings
+    description: "Storing questions like 'Where should I deploy?'"
+    why_bad: "Questions are never learnings. Only store answers/rules."
+
+  - id: truncated-learning-fragments
+    description: "Storing incomplete sentences like 'always specify ~/'"
+    why_bad: "Fragments lose meaning when read later. Must be complete thoughts."
+
+  - id: fix-without-reproduction
+    description: "Attempting to fix a bug without first reproducing it"
+    why_bad: "May fix wrong thing or not fix at all. Cannot verify fix without reproduction."
+
+  - id: fix-without-failing-test
+    description: "Fixing code without first writing a failing test"
+    why_bad: "No proof bug existed, no regression prevention, no documentation of the issue."
+
+  - id: guess-and-fix
+    description: "Making code changes to 'try' fixing without understanding root cause"
+    why_bad: "May introduce new bugs, fix symptoms not cause, or not fix at all."
+
+  - id: fix-then-debug
+    description: "Changing implementation code before root cause is identified"
+    why_bad: "Correct order: debug logs → analyze → understand → fix. Never change code to debug."
+
+  - id: console-log-debugging
+    description: "Using console.log instead of logger.debug for debugging"
+    why_bad: "console.log may be committed accidentally. logger.debug respects log levels."
+
+  - id: over-fix
+    description: "Refactoring or 'improving' code while fixing a bug"
+    why_bad: "Mixes concerns, makes review harder, may introduce new bugs. Separate tasks."
+
+  - id: skip-regression-testing
+    description: "Not running full test suite after bug fix"
+    why_bad: "Fix may have unintended side effects. Always verify no regressions."
+
+  - id: leave-debug-logs
+    description: "Forgetting to remove temporary debug logging after fix"
+    why_bad: "Pollutes logs, may expose sensitive data, looks unprofessional."
+
+handoffs:
+  - skill: "workflow-setup"
+    when: "After branch name generation, to create worktree and setup environment"
+  - skill: "developer"
+    when: "After setup, in new Claude session, to create implementation plan"
+  - skill: "commit"
+    when: "After retrospective, to commit changes with conventional commit message"
+  - skill: "pr-create"
+    when: "After commit, to create PR with proper formatting"
+  - skill: "deploy"
+    when: "After successful PR merge, to deploy changes to selected network"
+  - skill: "deploy-verify"
+    when: "After deployment completes, to verify service health"
+
+procedure:
+  - step: "Parse command"
+    detail: |
+      Determine which phase: start, status, merge, or finish.
+      Extract source argument for start command.
+      Extract PR number for merge command (optional).
+      Extract deploy flag for merge command (optional).
+
+  - step: "Start - Detect source type"
+    detail: |
+      Check if source matches Linear pattern (/^[A-Z]+-\d+$/).
+      If yes: fetch from Linear via MCP.
+      If no: treat as plain text description.
+
+  - step: "Start - Fetch ticket (if Linear)"
+    detail: |
+      Use mcp__linear-server__get_issue to fetch ticket details.
+      Extract: title, description, labels, state.
+
+  - step: "Start - Safety checks"
+    detail: |
+      Run git status to check for uncommitted changes.
+      Check if workflow-context.json exists (already in workflow).
+      Warn user and get confirmation if issues found.
+
+  - step: "Start - Determine type"
+    detail: |
+      Infer type from labels or content:
+      - Check for "bug" label or keywords
+      - Check for "feature" indicators
+      - Default to "feat"
+
+  - step: "Start - Generate branch name"
+    detail: |
+      Create kebab-case description from title (max 50 chars).
+      Format with type prefix: <type>/<ticket-id-lowercase>-<description> or <type>/<description>
+      Example: feat/proj-123-add-user-notifications, fix/proj-456-fix-date-error
+
+  - step: "Start - Call workflow-setup"
+    detail: |
+      Invoke workflow-setup skill with:
+        - branch: generated branch name
+        - ticketId: Linear ticket ID (if applicable)
+        - title: ticket title or description
+        - type: inferred type (feat, fix, etc.)
+
+      workflow-setup will:
+        - Create git worktree at configured path
+        - Copy .env* files to worktree
+        - Install dependencies in worktree
+        - Create .claude/workflow/<branch>/ directory
+        - Copy plan.md if .claude/plan.md exists
+        - Write pending-action.json for session handoff
+        - Open IDE with worktree directory
+
+      After this step, workflow hands off to new Claude session.
+
+  - step: "Start - Session handoff"
+    detail: |
+      The workflow-setup skill opens the IDE with the worktree.
+      A new Claude session will start in that IDE.
+      The new session reads pending-action.json and prompts user.
+      For type: feat → developer is invoked for planning.
+      For type: fix → Bug fix flow is initiated (see below).
+
+  # Bug Fix Flow (only for type: fix)
+  - step: "BugFix B1 - Reproduce"
+    detail: |
+      CRITICAL: First step for any bug fix workflow.
+
+      1. Read ticket description and any attached logs/screenshots
+      2. Identify reproduction steps from the ticket
+      3. Execute steps in local environment
+      4. Document observed vs expected behavior
+
+      If cannot reproduce:
+        - Ask user for additional context
+        - Check environment differences (Node version, env vars, etc.)
+        - Review any available logs more carefully
+        - Do NOT proceed without reproduction
+
+      Update context:
+        bugfix.phase = "reproduce"
+        bugfix.reproductionConfirmed = true/false
+
+      Output:
+        ## Bug Reproduction
+        - Steps: ...
+        - Expected: ...
+        - Actual: ...
+        - Environment: ...
+        - Confirmed: Yes/No
+
+  - step: "BugFix B2 - Write failing test"
+    detail: |
+      CRITICAL: Must have failing test before any fix attempt.
+
+      1. Identify appropriate test file (unit test preferred)
+      2. Write test that exercises the exact reproduction scenario
+      3. Run test: task -t .claude/Taskfile.yaml test (or project-specific test command)
+      4. Verify test FAILS (this is expected and correct)
+      5. Verify test fails for the RIGHT reason (the bug, not typos)
+
+      If test passes: bug may already be fixed or test doesn't capture scenario.
+
+      Update context:
+        bugfix.phase = "failing-test"
+        bugfix.failingTestFile = "<path-to-test>"
+
+      Output:
+        Failing test written: src/domain/.../__tests__/....test.ts
+        Failure reason: <expected X but got Y>
+
+  - step: "BugFix B3 - Identify root cause"
+    detail: |
+      CRITICAL: Understand the bug before changing any code.
+
+      1. Trace code path from reproduction steps
+      2. Read relevant source files
+      3. Form hypothesis about the cause
+
+      If root cause is UNCLEAR:
+        a. Add debug logging (logger.debug, NOT console.log)
+        b. Run with debug output: LOG_LEVEL=debug npm run ...
+        c. Analyze output to narrow down the issue
+        d. Do NOT change implementation code yet
+        e. Repeat until cause is identified
+
+      Once identified:
+        - Document the exact location (file:line)
+        - Document what's wrong and why
+        - Document why the bug happens (edge case, wrong operator, etc.)
+
+      Update context:
+        bugfix.phase = "root-cause"
+        bugfix.rootCause = "<description>"
+        bugfix.rootCauseLocation = "<file:line>"
+
+      Output:
+        ## Root Cause Analysis
+        - Location: src/.../file.ts:42
+        - Cause: <what's wrong>
+        - Why: <why it happens>
+
+  - step: "BugFix B4 - Fix and verify"
+    detail: |
+      Make the MINIMAL fix to address root cause.
+
+      1. Change ONLY what's necessary to fix the bug
+      2. Do NOT refactor surrounding code
+      3. Do NOT add "improvements"
+      4. Run the failing test using project test command
+      5. Test should now PASS
+
+      If test still fails:
+        - Re-analyze: fix may be incomplete
+        - Go back to B3 if root cause was misidentified
+
+      6. Remove any temporary debug logging from B3
+
+      Update context:
+        bugfix.phase = "fix"
+
+      Output:
+        Fix applied: <file:line> - <description of change>
+        Failing test now passes: Yes/No
+
+  - step: "BugFix B5 - Regression testing"
+    detail: |
+      Ensure fix doesn't break anything else.
+
+      1. Run full test suite: task -t .claude/Taskfile.yaml test
+      2. Analyze any failures:
+         - If related to fix: may have unintended side effects, re-analyze
+         - If unrelated: investigate separately (may be flaky test)
+      3. Run pre-commit: task -t .claude/Taskfile.yaml precommit
+      4. All tests must pass
+
+      If tests fail due to fix:
+        - The fix may be too broad or incorrect
+        - Go back to B3/B4 and re-analyze
+
+      Update context:
+        bugfix.phase = "regression"
+
+      Output:
+        Full test suite: PASS/FAIL
+        Pre-commit: PASS/FAIL
+        Ready for PR: Yes/No
+
+  # Retrospective (after implementation, before commit)
+  - step: "Retrospective - Capture learnings"
+    detail: |
+      After implementation is complete (feature or bug fix), capture learnings
+      BEFORE committing. This is a retrospective while context is fresh.
+
+      Scan conversation for signals:
+      - Corrections (high): "No, don't use X", "Wrong, use Y instead"
+      - Rules (high): "Always do X", "Never do Y", "The convention is"
+      - Approvals (medium): "Perfect!", "That's exactly how we do it"
+
+      For each signal, synthesize into actionable learning:
+      - Corrections → Extract the rule being taught
+      - Rules → Preserve with context (WHY, not just WHAT)
+      - Approvals → Extract WHAT was approved from Claude's previous message
+      - Complaints → Transform into actionable workaround
+
+      Quality checklist (must pass all):
+      - Complete sentence, not truncated
+      - Actionable (DO/DON'T/USE/AVOID)
+      - Specific (names tools, patterns, files)
+      - NOT a question
+      - Includes context/reason
+
+  - step: "Retrospective - Update skills knowledge"
+    detail: |
+      Route learnings to appropriate skill MEMORY.md:
+      1. Explicit mention: "the tdd skill" → tdd
+      2. Keyword matching:
+         - test, mock, coverage → tdd
+         - domain, business logic, entities → domain-expert
+         - architecture, layer, import → arch
+         - code, implementation, feature → developer
+      3. Default: developer (general code learnings)
+
+      For each learning:
+      1. Check target skill directory exists
+      2. Read existing MEMORY.md (if any)
+      3. Deduplicate against existing learnings (>50% overlap = skip)
+      4. Append new learning with format:
+         - → {VERB} {action} {context}
+         - ✗→✓ {wrong} → {right} {reason}
+
+  # Commit and PR (use dedicated skills)
+  - step: "Commit - Use commit skill"
+    detail: |
+      After retrospective, use the /commit skill to commit changes.
+      This skill handles:
+      - Conventional commit message generation
+      - Intelligent staging
+      - Pre-commit hook validation
+
+      Invoke: /commit
+
+  - step: "PR - Use pr-create skill"
+    detail: |
+      After commit, use the /pr-create skill to create the PR.
+      This skill handles:
+      - Conventional commit title format
+      - Structured PR body
+      - CI validation checks
+
+      Invoke: /pr-create
+
+  - step: "Status - Load context"
+    detail: |
+      Read workflow-context.json.
+      If not found, inform user no active workflow.
+
+  - step: "Status - Display info"
+    detail: |
+      Show: branch, ticket info, created date.
+      Check for PR: gh pr list --head <branch>.
+      Show PR status if exists.
+
+  - step: "Merge - Delegate to pr-merge"
+    detail: |
+      1. Get current branch name: git branch --show-current
+      2. Invoke pr-merge skill (handles CI checks, merge state, actual merge)
+      3. On success, proceed to deployment step
+
+      See pr-merge skill for merge logic details.
+
+  - step: "Merge - Ask about deployment"
+    detail: |
+      After successful merge, ask user if they want to deploy.
+
+      If project has deployment configured (deploy skill available):
+        Use AskUserQuestion:
+          question: "Deploy to an environment?"
+          header: "Deploy"
+          options:
+            - label: "Deploy (Recommended)"
+              description: "Deploy changes to configured environment"
+            - label: "Skip deployment"
+              description: "Don't deploy now"
+
+      If user selects "Skip deployment", go directly to finish message.
+      Otherwise, invoke /deploy skill which handles environment selection.
+
+  - step: "Merge - Invoke deployment"
+    detail: |
+      If user chose to deploy, invoke the /deploy skill.
+      The deploy skill handles:
+        - Environment selection (if multiple)
+        - Deployment workflow triggering
+        - Verification and health checks
+
+      After deployment, output cleanup instructions:
+
+      ✓ Deployment complete!
+
+      To cleanup, run in any session:
+      /workflow finish <branch-name>
+
+  - step: "Finish - Resolve target branch"
+    detail: |
+      Parse optional argument to /workflow finish:
+        - No argument: use current branch (git branch --show-current)
+        - Ticket ID pattern (XXX-###): search for matching branch
+          - git worktree list | grep -i <ticket-id>
+          - git branch --list "*<ticket-id-lowercase>*"
+          - ls .claude/workflow/ | grep -i <ticket-id>
+        - Branch name: use directly
+
+      Store resolved branch name for subsequent steps.
+
+  - step: "Finish - Verify PR merged"
+    detail: |
+      Check if PR exists: gh pr list --head <branch>
+      If exists, check if merged: gh pr view --json state
+      If not merged, ask user to confirm force-finish.
+
+      NOTE: Learning capture happens during the work (Retrospective step),
+      not at finish time. Finish is cleanup-only.
+
+  - step: "Finish - Cleanup"
+    detail: |
+      Get worktree path from workflow-config.json (worktreeBasePath + branch).
+      Get current working directory to determine if we're in the worktree.
+
+      If running from worktree:
+        1. Change to main repo: cd to parent based on worktreeBasePath
+        2. Remove worktree: git worktree remove <worktree-path> --force
+        3. Delete remote branch: git push origin --delete <branch> (if exists)
+        4. Delete local branch: git branch -D <branch> (if exists)
+        5. Prune worktree refs: git worktree prune
+        6. Clear workflow directory: rm -rf .claude/workflow/<branch>/
+
+      If running from main repo (or different worktree):
+        1. Remove worktree: git worktree remove <worktree-path> --force (if exists)
+        2. Delete remote branch: git push origin --delete <branch> (if exists)
+        3. Delete local branch: git branch -D <branch> (if exists)
+        4. Prune worktree refs: git worktree prune
+        5. Clear workflow directory: rm -rf .claude/workflow/<branch>/
+
+      Inform user workflow completed. If target was current worktree, IDE window
+      will close/become invalid.

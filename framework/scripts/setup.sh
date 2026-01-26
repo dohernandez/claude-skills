@@ -57,59 +57,78 @@ CONFIGURABLE_SKILLS=(
 # ============================================================================
 
 main() {
+    local force_reinstall=false
+    if [[ "${1:-}" == "--force" ]]; then
+        force_reinstall=true
+    fi
+
     log_header "Claude Code Framework Setup"
 
     echo "Plugin source: $PLUGIN_ROOT"
     echo "Project target: $PROJECT_ROOT"
     echo ""
 
-    # Check if already installed
-    if [[ -d "$PROJECT_ROOT/.claude/skills" ]] && [[ "$(ls -A "$PROJECT_ROOT/.claude/skills" 2>/dev/null)" ]]; then
-        local skill_count=$(ls -d "$PROJECT_ROOT/.claude/skills"/*/ 2>/dev/null | wc -l | tr -d ' ')
-        if [[ "$skill_count" -gt 5 ]]; then
-            log_info "Framework already installed ($skill_count skills found)"
-            log_info "Run with --force to reinstall, or use /framework configure"
-
-            # Still show configure reminder
-            show_configure_reminder
-            return 0
-        fi
-    fi
-
     # Create directories
     mkdir -p "$PROJECT_ROOT/.claude/skills"
     mkdir -p "$PROJECT_ROOT/.claude/hooks"
     mkdir -p "$PROJECT_ROOT/.claude/scripts"
 
-    # Install skills
-    log_info "Installing skills..."
+    # Check existing installation
+    local existing_count=0
+    if [[ -d "$PROJECT_ROOT/.claude/skills" ]]; then
+        existing_count=$(ls -d "$PROJECT_ROOT/.claude/skills"/*/ 2>/dev/null | wc -l | tr -d ' ')
+    fi
+
+    # Install skills (always check for new skills)
+    # NOTE: Skill definitions are in directories: .claude/skills/<skill>/
+    #       Skill configs are in files: .claude/skills/<skill>.yaml
+    #       This script only touches directories, configs are preserved.
+    log_info "Checking skills..."
     local installed=0
+    local skipped=0
+    local updated=0
+
     for skill_dir in "$PLUGIN_ROOT/skills"/*/; do
         if [[ -d "$skill_dir" ]]; then
             local skill_name=$(basename "$skill_dir")
             local dest="$PROJECT_ROOT/.claude/skills/$skill_name"
 
             if [[ ! -d "$dest" ]]; then
+                # New skill - install it
                 cp -r "$skill_dir" "$dest"
                 log_success "Installed: $skill_name"
                 ((installed++))
+            elif [[ "$force_reinstall" == true ]]; then
+                # Force reinstall - replace skill definition only
+                # Config file (.claude/skills/<skill>.yaml) is preserved
+                rm -rf "$dest"
+                cp -r "$skill_dir" "$dest"
+                log_success "Updated: $skill_name"
+                ((updated++))
+            else
+                ((skipped++))
             fi
         fi
     done
 
-    if [[ $installed -eq 0 ]]; then
-        log_info "All skills already installed"
-    else
-        log_success "Installed $installed skills"
+    # Report results
+    if [[ $installed -gt 0 ]]; then
+        log_success "Installed $installed new skill(s)"
+    fi
+    if [[ $updated -gt 0 ]]; then
+        log_success "Updated $updated skill(s)"
+    fi
+    if [[ $skipped -gt 0 ]] && [[ $installed -eq 0 ]] && [[ $updated -eq 0 ]]; then
+        log_info "All $skipped skills already installed (use --force to reinstall)"
     fi
 
-    # Install infrastructure
-    log_info "Installing infrastructure..."
+    # Install infrastructure (always update)
+    log_info "Updating infrastructure..."
 
     # Hooks
     if [[ -d "$PLUGIN_ROOT/hooks" ]]; then
         cp -r "$PLUGIN_ROOT/hooks/"* "$PROJECT_ROOT/.claude/hooks/" 2>/dev/null || true
-        log_success "Installed hooks"
+        log_success "Updated hooks"
     fi
 
     # Scripts (except setup.sh itself)
@@ -120,21 +139,26 @@ main() {
                 chmod +x "$PROJECT_ROOT/.claude/scripts/$(basename "$script")"
             fi
         done
-        log_success "Installed scripts"
+        log_success "Updated scripts"
     fi
 
-    # Taskfile
-    if [[ -f "$PLUGIN_ROOT/Taskfile.yaml" ]] && [[ ! -f "$PROJECT_ROOT/.claude/Taskfile.yaml" ]]; then
+    # Taskfile (always update to get new tasks)
+    if [[ -f "$PLUGIN_ROOT/Taskfile.yaml" ]]; then
         cp "$PLUGIN_ROOT/Taskfile.yaml" "$PROJECT_ROOT/.claude/Taskfile.yaml"
-        log_success "Installed Taskfile"
+        log_success "Updated Taskfile"
     fi
 
     # Show success and configure reminder
-    log_header "Installation Complete"
-    echo "Skills are now available as: /commit, /linear, /tdd, etc."
+    log_header "Setup Complete"
+    local total_skills=$(ls -d "$PROJECT_ROOT/.claude/skills"/*/ 2>/dev/null | wc -l | tr -d ' ')
+    echo "Total skills installed: $total_skills"
+    echo "Skills are available as: /commit, /test, /tdd, etc."
     echo ""
 
-    show_configure_reminder
+    # Only show configure reminder if new skills were installed
+    if [[ $installed -gt 0 ]]; then
+        show_configure_reminder
+    fi
 }
 
 show_configure_reminder() {

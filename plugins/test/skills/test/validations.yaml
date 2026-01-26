@@ -1,25 +1,27 @@
-version: 1
+# Validations for test
+# v1 supports command validations only
+
+name: test
+version: "1.0.0"
 
 validations:
-  on_stop:
-    - id: tests-executed
-      name: "Tests were executed"
-      type: command
-      command: "echo 'Test execution completed'"
-      expected: "Test execution completed"
-      on_fail: "Test skill completed"
+  - id: tests-executed
+    type: command
+    command: "echo 'Test execution completed'"
+    description: "Tests were executed"
+    failure_message: "Test skill completed"
 
-  on_warn:
-    - id: config-exists
-      name: "Test configuration exists"
-      type: command
-      command: "test -f .claude/skills/test.yaml && echo 'configured' || echo 'not configured'"
-      expected: "configured"
-      message: "Consider running /test configure for smart features like --affected"
+  - id: config-exists
+    type: command
+    command: "test -f .claude/skills/test.yaml && echo 'configured' || echo 'not configured'"
+    description: "Test configuration exists"
+    failure_message: "Consider running /test configure for smart features"
 
-    - id: test-command-configured
-      name: "TEST_COMMAND is configured"
-      type: command
-      command: "grep -q 'TEST_COMMAND=' .claude/skills-config.env 2>/dev/null && echo 'found' || echo 'missing'"
-      expected: "found"
-      message: "TEST_COMMAND not in skills-config.env - /test will use framework defaults"
+  - id: test-command-configured
+    type: command
+    command: "grep -q 'TEST_COMMAND=' .claude/skills-config.env 2>/dev/null && echo 'found' || echo 'missing'"
+    description: "TEST_COMMAND is configured"
+    failure_message: "TEST_COMMAND not in skills-config.env - /test will use framework defaults"
+
+on_stop:
+  - tests-executed

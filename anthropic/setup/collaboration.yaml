@@ -1,0 +1,33 @@
+# Collaboration: skill dependencies and composition
+
+name: setup
+version: "2.0.0"
+
+dependencies: []
+
+composition:
+  - when: "New developer onboarding"
+    sequence:
+      - setup  # discover → learn → guide → verify
+
+  - when: "First time project setup"
+    sequence:
+      - setup discover  # Detect project type
+      - setup learn     # Confirm and cache
+      - setup           # Guide through steps
+
+triggers:
+  - pattern: "setup|onboarding|new developer|configure environment"
+    suggest: setup
+  - pattern: "install dependencies|npm install|pip install"
+    suggest: setup
+  - pattern: ".env|environment variables|missing env"
+    suggest: setup
+
+provides_to:
+  - skill: developer
+    data: "Project is set up and ready for development"
+  - skill: workflow
+    data: "Prerequisites verified, can start working"
+
+receives_from: []

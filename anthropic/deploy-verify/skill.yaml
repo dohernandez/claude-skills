@@ -1,0 +1,367 @@
+name: deploy-verify
+kind: utility
+version: "2.0.0"
+description: "Systematic verification of deployments to confirm service health and successful startup."
+severity: medium
+tags:
+  - deployment
+  - verification
+  - health-check
+
+config_location: ".claude/skills/deploy-verify.yaml"
+
+commands:
+  - name: discover
+    description: "Analyze project for deployment platform and services (framework setup)"
+    output: ".claude/skills/deploy-verify.yaml"
+    user_approval: required
+    steps:
+      - Scan for deployment platform indicators
+      - Identify services from deployment configs
+      - Find health check endpoints
+      - Discover CI/CD workflow
+      - Propose configuration to user
+      - Save approved config
+
+  - name: learn
+    description: "Re-analyze deployment setup and update config"
+    output: "Updates .claude/skills/deploy-verify.yaml"
+    user_approval: required
+    steps:
+      - Re-scan deployment configuration
+      - Compare with existing config
+      - Propose updates to user
+      - Save approved changes
+
+  - name: default
+    description: "Run deployment verification"
+    requires: ".claude/skills/deploy-verify.yaml exists"
+    steps:
+      - Load saved configuration
+      - Execute verification workflow
+      - Generate report
+
+purpose: |
+  Verify deployments succeeded by checking:
+  1. Deployment workflow/process status
+  2. Service health and availability
+  3. Startup logs for errors
+  4. Application functionality
+
+  Project-specific verification is configured via discover/learn commands.
+
+owns:
+  - "Deployment verification workflow"
+  - "Health check procedures"
+  - "Service status validation"
+
+inputs:
+  - name: environment
+    description: The environment to verify (optional, uses config default)
+    required: false
+    examples:
+      - staging
+      - production
+
+  - name: services
+    description: Specific services to verify (or all if not specified)
+    required: false
+    examples:
+      - api
+      - worker
+
+outputs:
+  - name: verification_status
+    description: Overall verification result (PASSED/FAILED)
+
+  - name: service_statuses
+    description: Per-service health status
+
+  - name: errors_found
+    description: Any errors discovered during verification
+
+discovery:
+  platform_indicators:
+    kubernetes:
+      - "k8s/"
+      - "kubernetes/"
+      - "helm/"
+      - "**/*.yaml with kind: Deployment"
+    cloud_run:
+      - "gcloud run deploy in scripts"
+      - "cloudbuild.yaml with cloud run"
+    docker_compose:
+      - "docker-compose.yaml"
+      - "docker-compose.yml"
+      - "compose.yaml"
+    ecs:
+      - "ecs/"
+      - "task-definition.json"
+      - "**/*.tf with aws_ecs"
+    serverless:
+      - "serverless.yaml"
+      - "serverless.yml"
+    custom:
+      - "Taskfile.yaml with deploy tasks"
+      - "Makefile with deploy targets"
+
+  ci_cd_indicators:
+    github_actions:
+      - ".github/workflows/deploy*.yaml"
+      - ".github/workflows/deploy*.yml"
+    gitlab_ci:
+      - ".gitlab-ci.yml"
+    circleci:
+      - ".circleci/config.yml"
+    jenkins:
+      - "Jenkinsfile"
+
+  service_discovery:
+    - "Parse deployment configs for service names"
+    - "Look for health check annotations/configs"
+    - "Extract port and endpoint information"
+
+patterns:
+  verification_levels:
+    - level: process
+      description: Did the deployment process complete successfully?
+      checks:
+        - CI/CD workflow status
+        - Deployment command exit code
+
+    - level: service
+      description: Are services running and ready?
+      checks:
+        - Service status/health
+        - Container/process running
+        - Ready conditions met
+
+    - level: startup
+      description: Did services start without errors?
+      checks:
+        - Startup logs present
+        - No critical errors in recent logs
+        - Expected startup messages found
+
+    - level: functionality
+      description: Is the application working correctly?
+      checks:
+        - Health endpoint responds
+        - Basic operations succeed
+        - No degraded functionality
+
+  health_check_methods:
+    - method: url
+      description: HTTP health endpoint check
+      example: "curl -f {health_endpoint}"
+
+    - method: command
+      description: Custom verification command
+      example: "{verify_command}"
+
+    - method: logs
+      description: Check logs for errors
+      example: "grep -i error recent_logs.txt"
+
+anti_patterns:
+  - name: checking_only_workflow_status
+    why_bad: Workflow success doesn't guarantee services are healthy
+    what_to_do: Always verify service status and startup logs
+
+  - name: skipping_error_log_check
+    why_bad: Services may be running but logging errors
+    what_to_do: Always check for errors in recent logs
+
+  - name: wrong_time_range_for_logs
+    why_bad: Looking at old logs misses recent deployment issues
+    what_to_do: Use timestamp filter around deployment time
+
+  - name: assuming_health_without_check
+    why_bad: Services may be in degraded state
+    what_to_do: Always run health checks
+
+  - name: hardcoded_service_list
+    why_bad: Services change over time, list becomes stale
+    what_to_do: Use discover/learn to keep config current
+
+procedures:
+  - name: discover_deployment_config
+    description: Auto-detect deployment platform and services
+    steps:
+      - phase: Detect Platform
+        actions:
+          - Scan for platform indicator files/patterns
+          - Identify primary deployment method
+        commands:
+          - 'ls -la k8s/ kubernetes/ helm/ 2>/dev/null'
+          - 'grep -r "gcloud run" . 2>/dev/null | head -5'
+          - 'ls docker-compose.yaml compose.yaml 2>/dev/null'
+
+      - phase: Identify Services
+        actions:
+          - Parse deployment configs for service definitions
+          - Extract service names and configurations
+        commands:
+          - 'grep -r "name:" k8s/*.yaml 2>/dev/null'
+          - 'yq ".services | keys" docker-compose.yaml 2>/dev/null'
+
+      - phase: Find Health Endpoints
+        actions:
+          - Look for health check configurations
+          - Identify readiness/liveness probes
+        commands:
+          - 'grep -r "healthcheck\|health\|readiness" . 2>/dev/null'
+
+      - phase: Discover CI/CD
+        actions:
+          - Find deployment workflow files
+          - Extract workflow names and triggers
+
+      - phase: Propose Config
+        actions:
+          - Generate configuration YAML
+          - Present to user for approval
+          - Save on approval
+
+  - name: full_deployment_verification
+    description: Complete verification after deployment
+    steps:
+      - phase: Load Configuration
+        actions:
+          - Read .claude/skills/deploy-verify.yaml
+          - Validate config structure
+
+      - phase: Check Deployment Process
+        actions:
+          - Verify deployment command/workflow completed successfully
+          - Note any warnings or issues from deployment
+
+      - phase: Verify Service Status
+        actions:
+          - Check if services are running
+          - Verify services report ready status
+          - Check for any pending or failed conditions
+
+      - phase: Check for Errors
+        actions:
+          - Query recent logs for errors
+          - Focus on time period since deployment
+          - Flag any critical errors found
+
+      - phase: Verify Startup Logs
+        actions:
+          - Search for expected startup messages
+          - Confirm services initialized correctly
+          - Check timestamps are after deployment
+
+      - phase: Run Health Checks
+        actions:
+          - Hit health endpoints from config
+          - Verify expected responses
+          - Report any failures
+
+      - phase: Generate Summary Report
+        actions:
+          - Compile results from all checks
+          - Generate per-service status
+          - Report overall PASSED/FAILED status
+          - List any issues found with reasons
+        report_format: |
+          ## Deployment Verification Report
+
+          **Environment:** [environment]
+          **Deployment Time:** [timestamp]
+
+          ### Service Status
+          | Service | Status | Health | Errors |
+          |---------|--------|--------|--------|
+
+          ### Startup Verification
+          | Service | Expected Log | Found |
+          |---------|--------------|-------|
+
+          ### Overall: [PASSED/FAILED]
+
+          ### Issues Found
+          [List any issues]
+
+examples:
+  - name: Discover deployment config
+    request: "/deploy-verify discover"
+    expected_output: |
+      Scanning project for deployment configuration...
+
+      **Detected Platform:** kubernetes
+      **Services Found:** api, worker, scheduler
+      **CI/CD:** GitHub Actions (deploy.yaml)
+
+      Proposed configuration:
+      ```yaml
+      platform:
+        type: kubernetes
+        namespace: production
+      services:
+        - name: api
+          health_endpoint: /health
+        - name: worker
+          health_endpoint: /healthz
+      ```
+
+      Save this configuration? [Y/n]
+
+  - name: Full verification after deployment
+    request: "/deploy-verify"
+    expected_output: |
+      ## Deployment Verification Report
+
+      **Environment:** production
+      **Deployment Time:** 2026-01-25T13:25Z
+
+      ### Service Status
+      | Service | Status | Health | Errors |
+      |---------|--------|--------|--------|
+      | api | Running | 200 OK | None |
+      | worker | Running | 200 OK | None |
+
+      ### Overall: PASSED
+
+  - name: Verification with failures
+    request: "/deploy-verify"
+    expected_output: |
+      ## Deployment Verification Report
+
+      **Environment:** production
+      **Deployment Time:** 2026-01-25T13:25Z
+
+      ### Service Status
+      | Service | Status | Health | Errors |
+      |---------|--------|--------|--------|
+      | api | Running | 200 OK | None |
+      | worker | CrashLoop | N/A | OOMKilled |
+
+      ### Overall: FAILED
+
+      ### Issues Found
+      - Worker service in CrashLoopBackOff (OOMKilled)
+
+config_schema:
+  version: 1
+  platform:
+    type: string  # kubernetes | cloud-run | docker-compose | ecs | custom
+    project: string  # optional
+    region: string  # optional
+    namespace: string  # optional
+  services:
+    - name: string
+      health_endpoint: string
+      expected_status: number
+      startup_log: string
+  ci_cd:
+    workflow: string
+    check_command: string
+  verification:
+    commands:
+      list_services: string
+      check_status: string
+      check_logs: string
+      check_health: string

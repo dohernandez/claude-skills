@@ -1,18 +1,33 @@
 # Anthropic Claude Code Skills Package
-# Install entire framework: /plugin marketplace add genlayerlabs/skills/anthropic
-# Install individual skill: /plugin marketplace add genlayerlabs/skills/anthropic/commit
+#
+# Installation commands:
+#   /marketplace add genlayerlabs/skills/anthropic/framework      # Full framework (21 skills)
+#   /marketplace add genlayerlabs/skills/anthropic/commit         # Individual skill
+#   /marketplace add genlayerlabs/skills/anthropic/node-installer # Standalone skill
 
 name: anthropic
 version: "1.0.0"
-description: "Skills for Anthropic Claude Code - a complete developer workflow framework"
+description: "Skills for Anthropic Claude Code - developer workflow tools"
 
-# Framework: 21 skills installed together as a cohesive bundle
-# Provides end-to-end developer workflow from planning to deployment
+# =============================================================================
+# FRAMEWORK BUNDLE
+# =============================================================================
+# Installed via: /marketplace add genlayerlabs/skills/anthropic/framework
+#
+# Includes:
+#   - All 21 framework skills
+#   - Infrastructure (_framework/Taskfile.yaml, scripts/, hooks/)
+#   - Runs installation wizard for project configuration
+
 framework:
-  description: "Complete developer workflow skills for Claude Code"
+  name: "Claude Code Developer Framework"
+  description: "Complete developer workflow with 21 integrated skills"
 
-  # Framework-level wizard questions (asked during installation)
-  # Saved to .claude/skills-config.env for Taskfile consumption
+  # Framework installation copies _framework/ contents to .claude/
+  includes_infrastructure: true
+
+  # Framework-level wizard (asked during installation)
+  # Saved to .claude/skills-config.env
   wizard:
     PROJECT_NAME:
       prompt: "What is your project name?"
@@ -20,22 +35,23 @@ framework:
       required: true
     LINT_COMMAND:
       prompt: "What command runs your linter?"
-      description: "e.g., npm run lint, npx biome check ., task common:lint"
+      description: "e.g., npm run lint, task lint"
       default: ""
       required: false
     TEST_COMMAND:
       prompt: "What command runs your tests?"
-      description: "e.g., npm test, pytest, task common:test"
+      description: "e.g., npm test, task test"
       default: ""
       required: false
     PRECOMMIT_COMMAND:
       prompt: "What command runs pre-commit validation?"
-      description: "e.g., npm run lint && npm test, task common:precommit (leave blank for lint + test)"
+      description: "e.g., task precommit (leave blank for lint + test)"
       default: ""
       required: false
 
+  # Skills included in framework bundle (21 total)
   skills:
-    # Core skills - drop-in, no customization needed (12)
+    # Core skills (12) - Drop-in, no customization needed
     - commit
     - pr-create
     - pr-merge
@@ -48,7 +64,7 @@ framework:
     - create-skill
     - linear
     - slack
-    # Customizable skills - have configure mode for project-specific config (9)
+    # Customizable skills (9) - Have /skill configure mode
     - arch
     - code
     - developer
@@ -59,15 +75,26 @@ framework:
     - deploy
     - deploy-verify
 
-# Skill definitions with descriptions and wizard configs
+# =============================================================================
+# SKILL DEFINITIONS
+# =============================================================================
+# All skills can be installed individually:
+#   /marketplace add genlayerlabs/skills/anthropic/<skill-name>
+#
+# Installation behavior:
+#   - Copies skill directory + minimal _framework/ dependencies
+#   - If skill has `configure: true`, runs /skill configure on install
+#   - Same configuration behavior as framework install (consistent setup)
+
 skills:
-  # ============================================
-  # CORE SKILLS (12) - Drop-in, no customization
-  # ============================================
+  # ----------------------------------------
+  # CORE SKILLS (12)
+  # ----------------------------------------
 
   commit:
     description: "Git commit with conventional commit format and intelligent message generation"
     tags: [git, commit, workflow]
+    configure: true  # Has /commit configure
 
   pr-create:
     description: "Create pull requests with standardized format and automatic branch management"
@@ -84,22 +111,26 @@ skills:
   task:
     description: "Task execution and management workflow"
     tags: [workflow, task-management]
+    configure: true  # Has /task configure
 
   tdd:
     description: "Test-driven development workflow with red-green-refactor cycle"
     tags: [testing, tdd, workflow]
+    configure: true  # Has /tdd configure
 
   workflow:
     description: "Main development workflow orchestrator"
     tags: [workflow, orchestrator]
+    configure: true  # Has /workflow configure
 
   workflow-setup:
-    description: "Initialize workflow with branch creation and Linear integration"
-    tags: [workflow, git, linear]
+    description: "Initialize workflow with branch creation and worktree setup"
+    tags: [workflow, git, worktree]
 
   workflow-finish:
-    description: "Complete workflow with commit, PR, and cleanup"
-    tags: [workflow, git, pr]
+    description: "Complete workflow with cleanup (branches, worktrees)"
+    tags: [workflow, git, cleanup]
+    configure: true  # Has /workflow-finish configure (shared with workflow)
 
   create-skill:
     description: "Create new skills following the skill architecture"
@@ -108,24 +139,25 @@ skills:
   linear:
     description: "Linear issue management and ticket workflows"
     tags: [linear, issue-tracking]
+    configure: true  # Has /linear configure
     wizard:
       LINEAR_DEFAULT_TEAM:
         prompt: "What is your default Linear team name? (optional)"
-        description: "Default team for issue creation. Leave blank to select team each time."
+        description: "Default team for issue creation. Leave blank to select each time."
         required: false
-    # Note: Team can also be specified per-invocation. Skill will prompt if not configured.
 
   slack:
     description: "Slack integration for notifications"
     tags: [slack, notifications]
 
-  # ============================================
-  # CUSTOMIZABLE SKILLS (9) - Need wizard config
-  # ============================================
+  # ----------------------------------------
+  # CUSTOMIZABLE SKILLS (9)
+  # ----------------------------------------
 
   arch:
     description: "Architecture guidance and validation - check compliance or plan where code belongs"
     tags: [architecture, validation, planning]
+    configure: true  # Has /arch configure
     wizard:
       ARCHITECTURE_STYLE:
         prompt: "What architecture style does your project follow?"
@@ -133,54 +165,18 @@ skills:
         options: [hexagonal, layered, clean, mvc, custom]
         default: "layered"
         required: true
-    # After ARCHITECTURE_STYLE selection, run /arch configure which:
-    # - Detects project language from indicator files
-    # - SOURCE_ROOT from directory structure
-    # - LAYERS from directory names matching the style template
-    # - Import rules from language-specific config files
-    # User confirms or adjusts the configuration
-    auto_configure:
-      enabled: true
-      sources:
-        # Documentation (all languages)
-        - "CLAUDE.md"
-        - "README.md"
-        - "docs/architecture.md"
-        - "docs/ADR/"
-        # Language-specific configs (detected automatically)
-        # TypeScript: tsconfig.json, .eslintrc, .dependency-cruiser.js
-        # Python: pyproject.toml, .importlinter, setup.cfg
-        # Go: go.mod, go.work, .golangci.yml
-        # Rust: Cargo.toml
-        # Java: build.gradle, pom.xml, archunit.properties
-        # Generic: Makefile, docker-compose.yml
-      fallback_scan:
-        - "src/*/"
-        - "lib/*/"
-        - "app/*/"
-        - "pkg/*/"              # Go convention
-        - "internal/*/"         # Go convention
-        - "cmd/*/"              # Go convention
+    # /arch configure auto-detects: language, SOURCE_ROOT, LAYERS, import rules
 
   code:
     description: "Code style configuration, validation, and guidance for defensive programming"
     tags: [code-style, linting, quality]
-    # /code configure detects style from linter/formatter configs
-    # No wizard questions - detects language and tools automatically
-    auto_configure:
-      enabled: true
-      sources:
-        # TypeScript: .eslintrc, .prettierrc, biome.json
-        # Python: pyproject.toml (ruff, black, isort), .flake8
-        # Go: .golangci.yml (builtin gofmt)
-        # Rust: rustfmt.toml, clippy.toml
-        # Java: checkstyle.xml
-        # Generic: .editorconfig
+    configure: true  # Has /code configure
+    # /code configure auto-detects from: .eslintrc, .prettierrc, biome.json, pyproject.toml, etc.
 
   developer:
     description: "Development orchestration with domain understanding and layer routing"
     tags: [orchestrator, development]
-    # Uses framework-level config: PROJECT_NAME, TEST_COMMAND, PRECOMMIT_COMMAND
+    configure: true  # Has /developer configure
     wizard:
       TEAM_NAME:
         prompt: "What is your Linear team name? (leave blank if not using Linear)"
@@ -190,6 +186,7 @@ skills:
   docs-refresh:
     description: "Documentation generation and maintenance"
     tags: [documentation, maintenance]
+    configure: true  # Has /docs-refresh configure
     wizard:
       DOCS_PATH:
         prompt: "Where is your documentation located?"
@@ -205,6 +202,7 @@ skills:
   setup:
     description: "Project setup and onboarding workflow"
     tags: [setup, onboarding]
+    configure: true  # Has /setup configure
     wizard:
       SETUP_COMMAND:
         prompt: "What command sets up the project for development?"
@@ -220,18 +218,13 @@ skills:
   domain-expert:
     description: "Domain knowledge configuration, learning, and guidance"
     tags: [domain, knowledge, ddd]
-    # /domain configure detects domain from docs and code
-    # No wizard questions - detects automatically
-    auto_configure:
-      enabled: true
-      sources:
-        # Documentation: CLAUDE.md, README.md, docs/domain.md, docs/glossary.md
-        # Code analysis: src/domain/, domain/, models/ (language-specific)
-        # Extracts: glossary, entities, relationships, business rules
+    configure: true  # Has /domain configure
+    # /domain configure auto-detects from: CLAUDE.md, README.md, docs/, src/domain/
 
   debugger:
     description: "Debugging workflow with systematic investigation"
     tags: [debugging, troubleshooting]
+    configure: true  # Has /debugger configure
     wizard:
       LOG_COMMAND:
         prompt: "What command shows application logs?"
@@ -245,6 +238,7 @@ skills:
   deploy:
     description: "Deployment workflow"
     tags: [deployment, ci-cd]
+    configure: true  # Has /deploy configure
     wizard:
       DEPLOY_COMMAND:
         prompt: "What command deploys your application?"
@@ -263,6 +257,7 @@ skills:
   deploy-verify:
     description: "Post-deployment verification"
     tags: [deployment, verification]
+    configure: true  # Has /deploy-verify configure
     wizard:
       HEALTH_CHECK_URL:
         prompt: "What URL should be checked after deployment?"
@@ -273,7 +268,21 @@ skills:
         description: "e.g., curl -f https://api.example.com/health"
         required: false
 
-  # ============================================
-  # STANDALONE SKILLS - Not part of framework
-  # ============================================
-  # (None currently - add standalone skills here as needed)
+# =============================================================================
+# STANDALONE SKILLS
+# =============================================================================
+# Not part of the framework bundle. Install individually:
+#   /marketplace add genlayerlabs/skills/anthropic/<skill-name>
+#
+# Installation behavior (same as individual skill install):
+#   - Copies skill directory only (no _framework/ unless needed)
+#   - If skill has `configure: true`, runs /skill configure on install
+
+standalone:
+  # Example:
+  # node-installer:
+  #   description: "Install and configure Node.js on target systems"
+  #   tags: [node, installation, setup]
+  #   configure: false  # No configuration needed
+  #
+  # Add standalone skills here as they are created

@@ -13,7 +13,10 @@ target-project/
 │   ├── scripts/                   # ← From _framework/scripts/
 │   │   ├── validate-skill.sh
 │   │   ├── check-skill-structure.sh
-│   │   └── list-skills.sh
+│   │   ├── check-skill-yaml.sh
+│   │   ├── audit-skills.sh
+│   │   ├── list-skills.sh
+│   │   └── generate-skills-reference.sh
 │   ├── hooks/                     # ← From _framework/hooks/
 │   │   └── check-skill-structure.sh
 │   ├── docs/                      # ← From _framework/docs/
@@ -22,24 +25,49 @@ target-project/
 │   │   ├── commit/
 │   │   ├── arch/
 │   │   └── ...
-│   └── skills-config.yaml         # Wizard responses
+│   └── skills-config.env          # Wizard responses
 ├── .github/
 │   └── PULL_REQUEST_TEMPLATE.md   # ← From _framework/github/ (if missing)
-└── CLAUDE.md
+└── Taskfile.yaml                  # (optional) Include framework tasks
 ```
 
-## Configuration
+## Configuration Model
 
-During installation, the wizard asks for these commands (saved to `.claude/skills-config.env`):
+Skills follow a **configure/learn** pattern:
+
+| Command | Purpose | When to Use |
+|---------|---------|-------------|
+| `/skill configure` | Initial setup - scans project, proposes config | Framework install, updates |
+| `/skill learn` | Update config from new context | When project changes |
+| `/skill` | Normal usage with saved config | Daily use |
+
+### Framework-Level Config
+
+During installation, the wizard asks for these settings (saved to `.claude/skills-config.env`):
 
 | Variable | Description | Example |
 |----------|-------------|---------|
 | `PROJECT_NAME` | Project name (required) | `my-app` |
-| `LINT_COMMAND` | Run linter (optional) | `npm run lint`, `task common:lint` |
-| `TEST_COMMAND` | Run tests (optional) | `npm test`, `task common:test` |
-| `PRECOMMIT_COMMAND` | Pre-commit validation (optional) | `task common:precommit` |
+| `LINT_COMMAND` | Run linter (optional) | `npm run lint`, `task lint` |
+| `TEST_COMMAND` | Run tests (optional) | `npm test`, `task test` |
+| `PRECOMMIT_COMMAND` | Pre-commit validation (optional) | `task precommit` |
 
 If `LINT_COMMAND` or `TEST_COMMAND` are not configured, those tasks will be skipped.
+
+### Skill-Level Config
+
+Each skill that supports `/skill configure` saves its config to `.claude/skills/<skill>.yaml`:
+
+```yaml
+# .claude/skills/tdd.yaml
+version: 1
+discovered_at: "2024-01-26T10:00:00Z"
+
+test_framework: vitest
+test_locations:
+  - "src/**/*.test.ts"
+assertion_style: expect
+```
 
 ## Task Commands
 
@@ -58,11 +86,17 @@ task -t .claude/Taskfile.yaml precommit
 # Validate a specific skill
 task -t .claude/Taskfile.yaml validate-skill -- --skill commit
 
+# Audit all skills
+task -t .claude/Taskfile.yaml audit-skills
+
 # Check structure of all skills
 task -t .claude/Taskfile.yaml check-structure
 
 # List available skills
 task -t .claude/Taskfile.yaml list-skills
+
+# Generate skills reference documentation
+task -t .claude/Taskfile.yaml skills-reference
 ```
 
 ### Including in Your Project Taskfile
@@ -76,6 +110,8 @@ version: '3'
 includes:
   claude:
     taskfile: .claude/Taskfile.yaml
+
+dotenv: ['.claude/skills-config.env', '.env']
 
 # Now you can run:
 # task claude:lint
@@ -110,7 +146,7 @@ The framework includes Claude Code hooks installed to `.claude/hooks/`:
 |------|---------|---------|
 | `check-skill-structure.sh` | PostToolUse (Write/Edit) | Validates skill files after editing |
 
-The hook automatically validates skill structure when you edit files in `.claude/skills/`. It runs `task -t .claude/Taskfile.yaml claude:check-structure` and blocks if validation fails.
+The hook automatically validates skill structure when you edit files in `.claude/skills/`. It runs `task -t .claude/Taskfile.yaml check-structure` and blocks if validation fails.
 
 To enable, add to your `.claude/settings.json`:
 
@@ -150,7 +186,10 @@ The Taskfile wraps these scripts:
 |--------|---------|
 | `validate-skill.sh` | Run skill validations from validations.yaml |
 | `check-skill-structure.sh` | Validate skill has required files, valid YAML |
+| `check-skill-yaml.sh` | CI check for YAML structure and required files |
+| `audit-skills.sh` | Semantic skill audit (multi-YAML pattern compliance) |
 | `list-skills.sh` | List available skills with descriptions |
+| `generate-skills-reference.sh` | Generate skills reference documentation |
 
 Scripts are designed to be portable:
 - No external dependencies required (yq optional)

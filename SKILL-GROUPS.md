@@ -1,65 +1,74 @@
 # Skill Infrastructure Groups
 
+## Taskfile Split
+
+| Taskfile | Purpose | Tasks | Needs Config? |
+|----------|---------|-------|---------------|
+| `Taskfile.yaml` | User commands | test, test:watch, test:coverage, lint, precommit | Yes |
+| `Taskfile.skills.yaml` | Skill commands | validate-skill, check-structure, list-skills, audit-skills, skills-reference | No |
+
+---
+
 ## Stop Hook Analysis
 
-Only 3 skills need Stop hooks for **output validation**:
+Only 1 skill needs a Stop hook:
 
 | Skill | Stop Hook Purpose |
 |-------|-------------------|
-| `commit` | Prevent commits to main, detect staged secrets |
-| `create-skill` | Validate newly created skill files are valid |
-| `pr-create` | Prevent AI attribution in PR title/body |
+| `create-skill` | Validate newly created skill files |
 
-All other skills either validate during operation or don't need validation.
+All other skills validate during procedure (before action) or don't need validation.
 
 ---
 
-## Group 1: Requires `.claude/Taskfile.yaml` (5 skills)
-Skills that call our Taskfile during operation:
+## Skill Categories
 
-| Skill | Usage |
-|-------|-------|
-| `developer` | `task -t .claude/Taskfile.yaml precommit` |
-| `docs-refresh` | `task -t .claude/Taskfile.yaml skills-reference` |
-| `setup` | `task -t .claude/Taskfile.yaml test` |
-| `task` | `task -t .claude/Taskfile.yaml test/precommit` |
-| `test` | Falls back to `task -t .claude/Taskfile.yaml test` |
+### Standalone (16 skills)
+No infrastructure needed - just copies skill files.
 
-## Group 2: Uses generic `task` commands (5 skills)
-Skills that use user's own Taskfile:
+- `arch`
+- `bugfix`
+- `code`
+- `commit`
+- `debugger`
+- `deploy`
+- `deploy-verify`
+- `domain-expert`
+- `linear`
+- `pr-create`
+- `pr-merge`
+- `slack`
+- `tdd`
+- `workflow`
+- `workflow-finish`
+- `workflow-setup`
 
-| Skill | Usage |
-|-------|-------|
-| `bugfix` | `task test`, `task precommit` |
-| `code` | `task lint`, `task format`, `task precommit` |
-| `create-skill` | `task claude:validate-skill` (for validating created skills) |
-| `tdd` | `task test`, `task precommit` |
-| `workflow-setup` | `task setup` |
+### Skill Tasks Only (2 skills)
+Downloads: `Taskfile.skills.yaml` + `scripts/`
 
-## Group 3: Standalone (12 skills)
-Skills that can work without any infrastructure:
+| Skill | Tasks Used |
+|-------|-----------|
+| `create-skill` | validate-skill (Stop hook) |
+| `docs-refresh` | skills-reference |
 
-**With useful Stop hook (2):**
-- `commit` - validates git state (no Taskfile needed)
-- `pr-create` - validates no AI attribution (no Taskfile needed)
+### User Tasks (4 skills)
+Downloads: `Taskfile.yaml` + `Taskfile.skills.yaml` + `scripts/`
 
-**No Stop hook needed (10):**
-- `arch` - provides guidance only
-- `debugger` - investigates only
-- `deploy` - triggers external system
-- `deploy-verify` - verification is its job
-- `domain-expert` - provides knowledge only
-- `linear` - Linear API validates
-- `pr-merge` - gh validates CI
-- `slack` - Slack API validates
-- `workflow` - orchestrates other skills
-- `workflow-finish` - git validates cleanup
+| Skill | Tasks Used |
+|-------|-----------|
+| `developer` | precommit |
+| `setup` | test |
+| `task` | test, precommit |
+| `test` | test (fallback) |
 
 ---
 
-## Action Items
+## Configuration Persistence
 
-1. Remove Stop hooks from skills that don't need them
-2. Keep Stop hooks only for: `commit`, `create-skill`, `pr-create`
-3. Update `commit` and `pr-create` validations to NOT require Taskfile (pure bash/git/gh)
-4. `create-skill` needs Taskfile to validate created skills (acceptable)
+Skills check if config already exists before prompting:
+- If `.claude/skills-config.env` exists with TEST_COMMAND → don't ask again
+- Only prompt for missing values
+
+This means:
+1. User installs `setup` → configures TEST_COMMAND, LINT_COMMAND
+2. User installs `task` → detects config exists → skips configuration

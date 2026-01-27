@@ -28,7 +28,7 @@ Keep generated documentation in sync with source files. Manages skill reference 
 
 - **Setup**: `/docs-refresh configure` (run once during framework setup)
 - **Config**: `.claude/skills/docs-refresh.yaml`
-- **Stop hook**: `task -t .claude/Taskfile.yaml validate-skill -- --skill docs-refresh`
+- **Stop hook**: `task -t .claude/Taskfile.skills.yaml validate-skill -- --skill docs-refresh`
 
 ## Configure Mode
 
@@ -80,7 +80,7 @@ human_docs:
 
 ```bash
 # Generate skills reference documentation (outputs: docs/skills/REFERENCE.md)
-task -t .claude/Taskfile.yaml skills-reference
+task -t .claude/Taskfile.skills.yaml skills-reference
 ```
 
 Project-specific documentation commands are configured in the project's Taskfile:

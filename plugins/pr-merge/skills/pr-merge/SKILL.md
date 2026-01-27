@@ -14,7 +14,6 @@ Enforces the rule: **NEVER bypass failed CI checks**. Only offers bypass for mis
 ## Quick Reference
 - Merges: GitHub PR via `gh pr merge --squash`
 - Requires: GitHub CLI installed and authenticated, PR exists for branch
-- Stop hook: `task -t .claude/Taskfile.yaml validate-skill -- --skill pr-merge`
 
 ## Critical Rule
 

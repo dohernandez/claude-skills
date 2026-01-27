@@ -22,7 +22,6 @@ This skill is **not user-invocable**. It is called internally by the `workflow` 
 - **Creates**: Git worktree, copies env files, installs deps, opens IDE
 - **Requires**: Branch name from workflow
 - **Output**: Worktree ready, pending-action.json for session handoff
-- **Stop hook**: `task -t .claude/Taskfile.yaml validate-skill -- --skill workflow-setup`
 
 ## Configure Mode
 

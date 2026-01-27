@@ -11,7 +11,7 @@ allowed-tools:
 hooks:
   Stop:
     - type: command
-      command: "task -t .claude/Taskfile.yaml validate-skill -- --skill create-skill"
+      command: "task -t .claude/Taskfile.skills.yaml validate-skill -- --skill create-skill"
 ---
 
 # Create Skill

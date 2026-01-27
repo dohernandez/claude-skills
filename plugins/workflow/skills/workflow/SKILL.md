@@ -14,7 +14,6 @@ Manage the development environment lifecycle for ticket-based work. This skill h
 - **Creates**: Feature branch, worktree, workflow context file
 - **Requires**: Ticket source (Linear ID or plain text description)
 - **Delegates to**: `/bugfix` (fix tickets) or `/task` (feat, chore, refactor, docs)
-- **Stop hook**: `task -t .claude/Taskfile.yaml validate-skill -- --skill workflow`
 
 ### Config Location
 

@@ -7,51 +7,97 @@ set -uo pipefail
 # Colors (disabled for hook execution - no TTY)
 log_info() { echo "[INFO] $1"; }
 log_success() { echo "[OK] $1"; }
+log_error() { echo "[ERROR] $1"; }
 log_header() { echo "=== $1 ==="; }
 
 PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 PROJECT_ROOT="${CLAUDE_PROJECT_DIR:-${PWD}}"
 
-# Navigate to marketplace root to find framework
+# Navigate to marketplace root to find framework (for local development)
 # Structure: .../dohernandez-claude-skills/plugins/<skill>/
 #            .../dohernandez-claude-skills/framework/
 MARKETPLACE_ROOT="$(cd "$PLUGIN_ROOT/../.." && pwd)"
 FRAMEWORK_ROOT="$MARKETPLACE_ROOT/framework"
 
+# GitHub raw URL for downloading infrastructure when not available locally
+GITHUB_RAW_BASE="https://raw.githubusercontent.com/dohernandez/claude-skills/main/framework"
+
+# Scripts to download (excluding setup.sh which is plugin-specific)
+INFRA_SCRIPTS=(
+    "add-skill-to-claudemd.sh"
+    "audit-skills.sh"
+    "check-skill-structure.sh"
+    "check-skill-yaml.sh"
+    "generate-skills-reference.sh"
+    "get-config-path.sh"
+    "list-skills.sh"
+    "post-install.sh"
+    "validate-skill.sh"
+)
+
 SKILL_NAME="deploy"
+
+# ============================================================================
+# DOWNLOAD FROM GITHUB
+# ============================================================================
+download_file() {
+    local url="$1"
+    local dest="$2"
+
+    if curl -fsSL "$url" -o "$dest" 2>/dev/null; then
+        return 0
+    else
+        return 1
+    fi
+}
 
 # ============================================================================
 # INSTALL INFRASTRUCTURE (if missing)
 # ============================================================================
 install_infrastructure() {
-    # Only install if framework exists in marketplace
-    if [[ ! -d "$FRAMEWORK_ROOT" ]]; then
-        log_info "Framework not found - skipping infrastructure"
-        return
+    local use_local=false
+
+    # Check if local framework exists (development mode)
+    if [[ -d "$FRAMEWORK_ROOT" ]] && [[ -f "$FRAMEWORK_ROOT/Taskfile.yaml" ]]; then
+        use_local=true
+        log_info "Using local framework"
+    else
+        log_info "Downloading infrastructure from GitHub"
     fi
 
     # Taskfile
     if [[ ! -f "$PROJECT_ROOT/.claude/Taskfile.yaml" ]]; then
-        if [[ -f "$FRAMEWORK_ROOT/Taskfile.yaml" ]]; then
+        if [[ "$use_local" == true ]]; then
             cp "$FRAMEWORK_ROOT/Taskfile.yaml" "$PROJECT_ROOT/.claude/Taskfile.yaml"
             log_success "Installed: Taskfile.yaml"
+        else
+            if download_file "$GITHUB_RAW_BASE/Taskfile.yaml" "$PROJECT_ROOT/.claude/Taskfile.yaml"; then
+                log_success "Downloaded: Taskfile.yaml"
+            else
+                log_error "Failed to download Taskfile.yaml"
+            fi
         fi
     fi
 
     # Scripts directory
-    if [[ -d "$FRAMEWORK_ROOT/scripts" ]]; then
-        mkdir -p "$PROJECT_ROOT/.claude/scripts"
-        for script in "$FRAMEWORK_ROOT/scripts"/*.sh; do
-            if [[ -f "$script" ]] && [[ "$(basename "$script")" != "setup.sh" ]]; then
-                local script_name=$(basename "$script")
-                if [[ ! -f "$PROJECT_ROOT/.claude/scripts/$script_name" ]]; then
-                    cp "$script" "$PROJECT_ROOT/.claude/scripts/"
+    mkdir -p "$PROJECT_ROOT/.claude/scripts"
+
+    for script_name in "${INFRA_SCRIPTS[@]}"; do
+        if [[ ! -f "$PROJECT_ROOT/.claude/scripts/$script_name" ]]; then
+            if [[ "$use_local" == true ]] && [[ -f "$FRAMEWORK_ROOT/scripts/$script_name" ]]; then
+                cp "$FRAMEWORK_ROOT/scripts/$script_name" "$PROJECT_ROOT/.claude/scripts/"
+                chmod +x "$PROJECT_ROOT/.claude/scripts/$script_name"
+                log_success "Installed: scripts/$script_name"
+            else
+                if download_file "$GITHUB_RAW_BASE/scripts/$script_name" "$PROJECT_ROOT/.claude/scripts/$script_name"; then
                     chmod +x "$PROJECT_ROOT/.claude/scripts/$script_name"
-                    log_success "Installed: scripts/$script_name"
+                    log_success "Downloaded: scripts/$script_name"
+                else
+                    log_error "Failed to download scripts/$script_name"
                 fi
             fi
-        done
-    fi
+        fi
+    done
 }
 
 # ============================================================================

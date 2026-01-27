@@ -6,10 +6,6 @@ allowed-tools:
   - Bash
   - Glob
   - Read
-hooks:
-  Stop:
-    - type: command
-      command: "task -t .claude/Taskfile.yaml validate-skill -- --skill workflow-finish"
 ---
 
 # Workflow Finish

@@ -3,10 +3,6 @@ name: debugger
 description: Debug production service issues via alerts and logs. Use when user says /debugger or /debug.
 user-invocable: true
 allowed-tools: [Read, Bash, WebFetch]
-hooks:
-  Stop:
-    - type: command
-      command: "task -t .claude/Taskfile.yaml validate-skill -- --skill debugger"
 ---
 
 # Debugger

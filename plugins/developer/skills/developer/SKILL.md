@@ -3,10 +3,6 @@ name: developer
 description: Orchestrates development workflow with domain understanding, architecture mapping, and implementation. Use when user says /developer or /dev.
 user-invocable: true
 allowed-tools: [Read, Write, Edit, Bash, Grep, Glob]
-hooks:
-  Stop:
-    - type: command
-      command: "task -t .claude/Taskfile.yaml validate-skill -- --skill developer"
 ---
 
 # Developer

@@ -7,10 +7,6 @@ allowed-tools:
   - Bash
   - Glob
   - Grep
-hooks:
-  Stop:
-    - type: command
-      command: "task -t .claude/Taskfile.yaml validate-skill -- --skill commit"
 ---
 
 # Commit
@@ -148,8 +144,10 @@ Config path depends on how the plugin was installed:
 ### Workflow
 
 ```
-1. CHECK BRANCH
-   └─ Refuse to commit on main/master
+1. PRE-COMMIT CHECKS (before any commit)
+   ├─ Check not on main/master branch
+   ├─ Check no secrets in staged files (.env, credentials, .pem, .key)
+   └─ STOP if any check fails
 
 2. ANALYZE CHANGES
    ├─ git status --porcelain

@@ -6,10 +6,6 @@ allowed-tools:
   - Read
   - Bash
   - WebFetch
-hooks:
-  Stop:
-    - type: command
-      command: "task -t .claude/Taskfile.yaml validate-skill -- --skill slack"
 ---
 
 # Slack

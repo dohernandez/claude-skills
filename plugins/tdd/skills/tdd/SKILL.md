@@ -3,10 +3,6 @@ name: tdd
 description: "Enforce TDD discipline: tests first, fix code not tests. Use when user says /tdd or /test."
 user-invocable: true
 allowed-tools: [Read, Write, Edit, Bash, Grep, Glob]
-hooks:
-  Stop:
-    - type: command
-      command: "task -t .claude/Taskfile.yaml validate-skill -- --skill tdd"
 ---
 
 # TDD

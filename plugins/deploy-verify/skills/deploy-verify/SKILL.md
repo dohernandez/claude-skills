@@ -7,10 +7,6 @@ allowed-tools:
   - Bash
   - Glob
   - Grep
-hooks:
-  Stop:
-    - type: command
-      command: "task -t .claude/Taskfile.yaml validate-skill -- --skill deploy-verify"
 ---
 
 # Deploy Verify

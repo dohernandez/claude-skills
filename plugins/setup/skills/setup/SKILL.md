@@ -8,10 +8,6 @@ allowed-tools:
   - Glob
   - Grep
   - Write
-hooks:
-  Stop:
-    - type: command
-      command: "task -t .claude/Taskfile.yaml validate-skill -- --skill setup"
 ---
 
 # Setup

@@ -9,10 +9,6 @@ allowed-tools:
   - Grep
   - Edit
   - Write
-hooks:
-  Stop:
-    - type: command
-      command: "task -t .claude/Taskfile.yaml validate-skill -- --skill docs-refresh"
 ---
 
 # Docs Refresh

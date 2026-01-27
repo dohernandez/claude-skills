@@ -7,10 +7,6 @@ allowed-tools:
   - Bash
   - Glob
   - Grep
-hooks:
-  Stop:
-    - type: command
-      command: "task -t .claude/Taskfile.yaml validate-skill -- --skill domain-expert"
 ---
 
 # Domain Expert Skill

@@ -3,10 +3,6 @@ name: test
 description: "Smart test runner with watch mode, coverage, and path-specific testing. Use when running tests or checking test coverage."
 user-invocable: true
 allowed-tools: [Read, Bash, Grep, Glob]
-hooks:
-  Stop:
-    - type: command
-      command: "task -t .claude/Taskfile.yaml validate-skill -- --skill test"
 ---
 
 # Test

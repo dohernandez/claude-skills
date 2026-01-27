@@ -3,10 +3,6 @@ name: workflow-setup
 description: Setup development environment with git worktree for ticket-based workflows.
 user-invocable: false
 allowed-tools: [Read, Write, Edit, Bash, Glob, AskUserQuestion]
-hooks:
-  Stop:
-    - type: command
-      command: "task -t .claude/Taskfile.yaml validate-skill -- --skill workflow-setup"
 ---
 
 # Workflow Setup

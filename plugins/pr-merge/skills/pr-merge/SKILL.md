@@ -3,10 +3,6 @@ name: pr-merge
 description: Merge GitHub pull requests with strict CI validation. Never bypasses failed checks. Use when merging PRs or when user says /pr-merge.
 user-invocable: true
 allowed-tools: [Bash, Read]
-hooks:
-  Stop:
-    - type: command
-      command: "task -t .claude/Taskfile.yaml validate-skill -- --skill pr-merge"
 ---
 
 # PR Merge

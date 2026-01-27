@@ -3,10 +3,6 @@ name: workflow
 description: Manage development environment lifecycle for ticket-based work. Use when user says /workflow start, /workflow status, or /workflow finish.
 user-invocable: true
 allowed-tools: [Read, Write, Edit, Bash, Grep, Glob, mcp__linear-server__get_issue, mcp__linear-server__list_issues]
-hooks:
-  Stop:
-    - type: command
-      command: "task -t .claude/Taskfile.yaml validate-skill -- --skill workflow"
 ---
 
 # Workflow

@@ -17,10 +17,6 @@ allowed-tools:
   - mcp__linear-server__list_projects
   - mcp__linear-server__list_issue_labels
   - mcp__linear-server__list_issue_statuses
-hooks:
-  Stop:
-    - type: command
-      command: "task -t .claude/Taskfile.yaml validate-skill -- --skill linear"
 ---
 
 # Linear

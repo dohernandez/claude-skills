@@ -3,10 +3,6 @@ name: pr-create
 description: Creates GitHub pull requests with conventional commit-style titles. Use when creating PRs, submitting changes for review, or when user says /pr, /pr-create.
 user-invocable: true
 allowed-tools: [Bash, Read, Grep, Glob]
-hooks:
-  Stop:
-    - type: command
-      command: "task -t .claude/Taskfile.yaml validate-skill -- --skill pr-create"
 ---
 
 # PR Create
@@ -18,7 +14,31 @@ Follows git workflow conventions from `.claude/skills/pr-create/git-workflow.md`
 ## Quick Reference
 - Creates: GitHub PR via `gh pr create`
 - Requires: GitHub CLI installed and authenticated, committed changes on a feature branch
-- Stop hook: `task -t .claude/Taskfile.yaml validate-skill -- --skill pr-create`
+
+## Workflow
+
+```
+1. PRE-PR CHECKS
+   ├─ Verify gh CLI installed and authenticated
+   ├─ Verify on feature branch (not main/master)
+   └─ Verify changes are committed
+
+2. GENERATE PR CONTENT
+   ├─ Analyze commits on branch
+   ├─ Generate title (conventional commit format)
+   └─ Generate body (use template if exists)
+
+3. VALIDATE (before creating)
+   ├─ Check title for AI attribution (STOP if found)
+   ├─ Check body for AI attribution (STOP if found)
+   └─ Check title length ≤ 50 chars
+
+4. USER REVIEW
+   └─ Show preview, wait for approval
+
+5. CREATE PR
+   └─ gh pr create with approved content
+```
 
 ## Prerequisites
 

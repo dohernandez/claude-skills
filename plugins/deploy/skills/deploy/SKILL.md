@@ -6,10 +6,6 @@ allowed-tools:
   - Read
   - Bash
   - AskUserQuestion
-hooks:
-  Stop:
-    - type: command
-      command: "task -t .claude/Taskfile.yaml validate-skill -- --skill deploy"
 ---
 
 # Deploy

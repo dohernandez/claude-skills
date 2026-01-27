@@ -7,6 +7,5 @@
     "url": "https://github.com/dohernandez"
   },
   "repository": "https://github.com/dohernandez/claude-skills",
-  "skills": "./skills/",
-  "hooks": "./hooks/hooks.json"
+  "skills": "./skills/"
 }

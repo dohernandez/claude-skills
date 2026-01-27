@@ -8,6 +8,5 @@
   },
   "keywords": ["linear", "issues", "project-management", "tickets"],
   "repository": "https://github.com/dohernandez/claude-skills",
-  "skills": "./skills/",
-  "hooks": "./hooks/hooks.json"
+  "skills": "./skills/"
 }

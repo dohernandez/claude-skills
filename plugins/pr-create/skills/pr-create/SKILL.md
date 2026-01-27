@@ -71,9 +71,9 @@ PRs and commits must appear as human-authored work. This is a strict framework r
 
 ## PR Body Template
 
-Use the PR template at `.github/PULL_REQUEST_TEMPLATE.md`.
+Use the PR template at `.github/PULL_REQUEST_TEMPLATE.md` if it exists.
 
-The framework installs a default template to `.github/` if the project doesn't have one.
+Run `/pr-create configure` to install a default template if the project doesn't have one.
 
 Standard format:
 

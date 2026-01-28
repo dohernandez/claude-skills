@@ -1,0 +1,62 @@
+name: my-workflow
+version: "1.0.0"
+
+dependencies:
+  # my-workflow is self-contained — it installs other skills but doesn't
+  # depend on them to function
+  - skill: "*"
+    required: false
+    reason: "Installs skills from marketplace cache; does not require them to operate"
+
+composition:
+  - when: "Setting up a new project with skills"
+    sequence:
+      - my-workflow    # Install skills from marketplace
+      - "<skill> configure"  # Configure each installed skill
+
+  - when: "Adding more skills to an existing project"
+    sequence:
+      - my-workflow    # Install additional skills or upgrade tier
+
+boundaries:
+  this_skill_handles:
+    - "Copying skills from marketplace cache to project"
+    - "Tier-based skill selection"
+    - "Infrastructure provisioning (Taskfile, scripts)"
+    - "Post-install configuration prompts"
+
+  this_skill_does_not_handle:
+    - "Skill configuration (each skill handles its own /X configure)"
+    - "Skill execution (installed skills run independently)"
+    - "Plugin installation (use /plugin install for the plugin itself)"
+    - "Skill authoring (use /create-skill instead)"
+
+complements:
+  - skill: create-skill
+    relationship: "my-workflow installs create-skill; create-skill scaffolds new skills"
+
+  - skill: memory
+    relationship: "my-workflow installs memory; memory routes learnings to installed skills"
+
+common_questions:
+  - question: "What's the difference between /plugin install and /my-workflow install?"
+    answer: |
+      /plugin install adds the my-workflow plugin itself.
+      /my-workflow install uses the installed plugin to copy individual skills
+      from the marketplace cache into your project's .claude/skills/ directory.
+
+  - question: "Can I upgrade from minimal to standard?"
+    answer: |
+      Yes. Run /my-workflow install standard. Already-installed skills are
+      skipped, only new ones are added.
+
+  - question: "How do I reinstall a skill?"
+    answer: |
+      Delete the skill directory (.claude/skills/<skill-name>/) and run
+      /my-workflow install <skill-name> again.
+
+  - question: "What if the marketplace cache is not available?"
+    answer: |
+      The skill detects the marketplace root from the plugin installation.
+      If it can't find skills, check that the marketplace plugins are installed
+      with /plugin list.

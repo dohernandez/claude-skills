@@ -1,0 +1,11 @@
+{
+  "name": "memory",
+  "description": "Knowledge orchestration across skills - capture, route, and consolidate learnings",
+  "version": "1.0.0",
+  "author": {
+    "name": "dohernandez",
+    "url": "https://github.com/dohernandez"
+  },
+  "repository": "https://github.com/dohernandez/claude-skills",
+  "skills": "./skills/"
+}

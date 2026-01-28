@@ -8,7 +8,6 @@ description: "Validations for commit skill"
 
 validations:
   - id: not-on-protected-branch
-    name: "Not committing to protected branch"
     type: command
     command: |
       BRANCH=$(git branch --show-current 2>/dev/null)
@@ -20,7 +19,6 @@ validations:
     message: "Cannot commit directly to main/master branch."
 
   - id: no-secrets-staged
-    name: "No secrets in staged files"
     type: command
     command: |
       if git diff --staged --name-only | grep -qE '\.env$|credentials|secret|\.pem$|\.key$'; then

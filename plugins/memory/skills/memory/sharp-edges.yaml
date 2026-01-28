@@ -1,0 +1,145 @@
+# Sharp edges for memory skill
+
+edges:
+  - id: routing-ambiguity
+    description: "Learning could apply to multiple skills equally"
+    detect: "Learning contains mixed HOW and WHEN indicators, or keywords from multiple domains"
+    impact: "Learning gets routed to wrong skill, won't be found when needed"
+    fix: |
+      When routing is unclear:
+      1. Ask the user: "This could apply to X or Y. Which is most appropriate?"
+      2. Consider splitting into two learnings if truly applicable to both
+      3. Add cross-reference tags: "Also see: tdd/MEMORY.md"
+    severity: medium
+
+  - id: missing-memory-file
+    description: "Target skill has no MEMORY.md file yet"
+    detect: "File .claude/skills/{skill}/MEMORY.md does not exist"
+    impact: "Cannot capture learning, user loses the insight"
+    fix: |
+      Create MEMORY.md with standard header:
+
+      ```markdown
+      # {Skill Name} Memory
+
+      Accumulated learnings for the {skill} skill.
+
+      ---
+      ```
+
+      Then append the learning entry.
+    severity: low
+
+  - id: duplicate-learning
+    description: "Same or very similar learning already exists"
+    detect: "Compare new learning against existing entries using semantic similarity"
+    impact: "Memory becomes cluttered, same knowledge repeated"
+    fix: |
+      Before adding:
+      1. Search existing MEMORY.md for similar content
+      2. If duplicate found, skip or offer to merge
+      3. If near-duplicate, ask user if they want to:
+         - Skip (existing is sufficient)
+         - Replace (new version is better)
+         - Merge (combine insights)
+    severity: low
+
+  - id: vague-learning
+    description: "Learning lacks context or specifics"
+    detect: "Learning is very short (<20 words) or contains only generic advice"
+    impact: "Not actionable when reviewed later, wasted entry"
+    fix: |
+      Prompt user for more context:
+      - "Can you add a specific example?"
+      - "What was the situation where you learned this?"
+      - "What's the consequence of not doing this?"
+
+      Format as:
+      - Context: (situation)
+      - Learning: (specific insight)
+      - Example: (concrete case)
+    severity: medium
+
+  - id: wrong-scope-assignment
+    description: "HOW knowledge assigned to orchestrator or vice versa"
+    detect: |
+      - Learning in orchestrator contains: technique, pattern, implementation detail
+      - Learning in sub-skill contains: workflow, sequencing, coordination
+    impact: "Knowledge won't be found when using the appropriate skill"
+    fix: |
+      Review scope indicators:
+      - HOW (sub-skill): techniques, patterns, implementations
+      - WHEN (orchestrator): sequences, triggers, coordination
+
+      Move learning to correct scope or split if mixed.
+    severity: medium
+
+  - id: orphaned-project-knowledge
+    description: "Project-specific learning captured without project tag"
+    detect: "Learning references specific file paths, class names, or project-specific terms"
+    impact: "Could be confused for universal pattern, applied incorrectly elsewhere"
+    fix: |
+      Add #project tag and include project context:
+
+      **Context**: [Project: my-app] When working with UserService...
+
+      **Tags**: #project #my-app
+
+      Consider if universal version should also be captured.
+    severity: low
+
+  - id: stale-memory
+    description: "MEMORY.md contains outdated learnings"
+    detect: "Entries reference deprecated patterns, old library versions, or removed code"
+    impact: "Following stale advice causes problems"
+    fix: |
+      During /memory consolidate:
+      1. Flag entries older than 6 months for review
+      2. Check if referenced patterns/tools still exist
+      3. Mark stale entries for user review
+      4. Archive or update based on user decision
+    severity: medium
+
+  - id: skill-not-found
+    description: "User references a skill that doesn't exist"
+    detect: "/memory review <skill> where skill directory doesn't exist"
+    impact: "User expects to see memory but gets error or empty result"
+    fix: |
+      Check skill exists before attempting review:
+      1. List available skills
+      2. Suggest closest match if typo
+      3. Offer to create skill MEMORY.md if skill exists but has no memory
+
+      Example: "Did you mean 'tdd'? Available skills: tdd, bugfix, arch, code"
+    severity: low
+
+  - id: consolidation-data-loss
+    description: "Consolidation accidentally removes important distinct learnings"
+    detect: "Two learnings seem similar but have different contexts or applications"
+    impact: "Nuanced knowledge is lost"
+    fix: |
+      During consolidation:
+      1. Always show proposed merges before applying
+      2. Highlight context differences
+      3. Offer options: merge, keep both, keep one
+      4. Never auto-merge without user approval
+
+      When in doubt, keep both with a note about similarity.
+    severity: high
+
+  - id: memory-file-corruption
+    description: "MEMORY.md format becomes corrupted during edits"
+    detect: "File has malformed markdown, missing separators, or broken entries"
+    impact: "Entries may be lost or unparseable"
+    fix: |
+      Before writing:
+      1. Validate existing file structure
+      2. Use append-only for new entries
+      3. Create backup before consolidation
+      4. Validate after writing
+
+      If corruption detected:
+      - Attempt to repair structure
+      - Show user what was recovered
+      - Ask for manual review if uncertain
+    severity: high

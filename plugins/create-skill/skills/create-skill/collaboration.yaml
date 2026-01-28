@@ -24,15 +24,8 @@ boundaries:
     - "Validation target creation"
     - "Project-specific configurations"
 
-triggers:
-  - pattern: "create a skill|new skill|add skill|scaffold skill|skill template"
-    suggest: create-skill
-
-  - pattern: "/create-skill"
-    suggest: create-skill
-
 composition:
   - when: "Creating a brand new skill"
     sequence:
       - create-skill
-      - "Run validation: task claude:validate-skill -- --skill {folder-name}"
+      - "Run validation: task -t .claude/Taskfile.skills.yaml validate-skill -- --skill {folder-name}"

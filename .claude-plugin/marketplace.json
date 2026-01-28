@@ -67,6 +67,16 @@
       "description": "Linear issue creation and management"
     },
     {
+      "name": "memory",
+      "source": "./plugins/memory",
+      "description": "Knowledge orchestration across skills - capture, route, and consolidate learnings"
+    },
+    {
+      "name": "my-workflow",
+      "source": "./plugins/my-workflow",
+      "description": "Install curated skill tiers into any project from the marketplace"
+    },
+    {
       "name": "pr-create",
       "source": "./plugins/pr-create",
       "description": "Create GitHub pull requests with standardized format"

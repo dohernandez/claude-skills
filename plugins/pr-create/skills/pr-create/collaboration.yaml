@@ -10,8 +10,3 @@ composition:
     sequence:
       - pr-create
 
-triggers:
-  - pattern: "create pr|make pr|open pr|submit pr|/pr|/pr-create"
-    suggest: pr-create
-  - pattern: "push and pr|push pr|create pull request"
-    suggest: pr-create

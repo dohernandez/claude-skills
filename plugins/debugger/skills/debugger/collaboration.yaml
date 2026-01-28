@@ -126,3 +126,11 @@ coordination_notes: |
   - linear for tracking and visibility
 
   debugger does NOT implement fixes directly - it only diagnoses and recommends.
+
+memory_integration:
+  reads: "MEMORY.md for log analysis patterns, alert triage strategies, service quirks"
+  writes_via: "memory skill routes domain learnings here"
+  capture_triggers:
+    - "New log analysis pattern found"
+    - "Service-specific quirk identified"
+    - "Alert triage shortcut discovered"

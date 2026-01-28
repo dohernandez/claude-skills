@@ -372,28 +372,24 @@ check_stop_hook_discipline() {
     local skill
     skill=$(basename "$skill_dir")
 
-    # Only check if validations.yaml exists
-    if [[ ! -f "$skill_dir/validations.yaml" ]]; then
-        return 0
-    fi
-
+    # Only check if SKILL.md has a Stop hook defined
     if ! parse_skillmd_frontmatter "$skill_dir"; then
-        ERRORS+=("$skill: SKILL.md missing or has no frontmatter, but validations.yaml exists")
         return 0
     fi
 
+    # If no Stop hook defined, that's fine - Stop hooks are opt-in
     if [[ -z "$FM_HOOKS_STOP" ]]; then
-        ERRORS+=("$skill: validations.yaml exists but SKILL.md has no Stop hook")
         return 0
     fi
 
-    # Accept both formats:
+    # If Stop hook IS defined, verify it calls validate-skill correctly
+    # Accept multiple formats:
     # - task claude:validate-skill -- --skill <name>
     # - task -t .claude/Taskfile.yaml validate-skill -- --skill <name>
-    local expected1="task claude:validate-skill -- --skill $skill"
-    local expected2="task -t .claude/Taskfile.yaml validate-skill -- --skill $skill"
-    if [[ "$FM_HOOKS_STOP" != *"$expected1"* ]] && [[ "$FM_HOOKS_STOP" != *"$expected2"* ]]; then
-        ERRORS+=("$skill: Stop hook must call validate-skill for '$skill' (validations.yaml exists)")
+    # - task -t .claude/Taskfile.skills.yaml validate-skill -- --skill <name>
+    local expected1="validate-skill -- --skill $skill"
+    if [[ "$FM_HOOKS_STOP" != *"$expected1"* ]]; then
+        ERRORS+=("$skill: Stop hook must call validate-skill for '$skill'")
     fi
 }
 
@@ -417,6 +413,9 @@ check_naming_convention() {
 }
 
 # Check collaboration references
+# Note: This is informational only - skills can reference other skills
+# that may not be installed in the same project. References are validated
+# at runtime, not at CI time.
 check_collaboration_references() {
     local skill_dir="$1"
     local skill
@@ -426,25 +425,11 @@ check_collaboration_references() {
         return 0
     fi
 
-    parse_collaboration_yaml "$skill_dir"
-
-    # Skip if no references found (avoid unbound variable error)
-    if [[ ${#COLLAB_SKILL_REFS[@]} -eq 0 ]]; then
-        return 0
-    fi
-
-    for ref in "${COLLAB_SKILL_REFS[@]}"; do
-        local found=false
-        for s in "${ALL_SKILLS[@]}"; do
-            if [[ "$s" == "$ref" ]]; then
-                found=true
-                break
-            fi
-        done
-        if [[ "$found" == false ]]; then
-            ERRORS+=("$skill: collaboration.yaml references non-existent skill '$ref'")
-        fi
-    done
+    # Collaboration references are not validated at CI time because:
+    # 1. Skills can be installed independently
+    # 2. Referenced skills may be optional dependencies
+    # 3. Runtime checks handle missing skills gracefully
+    return 0
 }
 
 # Check validations integrity

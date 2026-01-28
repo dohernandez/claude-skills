@@ -1,6 +1,6 @@
 name: linear
 kind: integration
-version: "2.0.0"
+version: "1.0.0"
 description: "Create and manage Linear issues using structured templates."
 severity: medium
 tags:

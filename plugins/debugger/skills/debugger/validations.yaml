@@ -13,7 +13,7 @@ validations:
 
   - id: yaml-syntax-valid
     type: command
-    command: "task -t .claude/Taskfile.yaml validate-skill -- --skill debugger"
+    command: "task -t .claude/Taskfile.skills.yaml validate-skill -- --skill debugger"
     description: "Skill YAML files are valid"
     failure_message: "Debugger skill YAML validation failed."
 

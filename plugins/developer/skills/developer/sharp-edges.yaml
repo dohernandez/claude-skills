@@ -2,11 +2,11 @@
 
 edges:
   - id: no-config-exists
-    description: "Running /developer without having run /developer discover first"
+    description: "Running /developer without having run /developer configure first"
     detect: "Check if .claude/skills/developer.yaml exists"
     impact: "No architecture context, implementation may violate project patterns"
     fix: |
-      Run /developer discover first to analyze project architecture.
+      Run /developer configure first to analyze project architecture.
       This creates .claude/skills/developer.yaml with:
       - Architecture style and layers
       - Import rules
@@ -94,7 +94,7 @@ edges:
     detect: "Config references paths or patterns that no longer exist"
     impact: "Wrong guidance, may create code in wrong locations"
     fix: |
-      Run /developer discover to refresh config.
+      Run /developer configure to refresh config.
       Or use /developer learn <path> to update specific areas.
     severity: medium
 

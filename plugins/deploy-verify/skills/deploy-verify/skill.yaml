@@ -1,6 +1,6 @@
 name: deploy-verify
 kind: utility
-version: "2.0.0"
+version: "1.0.0"
 description: "Systematic verification of deployments to confirm service health and successful startup."
 severity: medium
 tags:

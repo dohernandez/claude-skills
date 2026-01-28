@@ -12,8 +12,79 @@ Merge GitHub pull requests with strict CI validation and merge state checking.
 Enforces the rule: **NEVER bypass failed CI checks**. Only offers bypass for missing reviews when all checks pass.
 
 ## Quick Reference
-- Merges: GitHub PR via `gh pr merge --squash`
-- Requires: GitHub CLI installed and authenticated, PR exists for branch
+- **Setup**: `/pr-merge configure` (set merge strategy and branch cleanup)
+- **Usage**: `/pr-merge` or `/pr-merge <number>`
+- **Config**: Depends on installation model (see Save Location)
+- **Requires**: GitHub CLI installed and authenticated, PR exists for branch
+
+## Commands
+
+| Command | Purpose | When to Use |
+|---------|---------|-------------|
+| `/pr-merge configure` | Set merge strategy and branch cleanup | First time in a project |
+| `/pr-merge` | Merge PR for current branch | Normal usage |
+| `/pr-merge <number>` | Merge specific PR by number | When not on the PR branch |
+
+---
+
+## /pr-merge configure
+
+**When**: First time using `/pr-merge` in a project, or to change merge preferences
+
+**What it does**:
+1. Asks user for preferred merge strategy (squash, merge, rebase)
+2. Asks whether to delete branch after merge
+3. Saves config to yaml (installation-model-aware path)
+
+### Workflow
+
+```
+1. ASK MERGE STRATEGY
+   └─ squash (default), merge, or rebase?
+
+2. ASK BRANCH CLEANUP
+   └─ Delete branch after merge? (default: true)
+
+3. SAVE CONFIG
+   └─ Write pr-merge.yaml with preferences
+```
+
+### Save Location
+
+Config path depends on the installation model. Detect which model is active by checking whether this skill is running from inside `.claude/skills/pr-merge/` (my-workflow) or from an external plugin directory (standalone).
+
+| Installation Model | Config File | How to Detect |
+|--------------------|-------------|---------------|
+| **Standalone** (external plugin) | `.claude/skills/pr-merge.yaml` | Skill files are NOT inside `.claude/skills/pr-merge/` |
+| **my-workflow** (copied into project) | `.claude/skills/pr-merge/pr-merge.yaml` | Skill files ARE inside `.claude/skills/pr-merge/` |
+
+**Precedence when reading** (first found wins):
+1. `.claude/skills/pr-merge/pr-merge.yaml` (my-workflow installation)
+2. `.claude/skills/pr-merge.yaml` (standalone installation)
+3. Skill defaults
+
+### Config Schema
+
+```yaml
+# .claude/skills/pr-merge.yaml (standalone installation)
+# .claude/skills/pr-merge/pr-merge.yaml (my-workflow installation)
+version: 1
+configured_at: "ISO timestamp"
+merge:
+  strategy: "squash"       # squash | merge | rebase
+  delete_branch: true      # delete remote branch after merge
+```
+
+---
+
+## /pr-merge (Normal Usage)
+
+**When**: Merging a pull request
+
+**Reads config from** (first found):
+1. `.claude/skills/pr-merge/pr-merge.yaml` (my-workflow installation)
+2. `.claude/skills/pr-merge.yaml` (standalone installation)
+3. Skill defaults (squash, delete branch)
 
 ## Critical Rule
 
@@ -77,7 +148,8 @@ For each check in `statusCheckRollup`:
 ### Step 5: Execute Merge
 
 ```bash
-gh pr merge <number> --squash
+# Uses configured strategy (default: squash)
+gh pr merge <number> --squash --delete-branch
 ```
 
 ## Update Behind Branch

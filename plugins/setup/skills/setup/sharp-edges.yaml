@@ -2,7 +2,7 @@
 # Common setup issues and their solutions
 
 name: setup
-version: "2.0.0"
+version: "1.0.0"
 
 edges:
   - id: missing-runtime

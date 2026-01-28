@@ -19,7 +19,7 @@ Discover, validate, and guide project architecture. Ensures code follows layer b
 
 - **Validates:** Layer boundaries, import directions, architectural compliance
 - **Modes:** configure, learn, check, plan
-- **Stop hook:** `task claude:validate-skill -- --skill arch`
+- **Stop hook:** `task -t .claude/Taskfile.skills.yaml validate-skill -- --skill arch`
 
 ## Modes Overview
 
@@ -36,7 +36,7 @@ Discover, validate, and guide project architecture. Ensures code follows layer b
 
 Auto-discovers your project's architecture based on the selected style.
 
-**Run during framework installation or manually:**
+**Run during plugin installation or manually:**
 ```bash
 /arch configure
 ```

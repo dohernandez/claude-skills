@@ -9,20 +9,6 @@ dependencies:
     relationship: triggers
     description: Should invoke deploy-verify after successful deployment
 
-triggers:
-  # When to suggest using this skill
-  - condition: "User says 'deploy' or '/deploy'"
-    action: "Use deploy skill"
-
-  - condition: "User wants to push changes to production"
-    action: "Use deploy skill"
-
-  - condition: "User mentions 'release' or 'ship'"
-    action: "Consider deploy skill after confirming intent"
-
-  - condition: "After merging PR to main"
-    action: "Suggest deploy skill if user wants to deploy changes"
-
 handoffs:
   # When to hand off to another skill
   - to: deploy-verify

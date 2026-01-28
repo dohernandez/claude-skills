@@ -6,7 +6,6 @@ description: "Validations for pr-create skill"
 
 validations:
   - id: no-ai-attribution
-    name: "PR title and body contain no AI attribution"
     type: command
     command: |
       gh pr view --json title,body -q '.title + " " + .body' 2>/dev/null | \

@@ -1,0 +1,43 @@
+# Bugfix skill collaboration
+# Defines how bugfix skill works with other skills
+
+name: bugfix
+version: "1.0.0"
+
+dependencies:
+  - skill: tdd
+    required: false
+    reason: "Uses TDD principles for failing test before fix"
+
+provides_to:
+  - skill: developer
+    provides:
+      - "root_cause: Identified cause of the bug"
+      - "fix_scope: Files and areas that need changes"
+    usage: |
+      Developer delegates to bugfix for structured debugging.
+      Bugfix returns root cause analysis for implementation.
+
+  - skill: workflow
+    provides:
+      - "bug_report: Structured analysis of the issue"
+    usage: |
+      Workflow may trigger bugfix as part of ticket work
+      when the ticket involves a bug fix.
+
+receives_from:
+  - skill: developer
+    receives:
+      - "bug_description: What is broken"
+      - "reproduction_context: How to reproduce"
+    usage: |
+      Developer provides context about the bug,
+      bugfix runs structured investigation.
+
+memory_integration:
+  reads: "MEMORY.md for investigation strategies, common root causes, debugging patterns"
+  writes_via: "memory skill routes domain learnings here"
+  capture_triggers:
+    - "New debugging strategy discovered"
+    - "Common root cause pattern identified"
+    - "Investigation shortcut found"

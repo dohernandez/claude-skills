@@ -1,13 +1,11 @@
 validations:
   - id: skills-yaml-valid
-    name: "Skill YAML files parse and required SKILL.md exists"
     type: command
-    command: "task -t .claude/Taskfile.yaml validate-skill-yaml"
+    command: "task -t .claude/Taskfile.skills.yaml validate-skill-yaml"
     expect: "exit 0"
     message: "Skill YAML validation failed (missing SKILL.md or invalid YAML)."
 
   - id: context-gitignored
-    name: "Workflow context file is in .gitignore"
     type: command
     command: "grep -q 'workflow-context.json' .gitignore"
     expect: "exit 0"

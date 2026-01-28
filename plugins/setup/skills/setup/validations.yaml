@@ -6,7 +6,6 @@ description: "Validations for setup skill"
 
 validations:
   - id: skill-structure-valid
-    name: "Skill has required files and valid YAML"
     type: command
     command: "task -t .claude/Taskfile.yaml check-structure -- --skill setup"
     expect: "exit 0"

@@ -18,10 +18,3 @@ composition:
       - pr-create  # Create the PR
       - pr-merge   # Merge when ready
 
-triggers:
-  - pattern: "merge pr|merge pull request|pr merge|/pr-merge|/merge-pr"
-    suggest: pr-merge
-  - pattern: "is pr ready|can we merge|check pr status"
-    suggest: pr-merge
-  - pattern: "merge this|merge it|let's merge"
-    suggest: pr-merge

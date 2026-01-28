@@ -13,9 +13,9 @@ PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && p
 PROJECT_ROOT="${CLAUDE_PROJECT_DIR:-${PWD}}"
 
 MARKETPLACE_ROOT="$(cd "$PLUGIN_ROOT/../.." && pwd)"
-FRAMEWORK_ROOT="$MARKETPLACE_ROOT/framework"
+INFRA_ROOT="$MARKETPLACE_ROOT/infra"
 
-GITHUB_RAW_BASE="https://raw.githubusercontent.com/dohernandez/claude-skills/main/framework"
+GITHUB_RAW_BASE="https://raw.githubusercontent.com/dohernandez/claude-skills/main/infra"
 
 INFRA_SCRIPTS=(
     "add-skill-to-claudemd.sh"
@@ -40,9 +40,9 @@ download_file() {
 install_infrastructure() {
     local use_local=false
 
-    if [[ -d "$FRAMEWORK_ROOT" ]] && [[ -f "$FRAMEWORK_ROOT/Taskfile.skills.yaml" ]]; then
+    if [[ -d "$INFRA_ROOT" ]] && [[ -f "$INFRA_ROOT/Taskfile.skills.yaml" ]]; then
         use_local=true
-        log_info "Using local framework"
+        log_info "Using local infrastructure"
     else
         log_info "Downloading infrastructure from GitHub"
     fi
@@ -50,7 +50,7 @@ install_infrastructure() {
     # Skill tasks Taskfile only (no user tasks)
     if [[ ! -f "$PROJECT_ROOT/.claude/Taskfile.skills.yaml" ]]; then
         if [[ "$use_local" == true ]]; then
-            cp "$FRAMEWORK_ROOT/Taskfile.skills.yaml" "$PROJECT_ROOT/.claude/Taskfile.skills.yaml"
+            cp "$INFRA_ROOT/Taskfile.skills.yaml" "$PROJECT_ROOT/.claude/Taskfile.skills.yaml"
             log_success "Installed: Taskfile.skills.yaml"
         else
             if download_file "$GITHUB_RAW_BASE/Taskfile.skills.yaml" "$PROJECT_ROOT/.claude/Taskfile.skills.yaml"; then
@@ -65,8 +65,8 @@ install_infrastructure() {
     mkdir -p "$PROJECT_ROOT/.claude/scripts"
     for script_name in "${INFRA_SCRIPTS[@]}"; do
         if [[ ! -f "$PROJECT_ROOT/.claude/scripts/$script_name" ]]; then
-            if [[ "$use_local" == true ]] && [[ -f "$FRAMEWORK_ROOT/scripts/$script_name" ]]; then
-                cp "$FRAMEWORK_ROOT/scripts/$script_name" "$PROJECT_ROOT/.claude/scripts/"
+            if [[ "$use_local" == true ]] && [[ -f "$INFRA_ROOT/scripts/$script_name" ]]; then
+                cp "$INFRA_ROOT/scripts/$script_name" "$PROJECT_ROOT/.claude/scripts/"
                 chmod +x "$PROJECT_ROOT/.claude/scripts/$script_name"
                 log_success "Installed: scripts/$script_name"
             else

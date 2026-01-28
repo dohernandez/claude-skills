@@ -12,21 +12,18 @@ validations:
   # Uncomment and customize based on your architecture
 
   # - id: domain-no-outer-imports
-  #   name: "Domain layer does not import outer layers"
   #   type: command
   #   command: "! grep -rq 'from.*/infrastructure/\\|from.*/application/' ${SOURCE_ROOT}domain/ 2>/dev/null"
   #   expect: "exit 0"
   #   message: "Domain layer must not import infrastructure or application modules"
 
   # - id: infra-no-app-imports
-  #   name: "Infrastructure layer does not import application"
   #   type: command
   #   command: "! grep -rq 'from.*/application/' ${SOURCE_ROOT}infrastructure/ 2>/dev/null"
   #   expect: "exit 0"
   #   message: "Infrastructure layer must not import application modules"
 
   # - id: config-no-internal-imports
-  #   name: "Config layer does not import internal modules"
   #   type: command
   #   command: "! grep -rqE 'from.*(domain|infrastructure|application)' ${SOURCE_ROOT}config/ 2>/dev/null"
   #   expect: "exit 0"
@@ -34,7 +31,6 @@ validations:
 
   # Placeholder - add your validations
   - id: placeholder
-    name: "Architecture validations placeholder"
     type: command
     command: "echo 'Configure validations for your project'"
     expect: "exit 0"
@@ -58,7 +54,6 @@ customization_guide: |
   ```yaml
   validations:
     - id: domain-no-outer-imports
-      name: "Domain layer isolation"
       type: command
       command: |
         ! grep -rE 'from.*(infrastructure|application)' src/domain/ 2>/dev/null || \

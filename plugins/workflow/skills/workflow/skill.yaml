@@ -439,7 +439,7 @@ procedure:
 
       1. Identify appropriate test file (unit test preferred)
       2. Write test that exercises the exact reproduction scenario
-      3. Run test: task -t .claude/Taskfile.yaml test (or project-specific test command)
+      3. Run test: task -t .claude/Taskfile.skills.yaml test (or project-specific test command)
       4. Verify test FAILS (this is expected and correct)
       5. Verify test fails for the RIGHT reason (the bug, not typos)
 
@@ -511,11 +511,11 @@ procedure:
     detail: |
       Ensure fix doesn't break anything else.
 
-      1. Run full test suite: task -t .claude/Taskfile.yaml test
+      1. Run full test suite: task -t .claude/Taskfile.skills.yaml test
       2. Analyze any failures:
          - If related to fix: may have unintended side effects, re-analyze
          - If unrelated: investigate separately (may be flaky test)
-      3. Run pre-commit: task -t .claude/Taskfile.yaml precommit
+      3. Run pre-commit: task -t .claude/Taskfile.skills.yaml precommit
       4. All tests must pass
 
       If tests fail due to fix:

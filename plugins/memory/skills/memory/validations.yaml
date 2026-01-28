@@ -1,0 +1,34 @@
+# Validations for memory skill
+# v1 supports command validations only
+
+name: memory
+version: "1.0.0"
+
+validations:
+  - id: skills-directory-exists
+    type: command
+    command: "test -d .claude/skills"
+    description: "Skills directory exists"
+    failure_message: "Skills directory not found. Run skill setup first."
+
+  - id: skill-yaml-valid
+    type: command
+    command: "test -f .claude/skills/memory/skill.yaml"
+    description: "Memory skill is installed"
+    failure_message: "Memory skill not found. Install the memory plugin first."
+
+  - id: target-skill-has-memory
+    type: manual
+    description: "Target skill's MEMORY.md exists or can be created"
+    check: "Before capture, verify target skill directory exists"
+    on_failure: "Create MEMORY.md in target skill directory"
+
+  - id: memory-format-valid
+    type: manual
+    description: "MEMORY.md follows expected format"
+    check: "Entries have date, category, context, learning, and tags"
+    on_failure: "Repair format or warn user"
+
+# on_stop: quick validation only
+on_stop:
+  - skills-directory-exists

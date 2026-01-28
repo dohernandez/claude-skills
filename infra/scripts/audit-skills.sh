@@ -505,31 +505,29 @@ check_required_files() {
 }
 
 # Check C) Stop hook discipline
+# Note: Stop hooks are opt-in. They are added via /create-skill when needed.
+# This check only validates format IF a Stop hook is defined.
 check_stop_hook_discipline() {
     local skill_dir="$1"
     local kind="$2"
     local skill
     skill=$(basename "$skill_dir")
 
-    # Helpers don't need Stop hooks
-    if [[ "$kind" == "helper" ]]; then
-        return 0
-    fi
-
     parse_skillmd_frontmatter "$skill_dir" || return 0
 
+    # If no Stop hook defined, that's fine - Stop hooks are opt-in
     if [[ -z "$FM_HOOKS_STOP" ]]; then
-        ERRORS+=("$skill: No Stop hook defined (required for kind '$kind')")
         return 0
     fi
 
-    # Accept either format:
-    # - task claude:validate-skill -- --skill X (project with includes)
-    # - task -t .claude/Taskfile.yaml validate-skill -- --skill X (framework direct)
-    local expected1="task claude:validate-skill -- --skill $skill"
-    local expected2="task -t .claude/Taskfile.yaml validate-skill -- --skill $skill"
-    if [[ "$FM_HOOKS_STOP" != *"$expected1"* ]] && [[ "$FM_HOOKS_STOP" != *"$expected2"* ]]; then
-        ERRORS+=("$skill: Stop hook must call validate-skill (expected '$expected2' or '$expected1')")
+    # If Stop hook IS defined, verify it calls validate-skill correctly
+    # Accept multiple formats:
+    # - task claude:validate-skill -- --skill X
+    # - task -t .claude/Taskfile.yaml validate-skill -- --skill X
+    # - task -t .claude/Taskfile.skills.yaml validate-skill -- --skill X
+    local expected="validate-skill -- --skill $skill"
+    if [[ "$FM_HOOKS_STOP" != *"$expected"* ]]; then
+        ERRORS+=("$skill: Stop hook must call validate-skill for '$skill'")
     fi
 }
 
@@ -603,32 +601,17 @@ check_validations_discipline() {
 }
 
 # Check E) Collaboration reference integrity
+# Note: Collaboration references are not validated at CI time because:
+# 1. Skills can be installed independently
+# 2. Referenced skills may be optional dependencies
+# 3. Runtime checks handle missing skills gracefully
 check_collaboration_references() {
     local skill_dir="$1"
     local skill
     skill=$(basename "$skill_dir")
 
-    if [[ ! -f "$skill_dir/collaboration.yaml" ]]; then
-        return 0
-    fi
-
-    parse_collaboration_yaml "$skill_dir"
-
-    # Bash 3.2 compatible: check length before iterating over array
-    if [[ ${#COLLAB_SKILL_REFS[@]} -gt 0 ]]; then
-        for ref in "${COLLAB_SKILL_REFS[@]}"; do
-            local found=false
-            for s in "${ALL_SKILLS[@]}"; do
-                if [[ "$s" == "$ref" ]]; then
-                    found=true
-                    break
-                fi
-            done
-            if [[ "$found" == false ]]; then
-                ERRORS+=("$skill: collaboration.yaml references non-existent skill '$ref'")
-            fi
-        done
-    fi
+    # Skip validation - references are resolved at runtime
+    return 0
 }
 
 # Check F) No patterns in SKILL.md (for non-helpers)

@@ -1,6 +1,6 @@
 name: workflow-setup
 kind: workflow
-version: "2.0.0"
+version: "1.0.0"
 description: "Setup development environment with git worktree for ticket-based workflows."
 severity: medium
 tags:

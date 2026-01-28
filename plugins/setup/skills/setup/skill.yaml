@@ -1,6 +1,6 @@
 name: setup
 kind: helper
-version: "2.0.0"
+version: "1.0.0"
 description: "Project setup and environment configuration with auto-discovery."
 severity: low
 tags:

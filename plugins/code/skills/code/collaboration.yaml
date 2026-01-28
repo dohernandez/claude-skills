@@ -1,13 +1,6 @@
 # Code skill collaboration
 # Defines how code skill works with other skills
 
-triggers:
-  - pattern: "code style|naming convention|linter|formatter|defensive|code guide"
-    suggest: code
-
-  - pattern: "before committing|style check|code check"
-    suggest: "code check"
-
 provides_to:
   - skill: developer
     provides:
@@ -54,3 +47,11 @@ usage_hints:
   - "Run /code check before commits"
   - "Invoke /code guide when starting new code"
   - "Re-invoke when you notice yourself rushing"
+
+memory_integration:
+  reads: "MEMORY.md for style edge cases, linter workarounds, naming decisions"
+  writes_via: "memory skill routes domain learnings here"
+  capture_triggers:
+    - "Linter workaround discovered"
+    - "Style edge case resolved"
+    - "Naming convention decision made"

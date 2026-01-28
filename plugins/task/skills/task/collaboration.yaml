@@ -1,7 +1,7 @@
 # Collaboration: skill dependencies and composition
 
 name: task
-version: "2.0.0"
+version: "1.0.0"
 
 dependencies:
   - skill: domain-expert
@@ -32,12 +32,6 @@ composition:
       - commit          # Commit changes
       - pr-create       # Create PR
 
-triggers:
-  - pattern: "implement|build|create feature|add feature"
-    suggest: task
-  - pattern: "new task|start task|task workflow"
-    suggest: task
-
 provides_to:
   - skill: workflow
     data: "Completed implementation ready for commit"
@@ -45,3 +39,11 @@ provides_to:
 receives_from:
   - skill: workflow
     data: "Task description and type from ticket"
+
+memory_integration:
+  reads: "MEMORY.md for task execution patterns, validation sequences, checkpoint learnings"
+  writes_via: "memory skill routes workflow learnings here"
+  capture_triggers:
+    - "Task execution pattern discovered"
+    - "Validation sequence preference identified"
+    - "Implementation approach decision made"

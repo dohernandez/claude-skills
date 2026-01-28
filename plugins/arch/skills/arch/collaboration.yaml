@@ -4,10 +4,6 @@
 dependencies: []
   # No hard dependencies - arch is a foundational skill
 
-triggers:
-  - pattern: "architecture|layer|import violation|where should.*go|which layer|dependency|circular"
-    suggest: arch
-
 provides_to:
   - skill: developer
     provides:
@@ -71,3 +67,19 @@ integration_patterns:
       - "PR created"
       - "CI runs: /arch check"
       - "Violations reported in PR comments"
+
+  - pattern: "post-check-capture"
+    description: |
+      After checking architecture, capture violations and decisions as memory.
+    flow:
+      - "Arch check finds violation or confirms decision"
+      - "Suggest: /memory capture with finding"
+      - "Memory routes to arch MEMORY.md"
+
+memory_integration:
+  reads: "MEMORY.md for past layer decisions, known violations"
+  writes_via: "memory skill routes domain learnings here"
+  capture_triggers:
+    - "New layer boundary decision made"
+    - "Import violation pattern identified"
+    - "Architecture drift detected"

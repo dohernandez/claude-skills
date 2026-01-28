@@ -1,6 +1,6 @@
 name: create-skill
 kind: meta
-version: "2.0.0"
+version: "1.0.0"
 description: "Scaffold a new Claude Code skill using the multi-YAML pattern."
 severity: high
 tags:
@@ -22,7 +22,7 @@ purpose: |
 owns:
   - "Skill scaffolding under .claude/skills/*/"
   - "Multi-YAML canonical file layout for skills"
-  - "Stop hook discipline: Stop hook must call task -t .claude/Taskfile.yaml validate-skill -- --skill {folder-name}"
+  - "Stop hook discipline: Stop hook must call task -t .claude/Taskfile.skills.yaml validate-skill -- --skill {folder-name}"
 
 inputs_required:
   - id: folder_name
@@ -51,7 +51,7 @@ inputs_required:
     examples:
       - ["task test"]
       - ["task lint"]
-      - ["task claude:validate-skill-yaml"]
+      - ["task -t .claude/Taskfile.skills.yaml validate-skill-yaml"]
 
 required_outputs:
   - ".claude/skills/{folder-name}/SKILL.md"
@@ -97,13 +97,13 @@ patterns:
   - id: stop-hook-calls-validate-skill
     description: |
       Stop hook MUST call:
-        task -t .claude/Taskfile.yaml validate-skill -- --skill {folder-name}
+        task -t .claude/Taskfile.skills.yaml validate-skill -- --skill {folder-name}
       This guarantees Stop runs exactly what validations.yaml:on_stop lists.
     example: |
       hooks:
         Stop:
           - type: command
-            command: "task -t .claude/Taskfile.yaml validate-skill -- --skill commit"
+            command: "task -t .claude/Taskfile.skills.yaml validate-skill -- --skill commit"
 
   - id: command-only-validations-v1
     description: |
@@ -183,7 +183,7 @@ procedure:
 
   - step: "Write SKILL.md (thin wrapper)"
     detail: |
-      Use folder-name in frontmatter name and in Stop hook task claude:validate-skill -- --skill {folder-name}.
+      Use folder-name in frontmatter name and in Stop hook task -t .claude/Taskfile.skills.yaml validate-skill -- --skill {folder-name}.
       Keep content pointer-level only.
 
   - step: "Write skill.yaml"
@@ -202,7 +202,7 @@ procedure:
 
   - step: "Validate"
     detail: |
-      - task -t .claude/Taskfile.yaml validate-skill -- --skill {folder-name}
+      - task -t .claude/Taskfile.skills.yaml validate-skill -- --skill {folder-name}
 
 # =============================================================================
 # HANDOFFS
@@ -218,4 +218,4 @@ default_on_stop_mapping:
   - area: "tests"
     target: "task test"
   - area: "skill system itself"
-    target: "task -t .claude/Taskfile.yaml claude:check-structure"
+    target: "task -t .claude/Taskfile.skills.yaml check-structure"

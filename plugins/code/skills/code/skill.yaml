@@ -1,6 +1,6 @@
 name: code
 kind: helper
-version: "2.0.0"
+version: "1.0.0"
 description: "Code style discovery, validation, and guidance for writing defensive, well-reasoned code."
 severity: medium
 tags:

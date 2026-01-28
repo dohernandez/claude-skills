@@ -1,0 +1,305 @@
+name: memory
+kind: meta
+version: "1.0.0"
+description: "Orchestrate knowledge capture across all skills, routing learnings to appropriate MEMORY.md files."
+severity: low
+tags:
+  - meta
+  - knowledge
+  - learning
+  - orchestration
+
+purpose: |
+  Centralized knowledge management for the skill ecosystem.
+
+  Captures learnings from development sessions and routes them to the
+  appropriate skill's MEMORY.md file based on knowledge type:
+
+  - Domain knowledge (HOW to do X) -> Sub-skill memory
+  - Workflow knowledge (WHEN/ORDER) -> Orchestrator memory
+
+owns:
+  - "Knowledge capture and routing"
+  - "MEMORY.md file management"
+  - "Learning consolidation and deduplication"
+
+# ============================================================================
+# MEMORY SCOPES
+# ============================================================================
+memory_scopes:
+  sub_skill:
+    description: "Domain-specific knowledge - HOW to do things"
+    skills:
+      - bugfix     # Debugging patterns, root cause analysis techniques
+      - tdd        # Test patterns, TDD workflow refinements
+      - arch       # Architecture decisions, layer boundary learnings
+      - code       # Code style patterns, language idioms
+      - debugger   # Production debugging, log analysis techniques
+    content_types:
+      - "Patterns and techniques"
+      - "Gotchas and edge cases"
+      - "Best practices"
+      - "Tool-specific knowledge"
+
+  orchestrator:
+    description: "Workflow knowledge - WHEN and in what ORDER to do things"
+    skills:
+      - developer  # Development workflow orchestration
+      - task       # Task management and prioritization
+      - workflow   # Multi-skill coordination
+    content_types:
+      - "Skill coordination patterns"
+      - "Sequencing rules"
+      - "Project-specific workflows"
+      - "When to use which skill"
+
+# ============================================================================
+# COMMANDS
+# ============================================================================
+commands:
+  - name: capture
+    description: "Capture a learning and route to appropriate MEMORY.md"
+    arguments:
+      - name: learning
+        required: true
+        description: "The learning to capture (quoted string)"
+    procedure:
+      - "Parse the learning content"
+      - "Analyze to determine scope (sub-skill vs orchestrator)"
+      - "If unclear, ask user to clarify"
+      - "Identify target skill(s)"
+      - "Format as MEMORY.md entry"
+      - "Append to target skill's MEMORY.md"
+      - "Confirm with summary"
+
+  - name: review
+    description: "Review accumulated knowledge"
+    arguments:
+      - name: skill
+        required: false
+        description: "Specific skill to review (optional, shows all if omitted)"
+    procedure:
+      - "If skill specified, read that skill's MEMORY.md"
+      - "If no skill, scan all skills for MEMORY.md files"
+      - "Display learnings grouped by skill"
+      - "Show summary statistics"
+
+  - name: consolidate
+    description: "Deduplicate and organize learnings across all MEMORY.md files"
+    procedure:
+      - "Scan all skill directories for MEMORY.md files"
+      - "Parse all entries"
+      - "Identify duplicates and near-duplicates"
+      - "Merge related learnings"
+      - "Reorganize by category within each file"
+      - "Present changes for user approval"
+      - "Apply approved changes"
+
+# ============================================================================
+# ROUTING LOGIC
+# ============================================================================
+routing:
+  decision_tree:
+    - question: "Is this about HOW to do something specific?"
+      yes:
+        question: "What domain does it relate to?"
+        options:
+          - match: "debugging, root cause, investigation"
+            route: bugfix
+          - match: "testing, TDD, test patterns, mocks"
+            route: tdd
+          - match: "architecture, layers, boundaries, modules"
+            route: arch
+          - match: "code style, formatting, idioms, language"
+            route: code
+          - match: "production, logs, monitoring, incidents"
+            route: debugger
+      no:
+        question: "Is this about WHEN or in what ORDER to do things?"
+        yes:
+          question: "What workflow does it relate to?"
+          options:
+            - match: "development process, implementation order"
+              route: developer
+            - match: "task priority, work organization"
+              route: task
+            - match: "skill coordination, multi-step workflows"
+              route: workflow
+        no:
+          action: "Ask user to clarify scope"
+
+  indicators:
+    sub_skill:
+      - "I learned that..."
+      - "The trick to..."
+      - "When doing X, always..."
+      - "Never do X because..."
+      - "Pattern: ..."
+      - "Gotcha: ..."
+    orchestrator:
+      - "Before doing X, first..."
+      - "After X, always do Y..."
+      - "The order should be..."
+      - "When X happens, trigger Y..."
+      - "Skip X if..."
+
+# ============================================================================
+# MEMORY ENTRY FORMAT
+# ============================================================================
+memory_format:
+  template: |
+    ## {date} - {category}
+
+    **Context**: {context}
+
+    **Learning**: {learning}
+
+    **Tags**: {tags}
+
+    ---
+
+  categories:
+    - pattern      # Reusable approach
+    - gotcha       # Edge case or pitfall
+    - best_practice # Recommended approach
+    - anti_pattern # What not to do
+    - workflow     # Process/sequencing knowledge
+    - tool         # Tool-specific knowledge
+    - project      # Project-specific knowledge
+
+# ============================================================================
+# PROCEDURE
+# ============================================================================
+procedure:
+  - step: "Parse input"
+    detail: |
+      For /memory capture "learning":
+      - Extract the learning text
+      - Identify key concepts and terms
+
+      For /memory review [skill]:
+      - Determine scope (all or specific skill)
+
+      For /memory consolidate:
+      - Prepare to scan all skills
+
+  - step: "Route appropriately"
+    detail: |
+      For capture:
+      1. Check for HOW indicators -> sub-skill scope
+      2. Check for WHEN/ORDER indicators -> orchestrator scope
+      3. Match keywords to specific skills
+      4. If ambiguous, ask user: "Is this about HOW to do X or WHEN to do X?"
+
+      Example routing:
+      - "Always run tests before commit" -> workflow (WHEN)
+      - "Use vi.fn() for mocking in vitest" -> tdd (HOW)
+      - "Layer boundaries: domain cannot import infrastructure" -> arch (HOW)
+
+  - step: "Execute command"
+    detail: |
+      capture: Format and append to target MEMORY.md
+      review: Read and display MEMORY.md contents
+      consolidate: Parse, dedupe, reorganize, get approval
+
+  - step: "Confirm result"
+    detail: |
+      capture: "Added to {skill}/MEMORY.md under {category}"
+      review: Display formatted learnings
+      consolidate: Show before/after summary, apply changes
+
+# ============================================================================
+# PATTERNS
+# ============================================================================
+patterns:
+  - id: ask-when-unclear
+    description: |
+      When routing is ambiguous, ask the user rather than guess.
+    example: |
+      User: /memory capture "Always validate inputs"
+
+      Response: This learning could apply to:
+      - code (style enforcement)
+      - arch (layer boundary rule)
+      - tdd (test coverage requirement)
+
+      Which scope is most appropriate?
+
+  - id: suggest-related-skills
+    description: |
+      After capturing, suggest if the learning might also apply elsewhere.
+    example: |
+      Captured to tdd/MEMORY.md
+
+      Note: This pattern might also be useful in:
+      - developer (as part of implementation workflow)
+
+  - id: project-vs-universal
+    description: |
+      Distinguish project-specific learnings from universal patterns.
+    example: |
+      Project-specific: "Use XyzClient for API calls in this codebase"
+      Universal: "Mock external APIs at the boundary"
+
+      Tag appropriately: #project vs #universal
+
+# ============================================================================
+# ANTI-PATTERNS
+# ============================================================================
+anti_patterns:
+  - id: capturing-without-routing
+    description: "Dumping all learnings in one place without categorization"
+    why_bad: "Becomes unsearchable, learnings get lost"
+
+  - id: duplicate-entries
+    description: "Adding the same learning multiple times"
+    why_bad: "Clutters memory, wastes context"
+
+  - id: vague-learnings
+    description: "Capturing learnings without context or specifics"
+    why_bad: "Not actionable when reviewed later"
+    example_bad: "Remember to test edge cases"
+    example_good: "When testing date parsing, always include: empty string, null, invalid format, timezone edge cases"
+
+  - id: wrong-scope
+    description: "Putting workflow knowledge in sub-skill or vice versa"
+    why_bad: "Won't be found when needed"
+
+# ============================================================================
+# EXAMPLES
+# ============================================================================
+examples:
+  - command: '/memory capture "When debugging async issues, always log the promise chain order first"'
+    routing: "bugfix (HOW to debug async)"
+    output: "Added to bugfix/MEMORY.md under 'pattern'"
+
+  - command: '/memory capture "Run /arch check before starting implementation in layered architecture"'
+    routing: "developer (WHEN to run arch check)"
+    output: "Added to developer/MEMORY.md under 'workflow'"
+
+  - command: "/memory review tdd"
+    output: |
+      ## TDD Learnings
+
+      ### Patterns (3)
+      - Use describe blocks for logical grouping...
+      - Mock at boundaries, not internal functions...
+
+      ### Gotchas (2)
+      - Vitest requires explicit reset between tests...
+
+  - command: "/memory consolidate"
+    output: |
+      Scanning 8 MEMORY.md files...
+
+      Found:
+      - 23 total entries
+      - 3 duplicates
+      - 5 near-duplicates
+
+      Proposed changes:
+      - Merge 2 entries in tdd/MEMORY.md
+      - Remove 1 duplicate in bugfix/MEMORY.md
+      - Recategorize 2 entries in developer/MEMORY.md
+
+      Apply changes? [Y/n]

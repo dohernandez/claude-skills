@@ -36,26 +36,11 @@ composition:
     sequence:
       - workflow  # Captures learnings, updates skills knowledge, cleans up
 
-triggers:
-  - pattern: "start ticket|start work|new ticket|begin work|workflow start"
-    suggest: workflow
-  - pattern: "merge pr|merge pull request|workflow merge|ready to merge|pr-merge"
-    suggest: pr-merge  # Delegated to dedicated skill
-  - pattern: "finish ticket|done with ticket|cleanup branch|workflow finish|capture learnings"
-    suggest: workflow
-  - pattern: "ticket status|workflow status|current ticket"
-    suggest: workflow
-
-# Memory provider: workflow can write MEMORY.md files to any skill
-writes_memory_to:
-  - developer
-  - tdd-core
-  - domain-expert
-  - add-service
-  - add-contract
-  - arch-check
-  - reporter
-  - infra-service
-  - linear
-  - code
-  - create-skill
+memory_integration:
+  reads: "MEMORY.md for branch strategies, PR preferences, skill invocation order"
+  writes_via: "memory skill routes workflow learnings here"
+  capture_triggers:
+    - "Branch strategy preference identified"
+    - "PR workflow preference learned"
+    - "Skill invocation order discovered"
+    - "Worktree pattern preference identified"

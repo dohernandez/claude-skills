@@ -1,6 +1,6 @@
 name: domain-expert
 kind: knowledge
-version: "2.0.0"
+version: "1.0.0"
 description: "Domain knowledge discovery, learning, and guidance for understanding project concepts and terminology."
 severity: informational
 tags:

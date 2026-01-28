@@ -24,7 +24,3 @@ composition:
       # New Claude session in IDE reads pending-action.json
       - developer     # Plans implementation (in new session)
 
-triggers:
-  # This skill is not directly invoked by users.
-  # It's called internally by workflow.
-  []

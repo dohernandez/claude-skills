@@ -56,18 +56,3 @@ orchestration:
     Status: {status}
     Assignee: {assignee}"
 
-triggers:
-  - pattern: "create.*linear.*issue|create.*ticket|new.*issue.*linear"
-    suggest: linear
-
-  - pattern: "add.*to.*backlog|create.*backlog.*item"
-    suggest: linear
-
-  - pattern: "log.*issue|file.*bug|report.*bug"
-    suggest: linear
-
-  - pattern: "convert.*plan.*to.*issue|plan.*to.*linear"
-    suggest: linear
-
-  - pattern: "/linear"
-    suggest: linear

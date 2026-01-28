@@ -1,6 +1,6 @@
 name: task
 kind: methodology
-version: "2.0.0"
+version: "1.0.0"
 description: |
   Structured implementation methodology for non-bugfix work (features, chores,
   refactors, docs). Ensures work is properly scoped, planned, implemented with

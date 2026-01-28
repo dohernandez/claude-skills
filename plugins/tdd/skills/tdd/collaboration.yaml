@@ -27,16 +27,6 @@ boundaries:
     - "Code style and formatting"
     - "Deployment and infrastructure"
 
-triggers:
-  - pattern: "tdd|test first|test-first|write tests"
-    suggest: tdd
-
-  - pattern: "implement|add feature|new feature"
-    suggest: tdd
-
-  - pattern: "unit tests|test coverage"
-    suggest: tdd
-
 common_questions:
   - question: "When should I write tests?"
     answer: |
@@ -62,3 +52,11 @@ common_questions:
       If your test breaks when you refactor code but the behavior
       is unchanged, you're testing implementation details.
       Test WHAT the code does (behavior), not HOW it does it.
+
+memory_integration:
+  reads: "MEMORY.md for test writing patterns, mock strategies, assertion styles"
+  writes_via: "memory skill routes domain learnings here"
+  capture_triggers:
+    - "New mock pattern discovered"
+    - "Framework-specific gotcha encountered"
+    - "Test structure decision made"

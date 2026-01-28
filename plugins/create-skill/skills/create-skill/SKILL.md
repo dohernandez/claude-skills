@@ -18,13 +18,13 @@ hooks:
 
 ## Purpose
 
-Scaffold a new `.claude/skills/{folder-name}/` skill directory that follows the multi-YAML pattern. Produces the canonical file set and wires the Stop hook to `task claude:validate-skill`.
+Scaffold a new `.claude/skills/{folder-name}/` skill directory that follows the multi-YAML pattern. Produces the canonical file set and wires the Stop hook to validate-skill.
 
 ## Quick Reference
 
 - **Creates:** SKILL.md, skill.yaml, validations.yaml, sharp-edges.yaml, collaboration.yaml
 - **Requires:** folder name, description, purpose
-- **Stop hook:** `task claude:validate-skill -- --skill {folder-name}`
+- **Stop hook:** `task -t .claude/Taskfile.skills.yaml validate-skill -- --skill {folder-name}`
 
 ## Skill File Structure
 
@@ -44,14 +44,14 @@ Each skill directory contains:
 2. **Gather inputs** - folder name, title, description, purpose
 3. **Create folder** - `mkdir -p .claude/skills/{folder-name}/`
 4. **Write files** - Create all 5 canonical files
-5. **Validate** - Run `task claude:validate-skill -- --skill {folder-name}`
+5. **Validate** - Run `task -t .claude/Taskfile.skills.yaml validate-skill -- --skill {folder-name}`
 
 ## Rules
 
 - [ ] Folder name must match SKILL.md frontmatter `name:`
 - [ ] SKILL.md should be thin (pointer-level only)
 - [ ] validations.yaml must only reference existing Task targets
-- [ ] Stop hook must call `task claude:validate-skill -- --skill {folder-name}`
+- [ ] Stop hook must call `task -t .claude/Taskfile.skills.yaml validate-skill -- --skill {folder-name}`
 
 ## Automation
 

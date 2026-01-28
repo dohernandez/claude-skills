@@ -1,0 +1,58 @@
+version: 1
+description: "Validations for my-workflow skill"
+
+validations:
+  - id: marketplace-root-exists
+    type: command
+    command: |
+      ROOT_FILE=".claude/skills/my-workflow/.marketplace-root"
+      if [[ -f "$ROOT_FILE" ]]; then
+        ROOT=$(cat "$ROOT_FILE")
+        if [[ -d "$ROOT" ]]; then
+          echo "OK: Marketplace root exists at $ROOT"
+          exit 0
+        else
+          echo "ERROR: Marketplace root not found: $ROOT"
+          exit 1
+        fi
+      else
+        echo "WARN: No .marketplace-root file (will detect at runtime)"
+        exit 0
+      fi
+    expect: "exit 0"
+    message: "Marketplace root directory not accessible. Reinstall the plugin or run /my-workflow install to re-detect."
+
+  - id: skills-dir-writable
+    type: command
+    command: |
+      mkdir -p .claude/skills
+      if [[ -w ".claude/skills" ]]; then
+        echo "OK: .claude/skills/ is writable"
+        exit 0
+      else
+        echo "ERROR: .claude/skills/ is not writable"
+        exit 1
+      fi
+    expect: "exit 0"
+    message: "Cannot write to .claude/skills/ directory. Check permissions."
+
+  - id: skill-structure-valid
+    type: command
+    command: |
+      SKILL_DIR=".claude/skills/my-workflow"
+      MISSING=""
+      for f in SKILL.md skill.yaml collaboration.yaml sharp-edges.yaml validations.yaml; do
+        if [[ ! -f "$SKILL_DIR/$f" ]]; then
+          MISSING="$MISSING $f"
+        fi
+      done
+      if [[ -n "$MISSING" ]]; then
+        echo "ERROR: Missing files:$MISSING"
+        exit 1
+      fi
+      echo "OK: All required files present"
+      exit 0
+    expect: "exit 0"
+    message: "my-workflow skill is missing required files. Reinstall the plugin."
+
+on_stop: []

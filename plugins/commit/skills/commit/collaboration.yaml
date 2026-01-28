@@ -38,16 +38,6 @@ boundaries:
     - "Code style enforcement (use code)"
     - "Pushing to remote (manual git push)"
 
-triggers:
-  - pattern: "commit|/commit"
-    suggest: commit
-
-  - pattern: "git commit|stage changes|create commit"
-    suggest: commit
-
-  - pattern: "commit message|conventional commit"
-    suggest: commit
-
 composition:
   - when: "User finishes a piece of work and wants to commit"
     sequence:

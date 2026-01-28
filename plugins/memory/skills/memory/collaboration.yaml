@@ -1,0 +1,117 @@
+name: memory
+version: "1.0.0"
+
+dependencies:
+  # Memory skill depends on other skills existing (to route to their MEMORY.md)
+  # but doesn't require them to function - it will create MEMORY.md as needed
+  - skill: "*"
+    required: false
+    reason: "Routes learnings to skill-specific MEMORY.md files"
+
+composition:
+  - when: "Learning something during development"
+    sequence:
+      - developer  # or any skill that generated the learning
+      - memory     # captures and routes the learning
+
+  - when: "Starting work on a skill"
+    sequence:
+      - memory     # review relevant learnings
+      - <skill>    # proceed with the skill
+
+  - when: "Periodic maintenance"
+    sequence:
+      - memory     # consolidate learnings
+
+complements:
+  # Memory complements all skills that can generate learnings
+  - skill: bugfix
+    relationship: "Captures debugging patterns and root cause insights"
+
+  - skill: tdd
+    relationship: "Captures testing patterns and TDD workflow refinements"
+
+  - skill: arch
+    relationship: "Captures architecture decisions and boundary rules"
+
+  - skill: code
+    relationship: "Captures style patterns and language idioms"
+
+  - skill: debugger
+    relationship: "Captures production debugging techniques"
+
+  - skill: developer
+    relationship: "Captures development workflow orchestration patterns"
+
+  - skill: task
+    relationship: "Captures task management and prioritization learnings"
+
+  - skill: workflow
+    relationship: "Captures multi-skill coordination patterns"
+
+usage_hints:
+  - "Use /memory capture immediately when learning something new"
+  - "Use /memory review before starting work with a skill"
+  - "Use /memory consolidate periodically to keep memory organized"
+  - "Be specific when capturing - vague learnings aren't useful later"
+  - "Include context: what situation led to this learning?"
+
+integration_points:
+  - name: "Post-bugfix capture"
+    when: "After successfully debugging an issue"
+    action: "Suggest capturing the debugging insight"
+    example: |
+      Bug fixed successfully.
+      Would you like to capture this debugging technique?
+      /memory capture "When seeing X error, check Y first"
+
+  - name: "Post-TDD pattern"
+    when: "After discovering a new test pattern"
+    action: "Suggest capturing the pattern"
+    example: |
+      Tests passing with new mock pattern.
+      This might be useful to remember:
+      /memory capture "Mock pattern: use factory for complex fixtures"
+
+  - name: "Pre-development review"
+    when: "Before starting implementation work"
+    action: "Suggest reviewing relevant learnings"
+    example: |
+      Starting work on authentication.
+      Review relevant learnings first:
+      /memory review developer
+      /memory review arch
+
+routing_integration:
+  # How memory routes to each skill
+  bugfix:
+    keywords: ["debug", "diagnose", "root cause", "stack trace", "investigation"]
+    scope: "sub-skill"
+
+  tdd:
+    keywords: ["test", "mock", "assert", "coverage", "TDD", "vitest", "jest"]
+    scope: "sub-skill"
+
+  arch:
+    keywords: ["architecture", "layer", "boundary", "module", "dependency", "import"]
+    scope: "sub-skill"
+
+  code:
+    keywords: ["style", "format", "idiom", "naming", "convention", "lint"]
+    scope: "sub-skill"
+
+  debugger:
+    keywords: ["production", "logs", "monitoring", "incident", "alert", "metric"]
+    scope: "sub-skill"
+
+  developer:
+    keywords: ["workflow", "implementation", "order", "before", "after", "process"]
+    scope: "orchestrator"
+
+  task:
+    keywords: ["priority", "task", "organize", "plan", "schedule"]
+    scope: "orchestrator"
+
+  workflow:
+    keywords: ["coordinate", "sequence", "trigger", "chain", "multi-step"]
+    scope: "orchestrator"

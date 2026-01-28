@@ -1,6 +1,6 @@
 name: workflow-finish
 kind: utility
-version: "2.0.0"
+version: "1.0.0"
 description: "Cleanup git branches and worktrees after a PR is merged."
 severity: low
 tags:

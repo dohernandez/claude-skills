@@ -2,7 +2,7 @@
 # v1 supports command validations only
 
 name: developer
-version: "2.0.0"
+version: "1.0.0"
 
 validations:
   - id: config-exists
@@ -19,7 +19,7 @@ validations:
 
   - id: skill-structure
     type: command
-    command: "task -t .claude/Taskfile.yaml validate-skill -- --skill developer"
+    command: "task -t .claude/Taskfile.skills.yaml validate-skill -- --skill developer"
     description: "Validate skill YAML structure"
     failure_message: "Skill validation failed. Check skill file structure."
 

@@ -1,6 +1,6 @@
 name: developer
 kind: orchestrator
-version: "2.0.0"
+version: "1.0.0"
 description: "Orchestrates development workflow with domain understanding, architecture mapping, and implementation."
 severity: high
 tags:

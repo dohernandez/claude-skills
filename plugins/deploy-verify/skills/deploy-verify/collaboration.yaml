@@ -9,20 +9,6 @@ dependencies:
     relationship: hands-off-to
     description: When verification finds issues, hand off to debugger for investigation
 
-triggers:
-  # When to suggest using this skill
-  - condition: "User asks about deployment status"
-    action: "Use deploy-verify skill"
-
-  - condition: "User mentions 'check deployment' or 'verify deployment'"
-    action: "Use deploy-verify skill"
-
-  - condition: "After running deployment workflow"
-    action: "Suggest running deploy-verify"
-
-  - condition: "User reports service issues after deployment"
-    action: "Start with deploy-verify before debugging"
-
 handoffs:
   # When to hand off to another skill
   - to: debugger

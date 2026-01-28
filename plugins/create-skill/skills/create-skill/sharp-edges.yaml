@@ -7,11 +7,11 @@
 edges:
   - id: stop-hook-skill-arg-mismatch
     description: "Stop hook uses wrong --skill value (not the folder basename)"
-    detect: "task -t .claude/Taskfile.yaml claude:check-structure (automated)"
+    detect: "task -t .claude/Taskfile.skills.yaml check-structure (automated)"
     impact: "Stop hook won't run the intended validations for that skill."
     fix: |
       In SKILL.md frontmatter:
-        command: "task -t .claude/Taskfile.yaml validate-skill -- --skill {folder-name}"
+        command: "task -t .claude/Taskfile.skills.yaml validate-skill -- --skill {folder-name}"
       Ensure {folder-name} exactly matches the directory name.
     severity: critical
 
@@ -27,17 +27,17 @@ edges:
 
   - id: yaml-indentation-breaks-parse
     description: "YAML parses fail due to indentation or unquoted colons"
-    detect: "task -t .claude/Taskfile.yaml claude:check-structure (automated)"
+    detect: "task -t .claude/Taskfile.skills.yaml check-structure (automated)"
     impact: "CI and local validation fail; skills become unusable in automation."
     fix: |
       - Use consistent 2-space indentation
       - Quote strings containing ':' or special characters
-      - Re-run: task -t .claude/Taskfile.yaml claude:check-structure
+      - Re-run: task -t .claude/Taskfile.skills.yaml check-structure
     severity: high
 
   - id: on-stop-ids-not-defined
     description: "validations.yaml:on_stop references missing validation IDs"
-    detect: "task claude:validate-skill -- --skill {folder-name} --mode all"
+    detect: "task -t .claude/Taskfile.skills.yaml validate-skill -- --skill {folder-name} --mode all"
     impact: "Stop hook appears to pass but required checks never ran."
     fix: "Ensure every on_stop entry has a matching validations[].id."
     severity: high

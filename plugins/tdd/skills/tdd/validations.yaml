@@ -1,13 +1,12 @@
 version: 1
-description: "Validations run by task claude:validate-skill -- --skill tdd"
+description: "Validations run by task validate-skill -- --skill tdd"
 
 validations:
-  - id: all-tests
-    name: "All tests pass"
+  - id: all-tests-pass
     type: command
     command: task test
     expect: exit 0
     message: "Tests failed. All tests must pass before completion."
 
 on_stop:
-  - all-tests
+  - all-tests-pass

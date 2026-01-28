@@ -13,14 +13,6 @@ composition:
     sequence:
       - docs-refresh
 
-triggers:
-  - pattern: "documentation|docs refresh|skill reference|update docs|regenerate docs"
-    suggest: docs-refresh
-  - condition: ".claude/skills/*/skill.yaml modified"
-    action: "Run docs-refresh to update documentation"
-  - condition: "CLAUDE.md skills table out of sync"
-    action: "Update skills table in CLAUDE.md"
-
 complements:
   - skill: create-skill
     relationship: "After creating a skill, refresh docs to update inventory"

@@ -7,9 +7,8 @@ description: "Validations for linear skill"
 
 validations:
   - id: skill-structure-valid
-    name: "Skill has required files and valid YAML"
     type: command
-    command: "task -t .claude/Taskfile.yaml claude:check-structure -- --skill linear"
+    command: "task -t .claude/Taskfile.skills.yaml check-structure -- --skill linear"
     expect: "exit 0"
     message: "Skill structure validation failed."
 

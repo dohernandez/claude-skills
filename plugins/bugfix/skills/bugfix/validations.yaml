@@ -1,0 +1,15 @@
+version: 1
+description: "Validations for bugfix skill"
+
+# Bugfix validations:
+# - All tests pass after fix
+
+validations:
+  - id: all-tests-pass
+    type: command
+    command: task test
+    expect: "exit 0"
+    message: "Tests failed. All tests must pass before completing bugfix."
+
+on_stop:
+  - all-tests-pass

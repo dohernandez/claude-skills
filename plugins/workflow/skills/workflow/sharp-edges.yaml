@@ -178,8 +178,8 @@ edges:
     impact: "Fix may have unintended side effects breaking other functionality"
     fix: |
       Always run full test suite in B5:
-      task -t .claude/Taskfile.yaml test
-      task -t .claude/Taskfile.yaml precommit
+      task -t .claude/Taskfile.skills.yaml test
+      task -t .claude/Taskfile.skills.yaml precommit
       All tests must pass before PR.
     severity: high
 

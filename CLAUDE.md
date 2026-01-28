@@ -14,7 +14,7 @@ Each skill lives in its own directory and is defined by multiple YAML/Markdown f
 - **skill.yaml** - Machine-readable procedure definition including inputs, patterns, anti-patterns, config wizard structure, and the main procedure flow
 - **validations.yaml** - Automated checks (prerequisites, post-installation verification) with commands, expected results, and error messages
 - **sharp-edges.yaml** - Known edge cases and gotchas with detection commands, impact descriptions, and fixes. These must be **proactively checked** during execution, not just used for reactive diagnosis
-- **collaboration.yaml** - Dependencies on external tools and trigger patterns for when to invoke the skill
+- **collaboration.yaml** - Skill dependencies, composition sequences, and integration interfaces
 
 ## Key Concepts
 
@@ -42,7 +42,7 @@ When modifying skills:
 1. Keep SKILL.md and skill.yaml in sync - they describe the same procedure
 2. Add new edge cases to sharp-edges.yaml when discovering failure modes
 3. Add validation commands to validations.yaml for automated checking
-4. Update collaboration.yaml trigger patterns when skill scope changes
+4. Update collaboration.yaml when skill dependencies or interfaces change
 
 When a skill is invoked:
 1. Display process overview at start

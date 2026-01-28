@@ -1,5 +1,5 @@
 name: developer
-version: "2.0.0"
+version: "1.0.0"
 
 dependencies:
   - skill: code
@@ -22,29 +22,6 @@ composition:
       - tdd        # test-first discipline
       - code       # style enforcement
 
-triggers:
-  - pattern: "implement|add feature|create new|build|develop|write code"
-    suggest: developer
-    priority: high
-
-  - pattern: "change|modify|update|refactor|improve|enhance"
-    suggest: developer
-    priority: high
-
-  - pattern: "fix bug|debug|troubleshoot|repair"
-    suggest: developer
-    priority: high
-
-  - pattern: "architecture|layer|module|component"
-    suggest: developer
-    priority: high
-    hint: "Architecture-related request - use developer to respect layer boundaries"
-
-  - pattern: "add|new|create"
-    suggest: developer
-    priority: medium
-    hint: "Creation request - use developer to determine correct approach"
-
 complements:
   - skill: code
     relationship: "developer uses code for style enforcement throughout"
@@ -60,7 +37,7 @@ usage_hints:
   - "Use when you need to understand where to place new code"
   - "Use to ensure changes follow project conventions"
   - "Enforces bottom-up implementation for multi-layer changes"
-  - "Run /developer discover first to analyze project architecture"
+  - "Run /developer configure first to analyze project architecture"
 
 orchestration_rules:
   - "Load architecture config first"
@@ -69,3 +46,11 @@ orchestration_rules:
   - "Validate after each layer"
   - "Apply code patterns throughout"
   - "Run pre-commit checks before marking complete"
+
+memory_integration:
+  reads: "MEMORY.md for skill coordination patterns, sequencing rules"
+  writes_via: "memory skill routes workflow learnings here"
+  capture_triggers:
+    - "Skill coordination pattern discovered"
+    - "Implementation sequencing rule learned"
+    - "Validation order preference identified"

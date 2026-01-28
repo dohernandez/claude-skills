@@ -1,4 +1,6 @@
+name: bugfix
 kind: methodology
+version: "1.0.0"
 ownership: engineering
 stop_hook: null
 

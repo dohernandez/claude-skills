@@ -588,13 +588,13 @@ main() {
     # Determine skills directory based on context
     local skills_dir="$PROJECT_ROOT/.claude/skills"
 
-    # Development mode: if framework/skills/ exists with plugin structure
-    if [[ -d "$PROJECT_ROOT/framework/skills" ]] && [[ -d "$PROJECT_ROOT/framework/.claude-plugin" ]]; then
-        skills_dir="$PROJECT_ROOT/framework/skills"
+    # Development mode: if infra/skills/ exists with plugin structure
+    if [[ -d "$PROJECT_ROOT/infra/skills" ]] && [[ -d "$PROJECT_ROOT/infra/.claude-plugin" ]]; then
+        skills_dir="$PROJECT_ROOT/infra/skills"
     fi
 
     if [[ ! -d "$skills_dir" ]]; then
-        echo "No skills directory found (checked .claude/skills and framework/skills)"
+        echo "No skills directory found (checked .claude/skills and infra/skills)"
         exit $ERR_GENERAL
     fi
 

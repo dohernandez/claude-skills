@@ -239,7 +239,7 @@ skills/
 │   ├── linear/
 │   └── ... (22 framework skills + future standalone skills)
 │
-└── framework/                   # Framework plugin (bundles all skills)
+└── infra/                       # Infrastructure (Taskfiles, scripts, templates)
     ├── .claude-plugin/plugin.json
     ├── skills/                  # ← Symlinks to plugins/
     │   ├── commit → ../../plugins/commit/skills/commit

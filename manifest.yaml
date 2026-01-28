@@ -8,8 +8,8 @@ version: "1.0.0"
 description: "Developer workflow plugins for Anthropic's Claude Code"
 
 plugins:
-  - name: framework
-    path: framework/
+  - name: infra
+    path: infra/
     description: "Complete developer workflow with 22 integrated skills"
   # Future standalone plugins:
   # - name: commit

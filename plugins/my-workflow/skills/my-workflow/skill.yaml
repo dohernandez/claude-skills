@@ -1,0 +1,369 @@
+name: my-workflow
+kind: meta
+version: "1.0.0"
+description: "Install curated skill tiers into any project from the marketplace cache."
+severity: low
+tags:
+  - meta
+  - installer
+  - workflow
+  - marketplace
+
+purpose: |
+  Marketplace skill installer for the claude-skills ecosystem.
+
+  Copies skills from the marketplace plugin cache (or local dev repo) into the
+  current project's .claude/skills/ directory. Three curated tiers provide
+  progressively more capability, or individual skills can be cherry-picked.
+
+owns:
+  - "Skill installation from marketplace cache"
+  - "Tier-based skill selection"
+  - "Infrastructure provisioning (Taskfile, scripts)"
+  - "Post-install configuration orchestration"
+
+# ============================================================================
+# TIERS
+# ============================================================================
+tiers:
+  minimal:
+    description: "Essential tooling — commits, PRs, issues, memory, skill scaffolding"
+    skills:
+      - commit
+      - pr-create
+      - pr-merge
+      - linear
+      - memory
+      - create-skill
+      - docs-refresh
+    infrastructure:
+      - skill-tasks
+
+  standard:
+    description: "Complete dev workflow — extends Minimal with coding, testing, architecture, deployment"
+    extends: minimal
+    added_skills:
+      - code
+      - bugfix
+      - tdd
+      - arch
+      - domain-expert
+      - task
+      - test
+      - setup
+      - deploy
+      - deploy-verify
+    infrastructure:
+      - user-tasks
+
+  advanced:
+    description: "Everything — extends Standard with orchestration and debugging"
+    extends: standard
+    added_skills:
+      - developer
+      - workflow
+      - workflow-setup
+      - workflow-finish
+      - debugger
+
+# All 22 skills (flat list for reference)
+all_skills:
+  - commit
+  - pr-create
+  - pr-merge
+  - linear
+  - memory
+  - create-skill
+  - docs-refresh
+  - code
+  - bugfix
+  - tdd
+  - arch
+  - domain-expert
+  - task
+  - test
+  - setup
+  - deploy
+  - deploy-verify
+  - developer
+  - workflow
+  - workflow-setup
+  - workflow-finish
+  - debugger
+
+# Skills excluded from all tiers
+excluded:
+  - skill: slack
+    reason: "Planned for future release"
+
+# ============================================================================
+# CONFIGURABLE SKILLS
+# ============================================================================
+# Skills that have a /X configure command. After installation, offer to run
+# configuration for each newly installed skill that supports it.
+configurable_skills:
+  - docs-refresh
+  - code
+  - tdd
+  - arch
+  - task
+  - test
+  - deploy
+  - deploy-verify
+  - developer
+  - workflow-setup
+  - workflow-finish
+  - debugger
+
+# ============================================================================
+# INFRASTRUCTURE
+# ============================================================================
+# Infrastructure components installed automatically when needed.
+infrastructure:
+  skill-tasks:
+    description: "Skill validation tasks (Taskfile.skills.yaml + scripts)"
+    needed_by:
+      - create-skill
+      - docs-refresh
+    files:
+      - source: "infra/Taskfile.skills.yaml"
+        dest: ".claude/Taskfile.skills.yaml"
+      - source: "infra/scripts/"
+        dest: ".claude/scripts/"
+        exclude:
+          - setup.sh
+          - post-install.sh
+
+  user-tasks:
+    description: "User-facing tasks (Taskfile.yaml + Taskfile.skills.yaml + scripts)"
+    includes: skill-tasks
+    needed_by:
+      - task
+      - test
+      - setup
+      - developer
+    files:
+      - source: "infra/Taskfile.yaml"
+        dest: ".claude/Taskfile.yaml"
+      - source: "infra/Taskfile.skills.yaml"
+        dest: ".claude/Taskfile.skills.yaml"
+      - source: "infra/scripts/"
+        dest: ".claude/scripts/"
+        exclude:
+          - setup.sh
+          - post-install.sh
+
+  source_resolution:
+    description: "How to locate infrastructure files"
+    local: "infra/ directory at marketplace root"
+    fallback: "https://raw.githubusercontent.com/dohernandez/claude-skills/main/infra/"
+
+# ============================================================================
+# SKILL SOURCE RESOLUTION
+# ============================================================================
+source_resolution:
+  cache_layout: "<marketplace-root>/<skill-name>/<version>/skills/<skill-name>/"
+  local_layout: "<marketplace-root>/plugins/<skill-name>/skills/<skill-name>/"
+  detection:
+    - "Read .marketplace-root file if it exists"
+    - "Otherwise scan upward from CLAUDE_PLUGIN_ROOT for sibling plugins"
+    - "Verify by checking for commit/ or plugins/commit/ directory"
+
+# ============================================================================
+# COMMANDS
+# ============================================================================
+commands:
+  - name: install
+    description: "Install skills by tier or individually"
+    arguments:
+      - name: target
+        required: false
+        description: "Tier name (minimal/standard/advanced), skill name, or omit for wizard"
+    procedure:
+      - "Resolve marketplace root from .marketplace-root file or re-detect"
+      - "Determine target skills based on argument"
+      - "Check which skills are already installed (skip those)"
+      - "Determine required infrastructure from skill list"
+      - "Install infrastructure files if needed"
+      - "Copy each skill directory to .claude/skills/<skill-name>/"
+      - "Report installed vs skipped"
+      - "Offer /X configure for each newly installed configurable skill"
+      - "Show summary of unconfigured skills"
+
+  - name: list
+    description: "Show tiers and their skills"
+    procedure:
+      - "Display all 3 tiers with descriptions and skill counts"
+      - "List skills in each tier"
+      - "Mark configurable skills with (configure)"
+
+  - name: status
+    description: "Show installed vs available skills"
+    procedure:
+      - "Scan .claude/skills/ for installed skills"
+      - "Compare against all 22 available skills"
+      - "Show installed/missing for each tier"
+      - "Show infrastructure status"
+
+# ============================================================================
+# PROCEDURE
+# ============================================================================
+procedures:
+  - name: install_wizard
+    description: "Interactive installation when no argument given"
+    steps:
+      - phase: "Show tiers"
+        actions:
+          - |
+            Display the 3 tiers:
+              Minimal (7 skills) — Essential tooling
+                commit, pr-create, pr-merge, linear, memory, create-skill, docs-refresh
+              Standard (17 skills) — Complete dev workflow
+                Minimal + code, bugfix, tdd, arch, domain-expert, task, test, setup, deploy, deploy-verify
+              Advanced (22 skills) — Everything
+                Standard + developer, workflow, workflow-setup, workflow-finish, debugger
+      - phase: "Ask user"
+        actions:
+          - "Ask: Choose a tier, or select individual skills?"
+          - "If tier: proceed with that tier's skill list"
+          - "If individual: show all 22 skills, let user pick"
+      - phase: "Install"
+        actions:
+          - "Run install procedure with selected skills"
+
+  - name: install_skills
+    description: "Install a list of skills"
+    steps:
+      - phase: "Resolve source"
+        actions:
+          - "Read .claude/skills/my-workflow/.marketplace-root for cached path"
+          - "If missing, re-detect marketplace root from CLAUDE_PLUGIN_ROOT"
+          - "Determine layout (cache vs local) by checking directory structure"
+      - phase: "Check existing"
+        actions:
+          - "For each skill, check if .claude/skills/<skill>/ exists"
+          - "Mark existing as 'skip', new as 'install'"
+          - "Report skipped skills: Already installed: X (skipping)"
+      - phase: "Infrastructure"
+        actions:
+          - "Determine which infrastructure is needed from skill list"
+          - "skill-tasks: needed if installing create-skill or docs-refresh"
+          - "user-tasks: needed if installing task, test, setup, or developer"
+          - "user-tasks includes everything from skill-tasks"
+          - "Locate infra/ directory at marketplace root"
+          - "If not found locally, download from GitHub raw URL"
+          - "Copy Taskfile.yaml (user-tasks only), Taskfile.skills.yaml, scripts/"
+      - phase: "Copy skills"
+        actions:
+          - "For each skill to install:"
+          - "  Resolve source: cache layout or local layout"
+          - "  Copy skill directory to .claude/skills/<skill-name>/"
+          - "  Log: Installed: <skill-name>"
+      - phase: "Configure"
+        actions:
+          - "Build list of newly installed skills that are configurable"
+          - "For each, ask: Run /<skill> configure now? [y/n]"
+          - "If yes, tell user to run /<skill> configure"
+          - "At end, show summary of unconfigured skills that support configure"
+
+# ============================================================================
+# PATTERNS
+# ============================================================================
+patterns:
+  - id: skip-existing
+    description: "Never overwrite already-installed skills"
+    example: |
+      Already installed: commit (skipping)
+      Already installed: pr-create (skipping)
+      Installed: memory
+      Installed: linear
+
+  - id: infrastructure-dedup
+    description: "user-tasks is a superset of skill-tasks — install once"
+    example: |
+      If both are needed, only install user-tasks (it includes skill-tasks).
+
+  - id: configure-after-install
+    description: "Offer configuration for each configurable skill"
+    example: |
+      Installed 7 skills. 1 supports configuration:
+        docs-refresh - Run /docs-refresh configure now? [y/n]
+
+      Unconfigured skills: docs-refresh
+      Run /<skill> configure to set up.
+
+# ============================================================================
+# ANTI-PATTERNS
+# ============================================================================
+anti_patterns:
+  - id: overwrite-existing
+    description: "Overwriting an already-installed skill directory"
+    why_bad: "User may have customized the skill. Overwrites destroy configuration."
+    what_to_do: "Skip installed skills. User must delete manually to reinstall."
+
+  - id: install-without-infra
+    description: "Installing skills that need infrastructure without providing it"
+    why_bad: "Skills like task and test depend on Taskfile.yaml to function"
+    what_to_do: "Always check and install required infrastructure first."
+
+  - id: hardcode-paths
+    description: "Hardcoding marketplace cache paths"
+    why_bad: "Path structure may vary between systems and versions"
+    what_to_do: "Always detect dynamically from CLAUDE_PLUGIN_ROOT."
+
+# ============================================================================
+# EXAMPLES
+# ============================================================================
+examples:
+  - name: "Install minimal tier"
+    command: "/my-workflow install minimal"
+    result: |
+      Installing Minimal tier (7 skills)...
+
+      Infrastructure:
+        Installed: Taskfile.skills.yaml
+        Installed: scripts/ (7 scripts)
+
+      Skills:
+        Installed: commit
+        Installed: pr-create
+        Installed: pr-merge
+        Installed: linear
+        Installed: memory
+        Installed: create-skill
+        Installed: docs-refresh
+
+      7/7 skills installed.
+
+      1 skill supports configuration:
+        docs-refresh - Run /docs-refresh configure? [y/n]
+
+  - name: "Install single skill"
+    command: "/my-workflow install tdd"
+    result: |
+      Installing: tdd
+
+      Installed: tdd
+
+      1/1 skill installed.
+      tdd supports configuration. Run /tdd configure to set up.
+
+  - name: "Show status"
+    command: "/my-workflow status"
+    result: |
+      Installed (7/22):
+        commit, pr-create, pr-merge, linear, memory, create-skill, docs-refresh
+
+      Available (15):
+        code, bugfix, tdd, arch, domain-expert, task, test, setup,
+        deploy, deploy-verify, developer, workflow, workflow-setup,
+        workflow-finish, debugger
+
+      Tier coverage:
+        Minimal:  7/7  (complete)
+        Standard: 7/17 (need 10 more)
+        Advanced: 7/22 (need 15 more)
+
+      Infrastructure:
+        skill-tasks: installed
+        user-tasks:  not installed

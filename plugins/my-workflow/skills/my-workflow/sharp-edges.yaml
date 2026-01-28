@@ -1,0 +1,89 @@
+# Sharp edges for my-workflow
+# Common pitfalls when installing skills from the marketplace
+
+edges:
+  - id: missing-marketplace-root
+    description: "Marketplace root cannot be detected"
+    detect: |
+      Check if .claude/skills/my-workflow/.marketplace-root exists and points
+      to a valid directory. If not, attempt re-detection from CLAUDE_PLUGIN_ROOT.
+    impact: "Cannot locate skill source files. Installation fails."
+    fix: |
+      1. Verify the my-workflow plugin is installed: /plugin list
+      2. Reinstall if needed: /plugin install my-workflow@dohernandez-claude-skills
+      3. Check that CLAUDE_PLUGIN_ROOT is set during plugin execution
+    severity: critical
+
+  - id: overwrite-customized-skill
+    description: "Overwriting a skill the user has customized"
+    detect: "Check if .claude/skills/<skill>/ already exists before copying"
+    impact: "User loses custom configuration and skill modifications."
+    fix: |
+      NEVER overwrite existing skill directories.
+      Always skip and report: "Already installed: X (skipping)"
+      User must manually delete the directory to reinstall.
+    severity: critical
+
+  - id: missing-infrastructure
+    description: "Installing skills without their required infrastructure"
+    detect: |
+      Check if skills that need infrastructure are being installed:
+      - create-skill, docs-refresh -> need skill-tasks
+      - task, test, setup, developer -> need user-tasks
+      Verify Taskfile.yaml / Taskfile.skills.yaml exist in .claude/
+    impact: "Skills that depend on Taskfile tasks will fail to validate or run properly."
+    fix: |
+      Always check infrastructure requirements before installing skills.
+      Install infrastructure first, then skills.
+    severity: high
+
+  - id: stale-marketplace-root
+    description: "Saved .marketplace-root points to a deleted or moved directory"
+    detect: |
+      Read .marketplace-root and verify the directory exists and contains
+      expected sibling plugins.
+    impact: "Skill source resolution fails. Cannot find skills to install."
+    fix: |
+      Delete .claude/skills/my-workflow/.marketplace-root and re-detect.
+      The install command will auto-detect on next run.
+    severity: high
+
+  - id: permission-denied-copy
+    description: "Cannot copy skill files due to permission issues"
+    detect: "cp command fails with permission denied"
+    impact: "Skill installation fails partway through. Partial install state."
+    fix: |
+      1. Check permissions on .claude/skills/ directory
+      2. Check permissions on source skill files in marketplace cache
+      3. Ensure the user has write access to the project directory
+    severity: medium
+
+  - id: partial-tier-install
+    description: "Some skills in a tier fail to install while others succeed"
+    detect: "Count of installed skills doesn't match expected tier count"
+    impact: "Tier is incomplete. Some skills may not work without their dependencies."
+    fix: |
+      Run /my-workflow status to see which skills are missing.
+      Run /my-workflow install <skill-name> for each missing skill.
+    severity: medium
+
+  - id: cache-version-mismatch
+    description: "Multiple versions in cache, wrong one selected"
+    detect: "ls the skill directory in cache to check for multiple version dirs"
+    impact: "May install an older version of a skill."
+    fix: |
+      When multiple versions exist in cache layout, always pick the
+      highest version directory (sort -V and take last).
+    severity: medium
+
+  - id: infra-not-found
+    description: "infra/ directory not found at marketplace root"
+    detect: |
+      Check for infra/ at marketplace root.
+      For cache installs, infra may not be in the cache.
+    impact: "Infrastructure files cannot be installed. Skills needing infra will fail."
+    fix: |
+      Fall back to downloading from GitHub:
+      https://raw.githubusercontent.com/dohernandez/claude-skills/main/infra/
+      Download Taskfile.yaml, Taskfile.skills.yaml, and scripts/*.sh
+    severity: high

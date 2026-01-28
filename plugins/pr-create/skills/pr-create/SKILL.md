@@ -12,8 +12,85 @@ Creates GitHub pull requests with conventional commit-style titles and structure
 Follows git workflow conventions from `.claude/skills/pr-create/git-workflow.md`.
 
 ## Quick Reference
-- Creates: GitHub PR via `gh pr create`
-- Requires: GitHub CLI installed and authenticated, committed changes on a feature branch
+- **Setup**: `/pr-create configure` (install default PR template)
+- **Usage**: `/pr-create` (create PR)
+- **Template**: `.github/PULL_REQUEST_TEMPLATE.md`
+- **Config**: Depends on installation model (see Save Location)
+- **Requires**: GitHub CLI installed and authenticated, committed changes on a feature branch
+
+## Commands
+
+| Command | Purpose | When to Use |
+|---------|---------|-------------|
+| `/pr-create configure` | Install default PR template | First time in a project or to reset template |
+| `/pr-create` | Create PR using template | Normal usage |
+
+---
+
+## /pr-create configure
+
+**When**: First time using `/pr-create` in a project, or to install/reset the PR template
+
+**What it does**:
+1. Checks if `.github/PULL_REQUEST_TEMPLATE.md` exists
+2. If exists: asks user — keep existing or replace with default?
+3. If user chooses default (or no template exists): copies plugin's `templates/PULL_REQUEST_TEMPLATE.md` to `.github/PULL_REQUEST_TEMPLATE.md`
+4. Saves config to yaml (installation-model-aware path)
+
+### Workflow
+
+```
+1. CHECK FOR EXISTING TEMPLATE
+   └─ Look for .github/PULL_REQUEST_TEMPLATE.md
+
+2. DECIDE SOURCE
+   ├─ If no template exists → use default
+   └─ If template exists → ask user: keep existing or replace?
+
+3. INSTALL TEMPLATE
+   ├─ mkdir -p .github
+   └─ Copy default template to .github/PULL_REQUEST_TEMPLATE.md
+
+4. SAVE CONFIG
+   └─ Write pr-create.yaml with template source and path
+```
+
+### Save Location
+
+Config path depends on the installation model. Detect which model is active by checking whether this skill is running from inside `.claude/skills/pr-create/` (my-workflow) or from an external plugin directory (standalone).
+
+| Installation Model | Config File | How to Detect |
+|--------------------|-------------|---------------|
+| **Standalone** (external plugin) | `.claude/skills/pr-create.yaml` | Skill files are NOT inside `.claude/skills/pr-create/` |
+| **my-workflow** (copied into project) | `.claude/skills/pr-create/pr-create.yaml` | Skill files ARE inside `.claude/skills/pr-create/` |
+
+**Precedence when reading** (first found wins):
+1. `.claude/skills/pr-create/pr-create.yaml` (my-workflow installation)
+2. `.claude/skills/pr-create.yaml` (standalone installation)
+3. Skill defaults
+
+### Config Schema
+
+```yaml
+# .claude/skills/pr-create.yaml (standalone installation)
+# .claude/skills/pr-create/pr-create.yaml (my-workflow installation)
+version: 1
+configured_at: "ISO timestamp"
+template:
+  source: "default"  # or "project"
+  path: ".github/PULL_REQUEST_TEMPLATE.md"
+```
+
+---
+
+## /pr-create (Normal Usage)
+
+**When**: Creating a pull request
+
+**Reads config from** (first found):
+1. `.claude/skills/pr-create/pr-create.yaml` (my-workflow installation)
+2. `.claude/skills/pr-create.yaml` (standalone installation)
+3. Skill defaults
 
 ## Workflow
 
@@ -26,7 +103,7 @@ Follows git workflow conventions from `.claude/skills/pr-create/git-workflow.md`
 2. GENERATE PR CONTENT
    ├─ Analyze commits on branch
    ├─ Generate title (conventional commit format)
-   └─ Generate body (use template if exists)
+   └─ Generate body (use .github/PULL_REQUEST_TEMPLATE.md if exists)
 
 3. VALIDATE (before creating)
    ├─ Check title for AI attribution (STOP if found)
@@ -94,28 +171,6 @@ PRs and commits must appear as human-authored work. This is a strict framework r
 Use the PR template at `.github/PULL_REQUEST_TEMPLATE.md` if it exists.
 
 Run `/pr-create configure` to install a default template if the project doesn't have one.
-
-Standard format:
-
-```markdown
-## Description
-
-[2-3 sentences summarizing what changed]
-
-## Types of Changes
-
-- [ ] Bug fix (non-breaking change that fixes an issue)
-- [ ] New feature (non-breaking change that adds functionality)
-- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
-- [ ] Chore (maintenance tasks, refactoring, or non-functional changes)
-
-## Checklist
-
-- [ ] My code follows the code style of this project
-- [ ] I have added the necessary documentation (if appropriate)
-- [ ] I have added tests (if appropriate)
-- [ ] Lint and unit tests pass locally with my changes
-```
 
 ## User Review Step
 

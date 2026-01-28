@@ -836,9 +836,9 @@ main() {
 
     # Determine skills directory (development mode vs installed mode)
     local skills_dir
-    if [[ -d "$PROJECT_ROOT/framework/skills" ]] && [[ -d "$PROJECT_ROOT/framework/.claude-plugin" ]]; then
+    if [[ -d "$PROJECT_ROOT/infra/skills" ]] && [[ -d "$PROJECT_ROOT/infra/.claude-plugin" ]]; then
         # Development mode: plugin structure
-        skills_dir="$PROJECT_ROOT/framework/skills"
+        skills_dir="$PROJECT_ROOT/infra/skills"
     elif [[ -d "$PROJECT_ROOT/.claude/skills" ]]; then
         # Installed mode: standard .claude/skills
         skills_dir="$PROJECT_ROOT/.claude/skills"
@@ -847,7 +847,7 @@ main() {
     fi
 
     if [[ ! -d "$skills_dir" ]]; then
-        echo "No skills directory found (tried framework/skills and .claude/skills)"
+        echo "No skills directory found (tried infra/skills and .claude/skills)"
         exit $ERR_GENERAL
     fi
 

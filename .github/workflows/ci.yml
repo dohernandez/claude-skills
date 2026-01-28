@@ -16,10 +16,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Check skill structure
-        run: ./framework/scripts/check-skill-structure.sh
+        run: ./infra/scripts/check-skill-structure.sh
 
       - name: Check skill YAML
-        run: ./framework/scripts/check-skill-yaml.sh
+        run: ./infra/scripts/check-skill-yaml.sh
 
       - name: Audit skills
-        run: ./framework/scripts/audit-skills.sh
+        run: ./infra/scripts/audit-skills.sh

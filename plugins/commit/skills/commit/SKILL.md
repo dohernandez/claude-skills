@@ -105,16 +105,16 @@ rules:
 
 ### Save Location
 
-Config path depends on the installation model. Detect which model is active by checking whether this skill is running from inside `.claude/skills/commit/` (copied) or from an external plugin directory.
+Config path depends on the installation model. Detect which model is active by checking whether this skill is running from inside `.claude/skills/commit/` (my-workflow) or from an external plugin directory (standalone).
 
 | Installation Model | Config File | How to Detect |
 |--------------------|-------------|---------------|
-| **Claude Code plugin** (external) | `.claude/skills/commit.yaml` | Skill files are NOT inside `.claude/skills/commit/` |
-| **Copied into project** | `.claude/skills/commit/commit.yaml` | Skill files ARE inside `.claude/skills/commit/` |
+| **Standalone** (external plugin) | `.claude/skills/commit.yaml` | Skill files are NOT inside `.claude/skills/commit/` |
+| **my-workflow** (copied into project) | `.claude/skills/commit/commit.yaml` | Skill files ARE inside `.claude/skills/commit/` |
 
 **Precedence when reading** (first found wins):
-1. `.claude/skills/commit/commit.yaml` (copied installation)
-2. `.claude/skills/commit.yaml` (plugin installation)
+1. `.claude/skills/commit/commit.yaml` (my-workflow installation)
+2. `.claude/skills/commit.yaml` (standalone installation)
 3. Skill defaults
 
 ---

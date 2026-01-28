@@ -20,7 +20,7 @@ Create standardized git commits following Conventional Commits specification. An
 - **Setup**: `/commit configure` (run once per project)
 - **Usage**: `/commit` (uses saved scopes)
 - **Update**: `/commit learn` (re-analyze scopes from recent commits)
-- **Config**: `.claude/skills/commit.yaml` or `.claude/skills/commit.local.yaml`
+- **Config**: Depends on installation model (see Save Location)
 
 ## Commands
 
@@ -105,17 +105,16 @@ rules:
 
 ### Save Location
 
-Config path depends on how the plugin was installed:
+Config path depends on the installation model. Detect which model is active by checking whether this skill is running from inside `.claude/skills/commit/` (copied) or from an external plugin directory.
 
-| Plugin Scope | Config File | Git |
-|--------------|-------------|-----|
-| **project** | `.claude/skills/commit.yaml` | Committed (shared) |
-| **local** | `.claude/skills/commit.local.yaml` | Ignored (personal) |
-| **user** | `.claude/skills/commit.local.yaml` | Ignored (personal) |
+| Installation Model | Config File | How to Detect |
+|--------------------|-------------|---------------|
+| **Claude Code plugin** (external) | `.claude/skills/commit.yaml` | Skill files are NOT inside `.claude/skills/commit/` |
+| **Copied into project** | `.claude/skills/commit/commit.yaml` | Skill files ARE inside `.claude/skills/commit/` |
 
 **Precedence when reading** (first found wins):
-1. `.claude/skills/commit.local.yaml`
-2. `.claude/skills/commit.yaml`
+1. `.claude/skills/commit/commit.yaml` (copied installation)
+2. `.claude/skills/commit.yaml` (plugin installation)
 3. Skill defaults
 
 ---
@@ -128,7 +127,7 @@ Config path depends on how the plugin was installed:
 1. Re-analyzes project structure
 2. Scans recent commits for new scopes
 3. Proposes updates to config
-4. Updates existing config file (respects scope)
+4. Updates existing config file (respects installation model)
 
 ---
 
@@ -137,9 +136,9 @@ Config path depends on how the plugin was installed:
 **When**: Creating a commit
 
 **Reads config from** (first found):
-1. `.claude/skills/commit.local.yaml`
-2. `.claude/skills/commit.yaml`
-3. Uses defaults if no config found
+1. `.claude/skills/commit/commit.yaml` (copied installation)
+2. `.claude/skills/commit.yaml` (plugin installation)
+3. Skill defaults
 
 ### Workflow
 
@@ -246,8 +245,8 @@ refactor(db): extract query builder to separate module
 ## Config Schema
 
 ```yaml
-# .claude/skills/commit.yaml (project scope - shared)
-# .claude/skills/commit.local.yaml (local/user scope - personal)
+# .claude/skills/commit.yaml (plugin installation)
+# .claude/skills/commit/commit.yaml (copied installation)
 version: 1
 discovered_at: "ISO timestamp"
 

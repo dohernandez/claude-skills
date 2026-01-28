@@ -3,18 +3,11 @@
 name: pr-create
 version: "1.0.0"
 
-dependencies:
-  - skill: workflow
-    reason: "PR creation is typically the final step of a workflow"
+dependencies: []
 
 composition:
   - when: "Creating a pull request"
     sequence:
-      - pr-create
-
-  - when: "Finishing workflow with PR"
-    sequence:
-      - workflow
       - pr-create
 
 triggers:

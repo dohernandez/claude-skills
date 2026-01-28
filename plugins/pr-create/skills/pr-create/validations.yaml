@@ -2,17 +2,9 @@ version: 1
 description: "Validations for pr-create skill"
 
 # PR-create validations:
-# - Skill structure is valid
 # - No AI attribution in PRs
 
 validations:
-  - id: skill-structure-valid
-    name: "Skill has required files and valid YAML"
-    type: command
-    command: "task -t .claude/Taskfile.yaml claude:check-structure -- --skill pr-create"
-    expect: "exit 0"
-    message: "Skill structure validation failed."
-
   - id: no-ai-attribution
     name: "PR title and body contain no AI attribution"
     type: command
@@ -23,5 +15,4 @@ validations:
     message: "AI attribution detected in PR. Remove all references to Claude, GPT, Co-Authored-By AI, etc."
 
 on_stop:
-  - skill-structure-valid
   - no-ai-attribution

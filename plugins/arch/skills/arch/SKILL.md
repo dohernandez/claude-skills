@@ -19,7 +19,6 @@ Discover, validate, and guide project architecture. Ensures code follows layer b
 
 - **Validates:** Layer boundaries, import directions, architectural compliance
 - **Modes:** configure, learn, check, plan
-- **Stop hook:** `task -t .claude/Taskfile.skills.yaml validate-skill -- --skill arch`
 
 ## Modes Overview
 

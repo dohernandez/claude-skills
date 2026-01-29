@@ -19,7 +19,6 @@ Discover, learn, and guide domain knowledge. Helps understand project concepts, 
 
 - **Provides:** Domain knowledge, concept explanations, request mapping
 - **Modes:** configure, learn, explain, map
-- **Stop hook:** `task claude:validate-skill -- --skill domain-expert`
 
 ## Modes Overview
 

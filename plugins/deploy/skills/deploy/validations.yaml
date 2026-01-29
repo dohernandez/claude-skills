@@ -7,7 +7,7 @@ validations:
   - id: skill-structure
     type: command
     description: Validate skill YAML structure
-    command: "task -t .claude/Taskfile.yaml validate-skill -- --skill deploy"
+    command: "task -t .claude/Taskfile.skills.yaml validate-skill -- --skill deploy"
 
 on_stop:
   - skill-structure

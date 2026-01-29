@@ -1,0 +1,8 @@
+version: 1
+description: "Validations for domain-expert skill"
+
+# Domain-expert is a knowledge skill - no runtime validations needed
+
+validations: []
+
+on_stop: []

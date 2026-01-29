@@ -7,7 +7,7 @@ validations:
   - id: skill-yaml-valid
     type: command
     description: Validate skill YAML structure
-    command: "task -t .claude/Taskfile.yaml validate-skill-yaml"
+    command: "task -t .claude/Taskfile.skills.yaml validate-skill-yaml"
 
   - id: config-exists
     type: command

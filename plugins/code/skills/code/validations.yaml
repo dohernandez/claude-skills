@@ -1,0 +1,14 @@
+version: 1
+description: "Validations for code skill"
+
+# Code skill validations:
+# - Lint passes after style changes
+
+validations:
+  - id: lint-passes
+    type: command
+    command: task lint
+    expect: "exit 0"
+    message: "Lint failed. Fix style issues before completing."
+
+on_stop: []

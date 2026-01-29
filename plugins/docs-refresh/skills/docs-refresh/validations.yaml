@@ -4,7 +4,7 @@ description: "Validations for docs-refresh skill"
 validations:
   - id: skill-yaml-valid
     type: command
-    command: "task -t .claude/Taskfile.yaml validate-skill-yaml"
+    command: "task -t .claude/Taskfile.skills.yaml validate-skill-yaml"
     expect: "exit 0"
     message: "Skill YAML validation failed. Fix skill structure issues."
 

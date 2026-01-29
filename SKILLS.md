@@ -173,7 +173,6 @@ Core: skill.yaml, SKILL.md, sharp-edges.yaml, validations.yaml, collaboration.ya
 
 | Skill | Files Present |
 |-------|---------------|
-| bugfix | skill.yaml, SKILL.md, sharp-edges.yaml, collaboration.yaml, MEMORY.md |
 | slack | skill.yaml, SKILL.md, sharp-edges.yaml, collaboration.yaml |
 | workflow-finish | skill.yaml, SKILL.md, sharp-edges.yaml |
 
@@ -181,8 +180,8 @@ Core: skill.yaml, SKILL.md, sharp-edges.yaml, validations.yaml, collaboration.ya
 
 | Skill | Missing |
 |-------|---------|
-| **code** | validations.yaml, sharp-edges.yaml |
-| **domain-expert** | validations.yaml, sharp-edges.yaml, collaboration.yaml |
+| **code** | sharp-edges.yaml |
+| **domain-expert** | sharp-edges.yaml, collaboration.yaml |
 | **test** | sharp-edges.yaml |
 
 ---
@@ -193,7 +192,7 @@ Core: skill.yaml, SKILL.md, sharp-edges.yaml, validations.yaml, collaboration.ya
 |-------|------------|------------|-----------|-------|-----------------|-----------|-------|
 | arch | standalone | - | ✓ | ✓ | - | ✓ (sub) | 5/5 |
 | bugfix | standalone | - | - | - | - | ✓ (sub) | 5/5 |
-| code | standalone | - | ✓ | ✓ | - | ✓ (sub) | 3/5 |
+| code | standalone | - | ✓ | ✓ | - | ✓ (sub) | 4/5 |
 | commit | standalone | - | - | - | - | - | 5/5 |
 | create-skill | skill-tasks | Taskfile.skills, scripts | - | - | - | - | 5/5 |
 | debugger | standalone | - | ✓ | ✓ | `.claude/skills/debugger.yaml` | ✓ (sub) | 5/5 |
@@ -201,7 +200,7 @@ Core: skill.yaml, SKILL.md, sharp-edges.yaml, validations.yaml, collaboration.ya
 | deploy-verify | standalone | - | ✓ | ✓ | `.claude/skills/deploy-verify.yaml` | - | 5/5 |
 | developer | user-tasks | Taskfile, scripts | ✓ | ✓ | `.claude/skills/developer.yaml` | ✓ (orch) | 5/5 |
 | docs-refresh | skill-tasks | Taskfile.skills, scripts | ✓ | - | `.claude/skills/docs-refresh.yaml` | - | 5/5 |
-| domain-expert | standalone | - | - | - | - | - | 2/5 |
+| domain-expert | standalone | - | - | - | - | - | 3/5 |
 | linear | standalone | - | - | - | - | - | 5/5 |
 | **memory** | standalone | - | - | - | - | - | 5/5 |
 | pr-create | standalone | - | - | - | - | - | 5/5 +git-workflow.md |
@@ -243,12 +242,16 @@ post-install.sh
 validate-skill.sh
 ```
 
-### Taskfile.yaml (user tasks) - 4 skills
+### Taskfile.dev.yaml → .claude/Taskfile.yaml (user tasks) - 4 skills
+Source: `infra/Taskfile.dev.yaml`
+Destination: `.claude/Taskfile.yaml`
 Provides: `test`, `lint`, `precommit` tasks
 Installed by: developer, setup, task, test
 
 ### Taskfile.skills.yaml (skill tasks) - 2 skills
-Provides: `validate-skill`, `skills-reference` tasks
+Source: `infra/Taskfile.skills.yaml`
+Destination: `.claude/Taskfile.skills.yaml`
+Provides: `validate-skill`, `validate-skill-yaml`, `check-structure`, `audit-skills`
 Installed by: create-skill, docs-refresh
 
 ---
@@ -599,3 +602,35 @@ These skills operate independently:
 | **deploy** | Deployment procedure |
 | **deploy-verify** | Post-deployment checks |
 | **docs-refresh** | Documentation generation |
+
+---
+
+## Plugin Review Checklist
+
+When reviewing or creating plugins, validate against this checklist:
+
+| # | Check | Requirement |
+|---|-------|-------------|
+| 1 | **Version sync** | `plugin.json` version matches `skill.yaml` version (all 1.0.0) |
+| 2 | **Taskfile paths** | Skill tasks use `.claude/Taskfile.skills.yaml`, user tasks use `.claude/Taskfile.yaml` |
+| 3 | **Task prefixes** | No `claude:` prefix in task names |
+| 4 | **Infra naming** | `setup.sh` uses `INFRA_ROOT` not `FRAMEWORK_ROOT` |
+| 5 | **GitHub URLs** | Use `main/infra` not `main/framework` |
+| 6 | **validations.yaml** | Use `id` only (no redundant `name` field) |
+| 7 | **collaboration.yaml** | No `triggers:` section (triggers don't work - loaded post-invocation) |
+| 8 | **Stop hooks** | Opt-in only (via `/create-skill`) |
+| 9 | **SKILL.md docs** | Stop hook documentation matches `validations.yaml` `on_stop` implementation |
+
+### Taskfile Mapping
+
+| Source | Destination | Contains |
+|--------|-------------|----------|
+| `infra/Taskfile.dev.yaml` | `.claude/Taskfile.yaml` | User tasks: test, lint, precommit |
+| `infra/Taskfile.skills.yaml` | `.claude/Taskfile.skills.yaml` | Skill tasks: validate-skill, check-structure |
+
+### Task Type Reference
+
+| Task Type | Taskfile | Example |
+|-----------|----------|---------|
+| **User tasks** | `.claude/Taskfile.yaml` | `task -t .claude/Taskfile.yaml test` |
+| **Skill tasks** | `.claude/Taskfile.skills.yaml` | `task -t .claude/Taskfile.skills.yaml validate-skill` |

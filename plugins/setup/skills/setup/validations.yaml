@@ -7,7 +7,7 @@ description: "Validations for setup skill"
 validations:
   - id: skill-structure-valid
     type: command
-    command: "task -t .claude/Taskfile.yaml check-structure -- --skill setup"
+    command: "task -t .claude/Taskfile.skills.yaml check-structure -- --skill setup"
     expect: "exit 0"
     message: "Skill structure validation failed."
 

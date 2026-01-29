@@ -15,7 +15,7 @@ edges:
 
   - id: skill-yaml-invalid
     description: "skill.yaml has syntax errors or missing required fields"
-    detect: "task -t .claude/Taskfile.yaml validate-skill-yaml"
+    detect: "task -t .claude/Taskfile.skills.yaml validate-skill-yaml"
     impact: "Reference generation will fail or produce incomplete output"
     fix: "Fix YAML syntax and ensure required fields are present"
     severity: high

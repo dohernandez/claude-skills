@@ -153,7 +153,7 @@ Infrastructure source resolution:
 2. If not found, download from `https://raw.githubusercontent.com/dohernandez/claude-skills/main/infra/`
 
 Files to copy:
-- `infra/Taskfile.yaml` → `.claude/Taskfile.yaml` (user-tasks only)
+- `infra/Taskfile.dev.yaml` → `.claude/Taskfile.yaml` (user-tasks only)
 - `infra/Taskfile.skills.yaml` → `.claude/Taskfile.skills.yaml`
 - `infra/scripts/*.sh` → `.claude/scripts/` (exclude setup.sh and post-install.sh)
 

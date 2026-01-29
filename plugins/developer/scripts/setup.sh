@@ -40,20 +40,20 @@ download_file() {
 install_infrastructure() {
     local use_local=false
 
-    if [[ -d "$INFRA_ROOT" ]] && [[ -f "$INFRA_ROOT/Taskfile.yaml" ]]; then
+    if [[ -d "$INFRA_ROOT" ]] && [[ -f "$INFRA_ROOT/Taskfile.dev.yaml" ]]; then
         use_local=true
         log_info "Using local infra"
     else
         log_info "Downloading infrastructure from GitHub"
     fi
 
-    # User tasks Taskfile
+    # User tasks Taskfile (Taskfile.dev.yaml → .claude/Taskfile.yaml)
     if [[ ! -f "$PROJECT_ROOT/.claude/Taskfile.yaml" ]]; then
         if [[ "$use_local" == true ]]; then
-            cp "$INFRA_ROOT/Taskfile.yaml" "$PROJECT_ROOT/.claude/Taskfile.yaml"
+            cp "$INFRA_ROOT/Taskfile.dev.yaml" "$PROJECT_ROOT/.claude/Taskfile.yaml"
             log_success "Installed: Taskfile.yaml"
         else
-            if download_file "$GITHUB_RAW_BASE/Taskfile.yaml" "$PROJECT_ROOT/.claude/Taskfile.yaml"; then
+            if download_file "$GITHUB_RAW_BASE/Taskfile.dev.yaml" "$PROJECT_ROOT/.claude/Taskfile.yaml"; then
                 log_success "Downloaded: Taskfile.yaml"
             else
                 log_error "Failed to download Taskfile.yaml"

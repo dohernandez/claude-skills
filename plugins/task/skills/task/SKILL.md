@@ -165,8 +165,8 @@ During `/task configure`:
 **Output:** All tests pass, ready for commit
 
 ```bash
-task -t .claude/Taskfile.yaml test       # All tests pass
-task -t .claude/Taskfile.yaml precommit  # Lint + tests pass
+task -t .claude/Taskfile.dev.yaml test       # All tests pass
+task -t .claude/Taskfile.dev.yaml precommit  # Lint + tests pass
 ```
 
 **Key Rule:** Don't commit with failing tests or lint errors.

@@ -77,14 +77,14 @@
 | docs-refresh | Taskfile.skills.yaml, 9 validation scripts |
 
 ### With User Tasks (4)
-**setup.sh**: 132 lines - Installs `Taskfile.yaml` (user tasks) + framework scripts
+**setup.sh**: 132 lines - Installs `Taskfile.dev.yaml` (user tasks) + framework scripts
 
 | Skill | Installs |
 |-------|----------|
-| developer | Taskfile.yaml (test, lint, precommit), scripts |
-| setup | Taskfile.yaml (test, lint, precommit), scripts |
-| task | Taskfile.yaml (test, lint, precommit), scripts |
-| test | Taskfile.yaml (test, lint, precommit), scripts |
+| developer | Taskfile.dev.yaml (test, lint, precommit), scripts |
+| setup | Taskfile.dev.yaml (test, lint, precommit), scripts |
+| task | Taskfile.dev.yaml (test, lint, precommit), scripts |
+| test | Taskfile.dev.yaml (test, lint, precommit), scripts |
 
 ---
 
@@ -242,9 +242,9 @@ post-install.sh
 validate-skill.sh
 ```
 
-### Taskfile.dev.yaml → .claude/Taskfile.yaml (user tasks) - 4 skills
+### Taskfile.dev.yaml → .claude/Taskfile.dev.yaml (user tasks) - 4 skills
 Source: `infra/Taskfile.dev.yaml`
-Destination: `.claude/Taskfile.yaml`
+Destination: `.claude/Taskfile.dev.yaml`
 Provides: `test`, `lint`, `precommit` tasks
 Installed by: developer, setup, task, test
 
@@ -612,7 +612,7 @@ When reviewing or creating plugins, validate against this checklist:
 | # | Check | Requirement |
 |---|-------|-------------|
 | 1 | **Version sync** | `plugin.json` version matches `skill.yaml` version (all 1.0.0) |
-| 2 | **Taskfile paths** | Skill tasks use `.claude/Taskfile.skills.yaml`, user tasks use `.claude/Taskfile.yaml` |
+| 2 | **Taskfile paths** | Skill tasks use `.claude/Taskfile.skills.yaml`, user tasks use `.claude/Taskfile.dev.yaml` |
 | 3 | **Task prefixes** | No `claude:` prefix in task names |
 | 4 | **Infra naming** | `setup.sh` uses `INFRA_ROOT` not `FRAMEWORK_ROOT` |
 | 5 | **GitHub URLs** | Use `main/infra` not `main/framework` |
@@ -625,12 +625,12 @@ When reviewing or creating plugins, validate against this checklist:
 
 | Source | Destination | Contains |
 |--------|-------------|----------|
-| `infra/Taskfile.dev.yaml` | `.claude/Taskfile.yaml` | User tasks: test, lint, precommit |
+| `infra/Taskfile.dev.yaml` | `.claude/Taskfile.dev.yaml` | User tasks: test, lint, precommit |
 | `infra/Taskfile.skills.yaml` | `.claude/Taskfile.skills.yaml` | Skill tasks: validate-skill, check-structure |
 
 ### Task Type Reference
 
 | Task Type | Taskfile | Example |
 |-----------|----------|---------|
-| **User tasks** | `.claude/Taskfile.yaml` | `task -t .claude/Taskfile.yaml test` |
+| **User tasks** | `.claude/Taskfile.dev.yaml` | `task -t .claude/Taskfile.dev.yaml test` |
 | **Skill tasks** | `.claude/Taskfile.skills.yaml` | `task -t .claude/Taskfile.skills.yaml validate-skill` |

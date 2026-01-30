@@ -149,7 +149,7 @@ mcp__ide__getDiagnostics({ uri: "<file-path>" })
 ### 2. Framework Pre-Commit
 
 ```bash
-task -t .claude/Taskfile.yaml precommit
+task -t .claude/Taskfile.dev.yaml precommit
 ```
 
 This runs configured linting and tests. **Do NOT commit if any step fails.**

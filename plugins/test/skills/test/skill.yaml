@@ -184,7 +184,7 @@ procedures:
         detail: |
           Run configured command:
           - From config: commands.all
-          - Fallback: task -t .claude/Taskfile.yaml test
+          - Fallback: task -t .claude/Taskfile.dev.yaml test
 
       - step: "Report results"
         detail: |

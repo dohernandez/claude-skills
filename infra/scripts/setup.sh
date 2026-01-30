@@ -131,13 +131,9 @@ main() {
         log_success "Updated scripts"
     fi
 
-    # Taskfile (always update to get new tasks)
-    echo "Checking Taskfile: $PLUGIN_ROOT/Taskfile.yaml" >> "$DEBUG_LOG"
-    if [[ -f "$PLUGIN_ROOT/Taskfile.yaml" ]]; then
-        echo "  Taskfile exists, copying..." >> "$DEBUG_LOG"
-        cp "$PLUGIN_ROOT/Taskfile.yaml" "$PROJECT_ROOT/.claude/Taskfile.yaml"
-        log_success "Updated Taskfile"
-    fi
+    # Note: Taskfiles (Taskfile.dev.yaml, Taskfile.skills.yaml) are installed by
+    # individual skill plugins (setup, developer, task, test, etc.), not by the
+    # framework plugin. Each skill's setup.sh copies from infra/ to .claude/.
 
     # Docs and GitHub templates are bundled with individual skills
     # (e.g., git-workflow.md is in pr-create skill)

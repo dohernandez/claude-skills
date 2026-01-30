@@ -155,7 +155,7 @@ mkdir -p "$OUTPUT_DIR"
   echo "## Regenerating This Document"
   echo ""
   echo "\`\`\`bash"
-  echo "task -t .claude/Taskfile.yaml skills-reference"
+  echo "task -t .claude/Taskfile.skills.yaml skills-reference"
   echo "\`\`\`"
 
 } > "$OUTPUT_FILE"

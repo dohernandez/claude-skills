@@ -144,7 +144,7 @@ infrastructure:
       - developer
     files:
       - source: "infra/Taskfile.dev.yaml"
-        dest: ".claude/Taskfile.yaml"
+        dest: ".claude/Taskfile.dev.yaml"
       - source: "infra/Taskfile.skills.yaml"
         dest: ".claude/Taskfile.skills.yaml"
       - source: "infra/scripts/"

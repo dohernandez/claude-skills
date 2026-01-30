@@ -71,7 +71,7 @@ edges:
     impact: "May introduce regressions, style violations, broken builds"
     fix: |
       Before marking complete, run:
-        task -t .claude/Taskfile.yaml precommit
+        task -t .claude/Taskfile.dev.yaml precommit
 
       Fix all errors before proceeding.
     severity: high

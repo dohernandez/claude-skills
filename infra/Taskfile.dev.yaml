@@ -1,14 +1,14 @@
 # Claude Skills - User Tasks
-# This file is installed to .claude/Taskfile.yaml in target projects
+# This file is installed to .claude/Taskfile.dev.yaml in target projects
 #
 # Usage:
-#   task -t .claude/Taskfile.yaml test
-#   task -t .claude/Taskfile.yaml precommit
+#   task -t .claude/Taskfile.dev.yaml test
+#   task -t .claude/Taskfile.dev.yaml precommit
 #
 # Or add to your project's Taskfile.yaml:
 #   includes:
 #     claude:
-#       taskfile: .claude/Taskfile.yaml
+#       taskfile: .claude/Taskfile.dev.yaml
 #
 # Configuration: .claude/skills-config.env
 

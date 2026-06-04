@@ -1,0 +1,40 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/register.sh",
+            "description": "Register this session in the handoff registry and inject the inbox-Monitor + specialist arming context"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/unregister.sh",
+            "description": "Best-effort removal of this session's registry row at session end"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/monitor-check.sh",
+            "description": "Re-arm reminder if the inbox Monitor heartbeat is missing or stale"
+          }
+        ]
+      }
+    ]
+  }
+}

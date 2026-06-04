@@ -43,7 +43,7 @@ After these steps, skills are available as `/commit`, `/tdd`, `/linear`, etc.
 └─────────────────────────────────────────────────────────────┘
 ```
 
-## Available Plugins (24)
+## Available Plugins (25)
 
 Install the full framework or any individual skill:
 
@@ -61,6 +61,7 @@ Install the full framework or any individual skill:
 | `developer` | Development orchestration with architecture awareness |
 | `docs-refresh` | Generate and refresh documentation from source |
 | `domain-expert` | Domain knowledge and business terminology |
+| `handoff` | Agent-to-agent mailbox for same-machine Claude Code sessions ([guide](#agent-to-agent-communication-handoff)) |
 | `linear` | Linear issue creation and management |
 | `pr-create` | Create GitHub pull requests with standardized format |
 | `pr-merge` | Merge pull requests with CI validation |
@@ -74,6 +75,58 @@ Install the full framework or any individual skill:
 | `workflow-setup` | Setup git worktree for ticket-based development |
 
 **Same result:** Installing `framework` = Installing all 23 individual plugins
+
+> `handoff` is a standalone runtime utility (it ships lifecycle hooks rather than a workflow skill), so it is **not** part of the `framework` bundle — install it on its own when you want inter-session messaging.
+
+## Agent-to-Agent Communication (`handoff`)
+
+The `handoff` plugin turns multiple Claude Code sessions running **on the same machine** into a small network that can message each other — useful when you have several sessions open across different repos or worktrees and want one to ask another to do something, without polluting either session's context.
+
+```
+/plugin install handoff@dohernandez-claude-skills
+```
+
+Installing wires the plugin's own `SessionStart` / `SessionEnd` / `UserPromptSubmit` hooks — **no `settings.json` edits**. Then every session, on start:
+
+1. **Registers** itself in `~/.claude/handoff/.registry` with a name (the repo basename, auto-suffixed `-2`/`-3` on collision), its repo, and its branch.
+2. **Arms a background Monitor** that polls its own inbox file (`~/.claude/handoff/<name>.signal`) every few seconds.
+
+### Sending and receiving
+
+```bash
+/handoff list                       # see all live sessions: name | repo | branch | cwd
+/handoff send <name> "your message" # deliver a message to another session's inbox
+/handoff whoami                     # confirm this session's own name
+```
+
+The flow is a simple filesystem mailbox:
+
+```
+  session A                              session B
+  /handoff send B "…"  ──writes──▶  ~/.claude/handoff/B.signal
+                                          │
+                                   B's Monitor polls, drains the file,
+                                   surfaces it as a chat notification
+                                          │
+                                   B investigates, then:
+                                   /handoff send A "reply"  ──▶  A's inbox
+```
+
+Messages are wrapped in a `[from <sender> — <timestamp>]` envelope, the sender is auto-derived, and the recipient is validated against the live registry — so a `send` to an unknown or dead session fails fast instead of going nowhere.
+
+### Specialist roles (optional)
+
+Beyond plain messaging, `handoff` can arm a session as a **domain specialist** for its repo so it answers cross-session questions as the right kind of engineer:
+
+```bash
+/handoff arm [<name>]               # arm a session (self-arm if no name) with a role prompt
+/handoff role set golang+gha        # map the current repo to a role (auto-applied on session start)
+/handoff role list                  # show the layered repo→role map (project > global)
+```
+
+Roles resolve across three tiers — env > project (`<repo>/.claude/handoff/roles.yaml`, committable & team-shared) > global (`~/.claude/handoff/roles.yaml`). Commit the project file and every teammate who installs `handoff` auto-gets the right role for that repo.
+
+**Scope:** same machine only — it's a local filesystem mailbox, not a network service (for cross-machine use `RemoteTrigger` or an MCP server). Messages are consumed on read (no history/replay). Full reference: [`plugins/handoff/README.md`](plugins/handoff/README.md).
 
 ## Installation Options
 

@@ -1,0 +1,49 @@
+# ============================================================================
+# handoff role map — TEMPLATE
+# ============================================================================
+# Maps a canonical <org>/<repo> identity (as recorded in the handoff registry
+# from `git remote get-url origin`) to a specialist role, so a session in that
+# repo auto-arms the right domain lens on start.
+#
+# This file is a TEMPLATE. On first run the plugin copies it to your GLOBAL
+# map at ~/.claude/handoff/roles.yaml — edit THAT file (or use
+# `/handoff role set`), not this one. The plugin never overwrites your map.
+#
+# Tiers (first match wins, highest precedence first):
+#   1. $HANDOFF_ROLES_YAML                          (env override, one file)
+#   2. <repo-root>/.claude/handoff/roles.yaml       (PROJECT — commit to share
+#                                                     a role with your whole team)
+#   3. ~/.claude/handoff/roles.yaml                 (GLOBAL — your personal map)
+#
+# Format (flat YAML, parseable with `awk -F': *'`):
+#
+#   <org>/<repo>: <primary>[+<secondary>[+<secondary>...]]
+#
+# - <primary> selects the overlay lens roles/<primary>.md. The receiver also
+#   reads specialist-prompt.md (the base contract) and applies it through the
+#   lens.
+# - Secondaries are additional languages/tools the receiver should be aware of.
+#   If a roles/<secondary>.md lens exists it's referenced; otherwise the tool
+#   is mentioned by name (the receiver is a senior engineer — they know what it
+#   is, they just need to know it applies to THIS repo).
+#
+# Shipped lenses (have a roles/<name>.md): golang, rust, python, typescript,
+#   blockchain-ts, devops, lua.
+# Common name-only secondaries (no lens; mentioned by name): gha, hardhat,
+#   foundry, zksync, terraform, ansible, gcp, aws, docker, k8s.
+#
+# Lens resolution also layers: a project/global roles/<name>.md overrides the
+# shipped one, so you can ship custom lenses with your repo or keep personal
+# ones in ~/.claude/handoff/roles/.
+#
+# Unmapped repos fall back to specialist-prompt.md alone (generic senior
+# engineer). Add a mapping with: /handoff role set <role>
+#
+# ---------------------------------------------------------------------------
+# Examples — replace with YOUR repos (delete these sample lines):
+# ---------------------------------------------------------------------------
+# acme/payments-api:   golang+gha
+# acme/web-frontend:   typescript
+# acme/contracts:      blockchain-ts+hardhat+foundry
+# acme/infra:          devops+terraform+ansible+gcp
+# acme/engine:         rust+lua

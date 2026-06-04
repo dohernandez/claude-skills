@@ -28,4 +28,5 @@ composition:
   - when: "Creating a brand new skill"
     sequence:
       - create-skill
-      - "Run validation: task -t .claude/Taskfile.skills.yaml validate-skill -- --skill {folder-name}"
+      - "Validation is automatic on Stop (create-skill installs bundled infra into .claude/ and runs check-structure)"
+      - "Re-run manually if needed: task -t .claude/Taskfile.skills.yaml validate-skill -- --skill {folder-name}"

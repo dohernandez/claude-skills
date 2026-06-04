@@ -5,6 +5,27 @@
 # validation runner. Automated enforcement happens via validations.yaml.
 
 edges:
+  - id: plugin-root-only-in-hooks
+    description: "Trying to use ${CLAUDE_PLUGIN_ROOT} from the skill procedure (model Bash calls)"
+    detect: "Procedure step that runs ${CLAUDE_PLUGIN_ROOT}/... directly via the Bash tool"
+    impact: "The variable is unset in the model's shell (it is only exported to hook processes), so the path resolves empty and the command fails or targets the wrong location."
+    fix: |
+      Reach bundled plugin assets ONLY from the Stop hook (which has the variable).
+      That is why validation is wired to the Stop hook
+      (bash ${CLAUDE_PLUGIN_ROOT}/infra/install-and-validate.sh), not to a procedure step.
+      The procedure must not reference ${CLAUDE_PLUGIN_ROOT}.
+    severity: critical
+
+  - id: missing-project-infra-for-generated-hook
+    description: "A scaffolded skill's Stop hook calls task -t .claude/Taskfile.skills.yaml ... but that file isn't in the project yet"
+    detect: "Run the generated skill before create-skill's Stop hook has fired once"
+    impact: "The generated skill's Stop hook fails because .claude/Taskfile.skills.yaml / .claude/scripts/ were never installed."
+    fix: |
+      create-skill's Stop hook (install-and-validate.sh) installs that infra into
+      .claude/ idempotently. Let create-skill reach Stop at least once in the project
+      so the infra is present before relying on a generated skill's own Stop hook.
+    severity: high
+
   - id: stop-hook-skill-arg-mismatch
     description: "Stop hook uses wrong --skill value (not the folder basename)"
     detect: "task -t .claude/Taskfile.skills.yaml check-structure (automated)"

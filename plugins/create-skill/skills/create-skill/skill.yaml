@@ -1,6 +1,6 @@
 name: create-skill
 kind: meta
-version: "1.0.0"
+version: "2.0.0"
 description: "Scaffold a new Claude Code skill using the multi-YAML pattern."
 severity: high
 tags:
@@ -22,7 +22,8 @@ purpose: |
 owns:
   - "Skill scaffolding under .claude/skills/*/"
   - "Multi-YAML canonical file layout for skills"
-  - "Stop hook discipline: Stop hook must call task -t .claude/Taskfile.skills.yaml validate-skill -- --skill {folder-name}"
+  - "Generated-skill Stop hook discipline: a scaffolded skill's Stop hook must call task -t .claude/Taskfile.skills.yaml validate-skill -- --skill {folder-name}"
+  - "This plugin's own validation infra (bundled under infra/, reached via ${CLAUDE_PLUGIN_ROOT} from the Stop hook only)"
 
 inputs_required:
   - id: folder_name
@@ -202,6 +203,12 @@ procedure:
 
   - step: "Validate"
     detail: |
+      Validation runs automatically on Stop: the create-skill Stop hook executes
+      ${CLAUDE_PLUGIN_ROOT}/infra/install-and-validate.sh, which installs the bundled
+      validation infra into the project's .claude/ and runs check-structure over all
+      project skills (including the one just created). Do NOT try to invoke
+      ${CLAUDE_PLUGIN_ROOT} from the procedure — it is only set in hook processes.
+      Once the infra is installed, you can re-run manually with:
       - task -t .claude/Taskfile.skills.yaml validate-skill -- --skill {folder-name}
 
 # =============================================================================

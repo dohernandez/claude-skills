@@ -1,14 +1,17 @@
 version: 1
 description: "Validations for create-skill"
 
-# Create-skill validations:
-# - Skill YAML files are valid
-# - Required files exist
+# create-skill is a plugin-provided skill. Its validation infra is bundled in
+# the plugin under infra/ and is reached via ${CLAUDE_PLUGIN_ROOT}, which is
+# only available to hook processes. The Stop hook runs
+# infra/install-and-validate.sh, which installs the infra into the project's
+# .claude/ and then runs the structure check below over the project's skills.
 
 validations:
   - id: skill-structure-valid
+    name: "Skill has required files and valid YAML"
     type: command
-    command: "task -t .claude/Taskfile.skills.yaml check-structure"
+    command: "task -t ${CLAUDE_PLUGIN_ROOT}/infra/Taskfile.skills.yaml check-structure"
     expect: "exit 0"
     message: "Skill structure validation failed (missing files or invalid YAML)."
 

@@ -13,7 +13,7 @@ validations:
 
   - id: precommit
     type: command
-    command: "task -t .claude/Taskfile.yaml precommit"
+    command: "task -t .claude/Taskfile.dev.yaml precommit"
     description: "Run pre-commit checks (lint + tests)"
     failure_message: "Pre-commit checks failed. Fix errors before proceeding."
 

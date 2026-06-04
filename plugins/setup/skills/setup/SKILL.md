@@ -146,7 +146,7 @@ cp .env.example .env
 
 ```bash
 # Run tests to confirm working setup
-task -t .claude/Taskfile.yaml test
+task -t .claude/Taskfile.dev.yaml test
 ```
 
 ## Verify Mode

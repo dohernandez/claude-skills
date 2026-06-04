@@ -1,7 +1,7 @@
 # Claude Code Plugins - Development Taskfile
 # FOR DEVELOPMENT OF THIS PLUGINS REPOSITORY ONLY
 # This is NOT the Taskfile installed to target projects.
-# See: infra/Taskfile.yaml for the installed version.
+# See: infra/Taskfile.dev.yaml and infra/Taskfile.skills.yaml for installed versions.
 #
 # Install Task: https://taskfile.dev/installation/
 # Usage: task <task-name>
@@ -10,7 +10,7 @@ version: '3'
 
 includes:
   claude:
-    taskfile: ./infra/Taskfile.yaml
+    taskfile: ./infra/Taskfile.skills.yaml
     vars:
       SCRIPTS_DIR: '{{.ROOT_DIR}}/infra/scripts'
 

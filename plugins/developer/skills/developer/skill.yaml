@@ -238,7 +238,7 @@ procedure:
   - step: "Validate changes"
     detail: |
       Run pre-commit validation:
-        task -t .claude/Taskfile.yaml precommit
+        task -t .claude/Taskfile.dev.yaml precommit
 
       Fix any errors before considering complete.
       Do NOT proceed if validation fails.
@@ -265,7 +265,7 @@ examples:
       1. Check config: architecture=layered, domain_concepts has "user"
       2. Plan: domain (auth models) → infrastructure (auth provider) → application (auth handler)
       3. Implement bottom-up
-      4. Validate: task -t .claude/Taskfile.yaml precommit
+      4. Validate: task -t .claude/Taskfile.dev.yaml precommit
 
   - request: "Create API endpoint for reports"
     workflow: |

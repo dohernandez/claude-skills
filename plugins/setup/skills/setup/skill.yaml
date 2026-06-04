@@ -189,7 +189,7 @@ modes:
       - step: "Verify setup"
         detail: |
           Run test command to verify working setup:
-          task -t .claude/Taskfile.yaml test
+          task -t .claude/Taskfile.dev.yaml test
 
   verify:
     description: "Verify setup is complete and working"
@@ -258,7 +258,7 @@ patterns:
   - id: verify-setup
     description: Run tests to verify setup worked
     example: |
-      task -t .claude/Taskfile.yaml test
+      task -t .claude/Taskfile.dev.yaml test
 
   - id: env-configuration
     description: Configure environment variables

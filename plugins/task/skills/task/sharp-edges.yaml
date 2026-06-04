@@ -74,8 +74,8 @@ edges:
     impact: "May break unrelated functionality"
     fix: |
       In T4 (Verify), always run:
-      1. task -t .claude/Taskfile.yaml test (all tests)
-      2. task -t .claude/Taskfile.yaml precommit (lint + tests)
+      1. task -t .claude/Taskfile.dev.yaml test (all tests)
+      2. task -t .claude/Taskfile.dev.yaml precommit (lint + tests)
       3. Check IDE diagnostics for errors
       All must pass before considering work complete.
     severity: critical

@@ -103,8 +103,8 @@ patterns:
 
   # Uses framework Taskfile commands (configured via wizard)
   test_commands:
-    run_all: "task -t .claude/Taskfile.yaml test"
-    precommit: "task -t .claude/Taskfile.yaml precommit"
+    run_all: "task -t .claude/Taskfile.dev.yaml test"
+    precommit: "task -t .claude/Taskfile.dev.yaml precommit"
 
 anti_patterns:
   - name: code_before_scope

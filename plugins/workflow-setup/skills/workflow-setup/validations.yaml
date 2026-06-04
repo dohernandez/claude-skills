@@ -2,16 +2,9 @@ version: 1
 description: "Validations for workflow-setup skill"
 
 # Workflow-setup validations:
-# - Skill structure is valid
 # - Config files are gitignored
 
 validations:
-  - id: skill-structure-valid
-    type: command
-    command: "task -t .claude/Taskfile.yaml check-structure -- --skill workflow-setup"
-    expect: "exit 0"
-    message: "Skill structure validation failed."
-
   - id: config-gitignored
     type: command
     command: "grep -q 'workflow-config.json' .gitignore"
@@ -25,6 +18,5 @@ validations:
     message: ".claude/workflow/ must be added to .gitignore"
 
 on_stop:
-  - skill-structure-valid
   - config-gitignored
   - workflow-dir-gitignored

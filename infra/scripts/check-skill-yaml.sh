@@ -385,7 +385,6 @@ check_stop_hook_discipline() {
     # If Stop hook IS defined, verify it calls validate-skill correctly
     # Accept multiple formats:
     # - task claude:validate-skill -- --skill <name>
-    # - task -t .claude/Taskfile.yaml validate-skill -- --skill <name>
     # - task -t .claude/Taskfile.skills.yaml validate-skill -- --skill <name>
     local expected1="validate-skill -- --skill $skill"
     if [[ "$FM_HOOKS_STOP" != *"$expected1"* ]]; then

@@ -61,7 +61,7 @@ These enable the Taskfile tasks:
 
 **Behavior**:
 1. Reads config from `.claude/skills/test.yaml`
-2. Falls back to `task -t .claude/Taskfile.yaml test` if no config
+2. Falls back to `task -t .claude/Taskfile.dev.yaml test` if no config
 3. Runs all tests
 4. Reports summary
 

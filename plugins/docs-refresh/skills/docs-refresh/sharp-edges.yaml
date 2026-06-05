@@ -1,4 +1,16 @@
 edges:
+  - id: plugin-root-only-in-hooks
+    description: "Trying to use ${CLAUDE_PLUGIN_ROOT} from the skill procedure (model Bash calls)"
+    detect: "Procedure step that runs ${CLAUDE_PLUGIN_ROOT}/... directly via the Bash tool"
+    impact: "The variable is unset in the model's shell (only exported to hook processes), so bundled skills-reference/validation tooling can't be located."
+    fix: |
+      Reach bundled plugin assets ONLY from the Stop hook (which has the variable).
+      That is why skills-reference generation and validation run from
+      ${CLAUDE_PLUGIN_ROOT}/infra/refresh-and-validate.sh on Stop, not from a
+      procedure step. After first run the infra is installed into .claude/, so
+      `task -t .claude/Taskfile.skills.yaml skills-reference` works for manual reruns.
+    severity: critical
+
   - id: reference-out-of-sync
     description: "REFERENCE.md doesn't match current skill.yaml files"
     detect: "task docs:refresh-check"

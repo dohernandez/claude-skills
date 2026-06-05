@@ -1,10 +1,17 @@
 version: 1
 description: "Validations for docs-refresh skill"
 
+# docs-refresh is a plugin-provided skill. Its infra is bundled under infra/ and
+# reached via ${CLAUDE_PLUGIN_ROOT}, which is only available to hook processes.
+# The Stop hook runs infra/refresh-and-validate.sh, which installs the infra into
+# the project's .claude/, regenerates the skills reference, and runs the
+# validate-skill-yaml check below over the project's skills.
+
 validations:
   - id: skill-yaml-valid
+    name: "Skill YAML is well-formed across the project"
     type: command
-    command: "task -t .claude/Taskfile.skills.yaml validate-skill-yaml"
+    command: "task -t ${CLAUDE_PLUGIN_ROOT}/infra/Taskfile.skills.yaml validate-skill-yaml"
     expect: "exit 0"
     message: "Skill YAML validation failed. Fix skill structure issues."
 

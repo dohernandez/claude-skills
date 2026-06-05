@@ -9,6 +9,12 @@ allowed-tools:
   - Grep
   - Edit
   - Write
+hooks:
+  Stop:
+    - matcher: "*"
+      hooks:
+        - type: command
+          command: "bash ${CLAUDE_PLUGIN_ROOT}/infra/refresh-and-validate.sh"
 ---
 
 # Docs Refresh
@@ -28,7 +34,11 @@ Keep generated documentation in sync with source files. Manages skill reference 
 
 - **Setup**: `/docs-refresh configure` (run once during framework setup)
 - **Config**: `.claude/skills/docs-refresh.yaml`
-- **Stop hook**: `task -t .claude/Taskfile.skills.yaml validate-skill -- --skill docs-refresh`
+- **Stop hook**: `${CLAUDE_PLUGIN_ROOT}/infra/refresh-and-validate.sh` — on Stop this installs the bundled skill infra into `.claude/`, regenerates the skills reference, and validates skill YAML.
+
+## How it works (global-install model)
+
+This plugin is auto-discovered from the plugin cache; its files do not live in the project. `${CLAUDE_PLUGIN_ROOT}` is available to **hook processes only**, not to the model's Bash calls, so the deterministic skills-reference generation and validation run from the **Stop hook** (which carries the bundled `infra/`), not from the procedure. The Stop hook also installs the infra into `.claude/` (idempotent) so you can re-run `task -t .claude/Taskfile.skills.yaml skills-reference` manually afterward.
 
 ## Configure Mode
 
@@ -77,6 +87,8 @@ human_docs:
 6. **Save to** `.claude/skills/docs-refresh.yaml`
 
 ## Commands
+
+Skills-reference generation is **automatic on Stop** (via the bundled infra in the Stop hook — see above). After the first run the infra is installed into `.claude/`, so you can also regenerate it manually:
 
 ```bash
 # Generate skills reference documentation (outputs: docs/skills/REFERENCE.md)

@@ -1,0 +1,125 @@
+# Claude Skills - Skill Tasks
+# This file is installed to .claude/Taskfile.skills.yaml in target projects
+#
+# Usage:
+#   task -t .claude/Taskfile.skills.yaml validate-skill -- --skill commit
+#   task -t .claude/Taskfile.skills.yaml audit-skills
+#
+# No configuration required - these tasks work out of the box.
+
+version: '3'
+
+vars:
+  SCRIPTS_DIR: '{{.TASKFILE_DIR}}/scripts'
+
+tasks:
+  validate-skill:
+    desc: "Run validation commands from a skill's validations.yaml"
+    summary: |
+      Validate a skill by running commands defined in its validations.yaml.
+
+      Usage:
+        task -t .claude/Taskfile.skills.yaml validate-skill -- --skill commit
+        task -t .claude/Taskfile.skills.yaml validate-skill -- --skill commit --mode all
+
+      Options:
+        --skill SKILL    Skill name (folder name under .claude/skills/) [required]
+        --mode MODE      Which validations to run: "on-stop" (default) or "all"
+        --debug          Enable debug logging
+
+      Exit codes:
+        0 - All validations passed
+        1 - One or more validations failed
+    cmds:
+      - '{{.SCRIPTS_DIR}}/validate-skill.sh {{.CLI_ARGS}}'
+
+  check-structure:
+    desc: "Check skill structure for all skills"
+    summary: |
+      Validates all skills have required files, valid YAML, consistent names.
+
+      Usage:
+        task -t .claude/Taskfile.skills.yaml check-structure
+        task -t .claude/Taskfile.skills.yaml check-structure -- --skill commit
+    cmds:
+      - '{{.SCRIPTS_DIR}}/check-skill-structure.sh {{.CLI_ARGS}}'
+
+  list-skills:
+    desc: "List all available skills"
+    cmds:
+      - '{{.SCRIPTS_DIR}}/list-skills.sh'
+
+  validate-skill-yaml:
+    desc: "CI check for skill YAML structure and required files"
+    summary: |
+      CI check that validates all skill YAML files are well-formed and have
+      required files.
+
+      Enforces:
+        - Naming convention (frontmatter name must match directory)
+        - Collaboration references (all referenced skills must exist)
+        - Validations integrity (on_stop IDs exist, type=command only)
+
+      Usage:
+        task -t .claude/Taskfile.skills.yaml validate-skill-yaml
+
+      Exit codes:
+        0 - All skills valid
+        1 - Errors found
+    cmds:
+      - '{{.SCRIPTS_DIR}}/check-skill-yaml.sh {{.CLI_ARGS}}'
+
+  audit-skills:
+    desc: "Run semantic skill audit (multi-YAML pattern compliance)"
+    summary: |
+      Semantic skill auditor that enforces multi-YAML pattern compliance.
+
+      Checks performed:
+        - skill.yaml exists and declares kind
+        - Required files present based on kind
+        - validations.yaml discipline (v1 command only)
+        - Collaboration reference integrity
+        - Best practices (SKILL.md conciseness, procedure sections)
+
+      Usage:
+        task -t .claude/Taskfile.skills.yaml audit-skills
+        task -t .claude/Taskfile.skills.yaml audit-skills -- --strict
+
+      Options:
+        --strict    Fail on warnings
+        --debug     Enable debug logging
+
+      Exit codes:
+        0 - Audit passed
+        1 - Errors found (or warnings in strict mode)
+    cmds:
+      - '{{.SCRIPTS_DIR}}/audit-skills.sh {{.CLI_ARGS}}'
+
+  audit-skills-strict:
+    desc: "Run semantic skill audit in strict mode"
+    summary: |
+      Same as audit-skills but fails on any warnings.
+      Use this in CI to enforce all best practices.
+    cmds:
+      - '{{.SCRIPTS_DIR}}/audit-skills.sh --strict'
+
+  skills-reference:
+    desc: "Generate skills reference documentation"
+    summary: |
+      Generate a markdown reference document from all skill.yaml files.
+
+      Scans .claude/skills/*/skill.yaml and generates a reference with:
+        - Overview table (name, description, kind)
+        - Detailed sections (ownership, version, user-invocable)
+
+      Usage:
+        task -t .claude/Taskfile.skills.yaml skills-reference
+        task -t .claude/Taskfile.skills.yaml skills-reference -- --output docs/SKILLS.md
+
+      Options:
+        --output PATH      Output file (default: docs/skills/REFERENCE.md)
+        --skills-dir PATH  Skills directory (default: .claude/skills)
+
+      The output file is created if it doesn't exist, or updated if it does.
+    cmds:
+      - '{{.SCRIPTS_DIR}}/generate-skills-reference.sh {{.CLI_ARGS}}'

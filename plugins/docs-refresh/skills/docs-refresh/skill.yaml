@@ -1,6 +1,6 @@
 name: docs-refresh
 kind: gate
-version: "1.0.0"
+version: "2.0.0"
 description: "Refresh documentation with deterministic generation from source files."
 severity: medium
 tags:
@@ -75,6 +75,7 @@ owns:
   - "Documentation generation workflow"
   - "Documentation freshness verification"
   - "Doc-source synchronization"
+  - "Deterministic skills-reference generation (bundled under infra/, run from the Stop hook via ${CLAUDE_PLUGIN_ROOT}; do not invoke ${CLAUDE_PLUGIN_ROOT} from the procedure)"
 
 permissions:
   - "You MUST run docs refresh before committing documentation changes"
